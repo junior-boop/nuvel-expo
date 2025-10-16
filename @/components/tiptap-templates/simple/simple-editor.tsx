@@ -1,16 +1,16 @@
-import * as React from "react"
 import { Editor, EditorContent, EditorContext, useEditor, } from "@tiptap/react"
 import { BubbleMenu, FloatingMenu } from "@tiptap/react/menus"
+import * as React from "react"
 // --- Tiptap Core Extensions ---
-import { StarterKit } from "@tiptap/starter-kit"
+import { Highlight } from "@tiptap/extension-highlight"
 import { Image } from "@tiptap/extension-image"
 import { TaskItem, TaskList } from "@tiptap/extension-list"
-import { TextAlign } from "@tiptap/extension-text-align"
-import { Typography } from "@tiptap/extension-typography"
-import { Highlight } from "@tiptap/extension-highlight"
 import { Subscript } from "@tiptap/extension-subscript"
 import { Superscript } from "@tiptap/extension-superscript"
+import { TextAlign } from "@tiptap/extension-text-align"
+import { Typography } from "@tiptap/extension-typography"
 import { Selection } from "@tiptap/extensions"
+import { StarterKit } from "@tiptap/starter-kit"
 
 // --- UI Primitives ---
 import { Button } from "../../tiptap-ui-primitive/button"
@@ -22,32 +22,31 @@ import {
 } from "../../tiptap-ui-primitive/toolbar"
 
 // --- Tiptap Node ---
-import { ImageUploadNode } from "../../tiptap-node/image-upload-node/image-upload-node-extension"
-import { HorizontalRule } from "../../tiptap-node/horizontal-rule-node/horizontal-rule-node-extension"
 import "../../tiptap-node/blockquote-node/blockquote-node.css"
 import "../../tiptap-node/code-block-node/code-block-node.css"
-import "../../tiptap-node/horizontal-rule-node/horizontal-rule-node.css"
-import "../../tiptap-node/list-node/list-node.css"
-import "../../tiptap-node/image-node/image-node.css"
 import "../../tiptap-node/heading-node/heading-node.css"
+import { HorizontalRule } from "../../tiptap-node/horizontal-rule-node/horizontal-rule-node-extension"
+import "../../tiptap-node/horizontal-rule-node/horizontal-rule-node.css"
+import "../../tiptap-node/image-node/image-node.css"
+import { ImageUploadNode } from "../../tiptap-node/image-upload-node/image-upload-node-extension"
+import "../../tiptap-node/list-node/list-node.css"
 import "../../tiptap-node/paragraph-node/paragraph-node.css"
 
 // --- Tiptap UI ---
-import { HeadingDropdownMenu } from "../../tiptap-ui/heading-dropdown-menu"
-import { ImageUploadButton } from "../../tiptap-ui/image-upload-button"
-import { ListDropdownMenu } from "../../tiptap-ui/list-dropdown-menu"
 import { BlockquoteButton } from "../../tiptap-ui/blockquote-button"
 import { CodeBlockButton } from "../../tiptap-ui/code-block-button"
 import {
   ColorHighlightPopover,
-  ColorHighlightPopoverContent,
   ColorHighlightPopoverButton,
+  ColorHighlightPopoverContent,
 } from "../../tiptap-ui/color-highlight-popover"
+import { HeadingDropdownMenu } from "../../tiptap-ui/heading-dropdown-menu"
 import {
-  LinkPopover,
-  LinkContent,
   LinkButton,
+  LinkContent,
+  LinkPopover,
 } from "../../tiptap-ui/link-popover"
+import { ListDropdownMenu } from "../../tiptap-ui/list-dropdown-menu"
 import { MarkButton } from "../../tiptap-ui/mark-button"
 import { TextAlignButton } from "../../tiptap-ui/text-align-button"
 
@@ -57,9 +56,9 @@ import { HighlighterIcon } from "../../tiptap-icons/highlighter-icon"
 import { LinkIcon } from "../../tiptap-icons/link-icon"
 
 // --- Hooks ---
+import { useCursorVisibility } from "../../../hooks/use-cursor-visibility"
 import { useIsMobile } from "../../../hooks/use-mobile"
 import { useWindowSize } from "../../../hooks/use-window-size"
-import { useCursorVisibility } from "../../../hooks/use-cursor-visibility"
 
 // --- Components ---
 // import { ThemeToggle } from "../../tiptap-templates/simple/theme-toggle"
@@ -68,17 +67,15 @@ import { useCursorVisibility } from "../../../hooks/use-cursor-visibility"
 import { handleImageUpload, MAX_FILE_SIZE } from "../../../lib/tiptap-utils"
 
 // --- Styles ---
+import { BibleVersetIcon, FluentArrowLeft32Filled, FluentArrowUp32Filled, FluentFolderLink32Regular, FluentImageAdd32Regular, IcSharpWhatsapp } from '../../../icons'
 import "../../tiptap-templates/simple/simple-editor.css"
-import { BibleVersetIcon, FluentArrowLeft32Filled, FluentArrowUp32Filled, FluentFolderLink32Regular, FluentImageAdd32Regular, IcSharpWhatsapp } from "../../../../src/lib/icons"
 
-import BibleVerset from "../../../../src/communs/ui/bible_component/extension"
+import BibleVerset from "@/components/bible_component/Bibleverset"
 
 
-import { useLocation, useNavigate } from "react-router-dom"
-import { useDatabase } from "../../../../src/communs/context/databaseprovide"
 
+import { useCopyToClipboard } from "@uidotdev/usehooks"
 import { toast } from "sonner"
-import { useCopyToClipboard } from "@uidotdev/usehooks";
 
 
 const MainToolbarContent = ({
@@ -95,8 +92,8 @@ const MainToolbarContent = ({
   isMobile: boolean
 }) => {
 
-  const navigate = useNavigate()
-  const handleBack = () => { onBack(); navigate(-1) }
+  // const navigate = useNavigate()
+  // const handleBack = () => { onBack(); navigate(-1) }
   const addVersetSection = () => {
     // Logic to add a new verse section
     const Box = document.createElement("div");
@@ -108,7 +105,7 @@ const MainToolbarContent = ({
   return (
     <>
       <div className="pl-2"></div>
-      <button onClick={handleBack} className="hover:bg-slate-100 w-[34px] h-[34px] rounded-xl flex justify-center items-center">
+      <button className="hover:bg-slate-100 w-[34px] h-[34px] rounded-xl flex justify-center items-center">
         <FluentArrowLeft32Filled className="h-5 w-5" />
       </button>
       <Spacer />
@@ -484,50 +481,49 @@ const AddImage = ({ editor, text }: { editor: Editor, text?: boolean }) => {
 const DossierButton = ({ editor }: { editor: Editor }) => {
   const [openVerset, setOpenVerset] = React.useState(false)
   const [isActive, setIsActived] = React.useState(false)
-  const location = useLocation()
-  const navigate = useNavigate()
-  const state = location.state.note
-  const [note, setNote] = React.useState(state)
+
+  // const state = location.state.note
+  const [note, setNote] = React.useState(null)
 
   const InputVerset = ({ onBlur }: { onBlur: () => void }) => {
     const [verse, setVerse] = React.useState<string>("")
-    const { groupedQuery, addNotetoGroup } = useDatabase()
+    // const { groupedQuery, addNotetoGroup } = useDatabase()
 
     // console.log(location.pathname)
-    const d = groupedQuery?.orderBy("modified", "desc")
-    const handleNewState = async (groupId: string) => {
-      setNote({ ...note, grouped: groupId })
-      await addNotetoGroup({ id: state.id, grouped: groupId })
-      setTimeout(() => {
-        handleOpen()
-      }, 1000)
+    // const d = groupedQuery?.orderBy("modified", "desc")
+    // const handleNewState = async (groupId: string) => {
+    //   setNote({ ...note, grouped: groupId })
+    //   await addNotetoGroup({ id: state.id, grouped: groupId })
+    //   setTimeout(() => {
+    //     handleOpen()
+    //   }, 1000)
 
-    }
+    // }
 
-    const handleNoGroup = async () => {
-      setNote({ ...note, grouped: "" })
-      await addNotetoGroup({ id: state.id, grouped: null })
-      setTimeout(() => {
-        handleOpen()
-      }, 1000)
+    // const handleNoGroup = async () => {
+    //   setNote({ ...note, grouped: "" })
+    //   await addNotetoGroup({ id: state.id, grouped: null })
+    //   setTimeout(() => {
+    //     handleOpen()
+    //   }, 1000)
 
-    }
+    // }
 
     return (
       <div onBlur={onBlur} className="absolute top-[30px] right-[-12px] w-[210px] bg-white border border-slate-200 rounded-lg px-1 py-2 gap-2 shadow-md">
         <span className="text-[14px] font-semibold inline-block mb-2 px-2 mb-1">Liste des Dossiers</span>
-        <button onClick={handleNoGroup} className={`flex items-center gap-2 justify-between w-full py-1 px-2 ${note.grouped === "" ? "bg-gray-50" : ""} rounded-md`}>
+        <button className={`flex items-center gap-2 justify-between w-full py-1 px-2 ${note.grouped === "" ? "bg-gray-50" : ""} rounded-md`}>
           <span className={`flex-1 ${note.grouped === "" ? "font-semibold" : ""} text-[14px]`}>Aucun Dossier</span>
           {note.grouped === "" && <span className="w-[8px] h-[8px] rounded-full bg-slate-700"></span>}
         </button>
-        {
+        {/* {
           d && d.map((el, key) => (
             <button onClick={() => handleNewState(el.id)} className={`flex items-center gap-2 justify-between w-full py-1 ${note.grouped === el.id ? "bg-gray-50" : ""} px-2 rounded-md mb-1`} key={key}>
               <span className={`flex-1 ${note.grouped === el.id ? "font-semibold" : ""} text-[14px]`}>{el.name}</span>
               {note.grouped === el.id && <span className="w-[8px] h-[8px] rounded-full bg-slate-700"></span>}
             </button>
           ))
-        }
+        } */}
       </div>
     )
   }
@@ -763,37 +759,6 @@ function htmlToWhatsAppSimple(htmlString) {
     .trim();
 }
 
-// Fonction de test
-function testConversion() {
-  const testHTML = `
-        <h1>Titre principal en majuscules</h1>
-        <h2>Sous-titre en Gras Normal</h2>
-        <h3>Titre de niveau 3</h3>
-        <p>Ceci est un paragraphe avec du <strong>texte en gras</strong> et du <em>texte en italique</em>.</p>
-        <p>On peut aussi avoir du <s>texte barré</s> et du <code>code inline</code>.</p>
-        <blockquote>Ceci est une citation importante</blockquote>
-        <ul>
-            <li>Premier élément de liste</li>
-            <li>Deuxième élément avec du <b>gras</b></li>
-            <li>Troisième élément</li>
-        </ul>
-        <pre>
-function exemple() {
-    console.log("Code block");
-}
-        </pre>
-        <p>Un lien vers <a href="https://example.com">Example.com</a></p>
-    `;
-
-  console.log("HTML original:");
-  console.log(testHTML);
-  console.log("\n" + "=".repeat(50) + "\n");
-  console.log("Conversion WhatsApp (méthode complète):");
-  console.log(htmlToWhatsApp(testHTML));
-  console.log("\n" + "=".repeat(50) + "\n");
-  console.log("Conversion WhatsApp (méthode simple):");
-  console.log(htmlToWhatsAppSimple(testHTML));
-}
 
 // Exporter les fonctions
 if (typeof module !== 'undefined' && module.exports) {

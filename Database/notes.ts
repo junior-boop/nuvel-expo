@@ -19,7 +19,7 @@ const Notes = () => {
   return items;
 };
 
-export const createNote = async (data: NotesType) => {
+export const created = async (data: NotesType) => {
   const items = Notes();
 
   const result = await items.create({
@@ -38,7 +38,7 @@ export const createNote = async (data: NotesType) => {
   return result;
 };
 
-export const getAllNotes = async () => {
+export const getall = async () => {
   const items = Notes();
   const result = await items.findAll({
     orderBy: { column: "modified", direction: "DESC" },
@@ -46,7 +46,7 @@ export const getAllNotes = async () => {
   return result;
 };
 
-export const updateNote = async (data: Partial<NotesType>) => {
+export const update = async (data: Partial<NotesType>) => {
   const items = Notes();
   const result = await items.update(data.id as string, {
     body: data.body,
@@ -57,7 +57,7 @@ export const updateNote = async (data: Partial<NotesType>) => {
   return result;
 };
 
-export async function setNotesArchived(data: NotesType) {
+export async function setarchived(data: NotesType) {
   const items = Notes();
   return await items.update(data.id as string, {
     archived: data.archived,
@@ -65,13 +65,13 @@ export async function setNotesArchived(data: NotesType) {
   });
 }
 
-export const deleteNote = async (id: string) => {
+export const deleted = async (id: string) => {
   const items = Notes();
   const result = await items.delete(id);
   return result;
 };
 
-export const setNotePinned = async (data: NotesType) => {
+export const setpinned = async (data: NotesType) => {
   const items = Notes();
   return await items.update(data.id as string, {
     pinned: data.pinned,
