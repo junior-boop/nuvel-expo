@@ -24,8 +24,8 @@ export type User = {
 export type Groups = {
   id: string;
   name: string;
-  created: Date;
-  modified: Date;
+  created: Date | string;
+  modified: Date | string;
 };
 
 export type Session = {

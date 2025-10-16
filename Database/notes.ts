@@ -1,6 +1,6 @@
-import { v4 as uuidv4 } from "uuid";
 import type { Notes as NotesType } from "./db";
 import db from "./index";
+import { generateUUID as uuidv4 } from "./uuid";
 
 const Notes = () => {
   const items = db.createModel<NotesType>("notes", {

@@ -32,3 +32,30 @@ const styles = StyleSheet.create({
     },
 
 });
+
+
+export function PageLayout_2({ children, addnote = true }: { children: React.ReactNode, addnote?: boolean }) {
+    const navigation = useNavigation()
+
+    return (
+        <View style={styles_2.container}>
+            <StatusBar style="dark" />
+            {children}
+            {
+                addnote && (<View style={NewNoteButton.container} >
+                    <TouchableOpacity style={NewNoteButton.button} onPress={() => navigation.navigate("noteeditor")}>
+                        <MaterialIcons name="add" size={32} color="white" />
+                    </TouchableOpacity>
+                </View>)
+            }
+        </View>
+    );
+}
+
+const styles_2 = StyleSheet.create({
+    container: {
+        flex: 1,
+        position: 'relative'
+    },
+
+});
