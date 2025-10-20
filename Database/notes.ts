@@ -2,25 +2,25 @@ import type { Notes as NotesType } from "./db";
 import db from "./index";
 import { generateUUID as uuidv4 } from "./uuid";
 
-const Notes = () => {
-  const items = db.createModel<NotesType>("notes", {
-    id: "TEXT PRIMARY KEY",
-    body: "TEXT",
-    html: "TEXT NULL",
-    creator: "TEXT",
-    pinned: "INTEGER",
-    archived: "INTEGER",
-    grouped: "TEXT NULL",
-    created: "DATETIME DEFAULT CURRENT_TIMESTAMP",
-    modified: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-    version: "INT NOT NULL DEFAULT 1",
-  });
-  (async () => await items.createTable())();
-  return items;
+const Notes = db.createModel<NotesType>("notes", {
+  id: "TEXT PRIMARY KEY",
+  body: "TEXT",
+  html: "TEXT NULL",
+  creator: "TEXT",
+  pinned: "INTEGER",
+  archived: "INTEGER",
+  grouped: "TEXT NULL",
+  created: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+  modified: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+  version: "INT NOT NULL DEFAULT 1",
+});
+
+export const createdtable = async () => {
+  await Notes.createTable();
 };
 
 export const created = async (data: NotesType) => {
-  const items = Notes();
+  const items = Notes;
 
   const result = await items.create({
     id: uuidv4(),
@@ -39,15 +39,14 @@ export const created = async (data: NotesType) => {
 };
 
 export const getall = async () => {
-  const items = Notes();
-  const result = await items.findAll({
+  const result = await Notes.findAll({
     orderBy: { column: "modified", direction: "DESC" },
   });
   return result;
 };
 
 export const update = async (data: Partial<NotesType>) => {
-  const items = Notes();
+  const items = Notes;
   const result = await items.update(data.id as string, {
     body: data.body,
     html: data.html,
@@ -57,8 +56,17 @@ export const update = async (data: Partial<NotesType>) => {
   return result;
 };
 
+export async function addtogroup(data: NotesType) {
+  const items = Notes;
+
+  return await items.update(data.id, {
+    grouped: data.grouped,
+    modified: new Date().toISOString(),
+  });
+}
+
 export async function setarchived(data: NotesType) {
-  const items = Notes();
+  const items = Notes;
   return await items.update(data.id as string, {
     archived: data.archived,
     modified: new Date().toISOString(),
@@ -66,13 +74,13 @@ export async function setarchived(data: NotesType) {
 }
 
 export const deleted = async (id: string) => {
-  const items = Notes();
+  const items = Notes;
   const result = await items.delete(id);
   return result;
 };
 
 export const setpinned = async (data: NotesType) => {
-  const items = Notes();
+  const items = Notes;
   return await items.update(data.id as string, {
     pinned: data.pinned,
     modified: new Date().toISOString(),

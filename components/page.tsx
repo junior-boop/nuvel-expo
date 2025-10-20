@@ -52,6 +52,17 @@ export function PageLayout_2({ children, addnote = true }: { children: React.Rea
     );
 }
 
+export function PageLayout_3({ children, addnote = true }: { children: React.ReactNode, addnote?: boolean }) {
+    const navigation = useNavigation()
+
+    return (
+        <View style={styles_2.container}>
+            <StatusBar style="dark" />
+            {children}
+        </View>
+    );
+}
+
 const styles_2 = StyleSheet.create({
     container: {
         flex: 1,

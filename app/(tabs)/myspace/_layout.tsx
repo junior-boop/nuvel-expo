@@ -1,17 +1,16 @@
 
-import PageLayout from '@/components/page';
-import { Stack, useNavigation } from 'expo-router';
+import { PageLayout_3 } from '@/components/page';
+import { Stack } from 'expo-router';
 
 export const unstable_settings = {
     initialRouteName: 'index',
 };
 
 export default function TabTwoScreen() {
-    const navigator = useNavigation();
     return (
-        <PageLayout>
+        <PageLayout_3>
             <Stack screenOptions={{ animation: 'none' }} />
-        </PageLayout >
+        </PageLayout_3>
     );
 }
 

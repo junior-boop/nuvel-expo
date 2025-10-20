@@ -42,5 +42,6 @@ export const NewNoteButton = StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: "center",
     justifyContent: "flex-end",
+    backgroundColor: "transparent",
   },
 });

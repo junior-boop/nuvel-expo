@@ -1,4 +1,4 @@
-import { Editor, EditorContent, EditorContext, useEditor, } from "@tiptap/react"
+import { Editor, useEditor } from "@tiptap/react"
 import { BubbleMenu, FloatingMenu } from "@tiptap/react/menus"
 import * as React from "react"
 // --- Tiptap Core Extensions ---
@@ -16,9 +16,8 @@ import { StarterKit } from "@tiptap/starter-kit"
 import { Button } from "../../tiptap-ui-primitive/button"
 import { Spacer } from "../../tiptap-ui-primitive/spacer"
 import {
-  Toolbar,
   ToolbarGroup,
-  ToolbarSeparator,
+  ToolbarSeparator
 } from "../../tiptap-ui-primitive/toolbar"
 
 // --- Tiptap Node ---
@@ -78,6 +77,7 @@ import { useCopyToClipboard } from "@uidotdev/usehooks"
 import { toast } from "sonner"
 
 
+
 const MainToolbarContent = ({
   onHighlighterClick,
   onBack,
@@ -92,8 +92,8 @@ const MainToolbarContent = ({
   isMobile: boolean
 }) => {
 
-  // const navigate = useNavigate()
-  // const handleBack = () => { onBack(); navigate(-1) }
+  const navigate = useNavigate()
+  const handleBack = () => { onBack(); navigate(-1) }
   const addVersetSection = () => {
     // Logic to add a new verse section
     const Box = document.createElement("div");
@@ -105,7 +105,7 @@ const MainToolbarContent = ({
   return (
     <>
       <div className="pl-2"></div>
-      <button className="hover:bg-slate-100 w-[34px] h-[34px] rounded-xl flex justify-center items-center">
+      <button onClick={handleBack} className="hover:bg-slate-100 w-[34px] h-[34px] rounded-xl flex justify-center items-center">
         <FluentArrowLeft32Filled className="h-5 w-5" />
       </button>
       <Spacer />
@@ -183,6 +183,7 @@ const MainToolbarContent = ({
     </>
   )
 }
+
 
 const MenuFlottant = ({ editor, onHighlighterClick, onLinkClick, isMobile }: { editor: Editor, isMobile: boolean, onHighlighterClick: () => void, onLinkClick: () => void }) => {
   return (
@@ -325,46 +326,47 @@ export function SimpleEditor({ onChange, content, onBack, ref, onHtmlChange }: {
 
 
   return (
-    <div className="simple-editor-wrapper">
-      <EditorContext.Provider value={{ editor }}>
-        <Toolbar
-          ref={toolbarRef}
-          style={{
-            ...(isMobile
-              ? {
-                bottom: `calc(100% - ${height - rect.y}px)`,
-              }
-              : {}),
-          }}
-        >
-          {mobileView === "main" ? (
-            <MainToolbarContent
-              onBack={onBack}
-              onHighlighterClick={() => setMobileView("highlighter")}
-              onLinkClick={() => setMobileView("link")}
-              isMobile={isMobile}
-              editor={editor as Editor}
-            />
-          ) : (
-            <MobileToolbarContent
-              type={mobileView === "highlighter" ? "highlighter" : "link"}
-              onBack={() => setMobileView("main")}
-            />
-          )}
-        </Toolbar>
+    <div>je suis dans la place</div>
+    // <div className="simple-editor-wrapper">
+    //   <EditorContext.Provider value={{ editor }}>
+    //     <Toolbar
+    //       ref={toolbarRef}
+    //       style={{
+    //         ...(isMobile
+    //           ? {
+    //             bottom: `calc(100% - ${height - rect.y}px)`,
+    //           }
+    //           : {}),
+    //       }}
+    //     >
+    //       {mobileView === "main" ? (
+    //         <MainToolbarContent
+    //           onBack={onBack}
+    //           onHighlighterClick={() => setMobileView("highlighter")}
+    //           onLinkClick={() => setMobileView("link")}
+    //           isMobile={isMobile}
+    //           editor={editor as Editor}
+    //         />
+    //       ) : (
+    //         <MobileToolbarContent
+    //           type={mobileView === "highlighter" ? "highlighter" : "link"}
+    //           onBack={() => setMobileView("main")}
+    //         />
+    //       )}
+    //     </Toolbar>
 
-        <EditorContent
-          ref={ref as React.RefAttributes<HTMLDivElement>}
-          editor={editor}
-          role="presentation"
-          className="simple-editor-content"
-        />
+    //     <EditorContent
+    //       ref={ref as React.RefAttributes<HTMLDivElement>}
+    //       editor={editor}
+    //       role="presentation"
+    //       className="simple-editor-content"
+    //     />
 
-        <MenuFlottant editor={editor as Editor} isMobile={isMobile} />
-        <StartingMenu editor={editor as Editor} isMobile={isMobile} />
-        <div className="h-[100px]"></div>
-      </EditorContext.Provider>
-    </div>
+    //     <MenuFlottant editor={editor as Editor} isMobile={isMobile} />
+    //     <StartingMenu editor={editor as Editor} isMobile={isMobile} />
+    //     <div className="h-[100px]"></div>
+    //   </EditorContext.Provider>
+    // </div>
   )
 }
 

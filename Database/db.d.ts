@@ -73,3 +73,25 @@ export type usersession = {
   name: string;
   email: string;
 };
+
+export interface AiHistoryType {
+  id: string;
+  iduser: string;
+  role: string;
+  content: string;
+  created: Date | string;
+  modified: Date | string;
+}
+
+export interface Articles {
+  id?: string;
+  imageurl: string;
+  userid: string;
+  noteid: string;
+  description: string;
+  topic: string;
+  title: string;
+  appreciation: string;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -1,21 +1,36 @@
-import PageLayout from "@/components/page";
-import { Text, View } from "@/components/Themed";
-// import * as WebView from 'react-native-webview';
+import { PageLayout_3 } from "@/components/page";
+import { useDatabase } from '@/context/database.context';
+import { Notes } from "@/Database/db";
+import EditorJS from "@/editor";
+import { Stack, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
+import { Keyboard, KeyboardAvoidingView, Platform } from "react-native";
 
 export default function NoteEditor() {
-    return (
-        <PageLayout>
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <View>
-                    <View style={{ marginBottom: 20 }}>
-                        <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Note Editor</Text>
-                    </View>
-                    <View>
-                        <Text style={{ fontSize: 16, color: '#666' }}>This is where the note editor will be implemented.</Text>
-                    </View>
-                </View>
-            </View>
+    const [isKeyboard, setIskeyboard] = useState<{ height: number, screenY: number, width: number } | undefined>(undefined)
+    const data = useLocalSearchParams()
+    const { notesQuery, updateNote } = useDatabase()
 
-        </PageLayout>
+
+    const Note = notesQuery?.findById(data.id as string) as Notes
+    useEffect(() => {
+        Keyboard.addListener("keyboardDidHide", () => {
+            setIskeyboard(Keyboard.metrics())
+        })
+    }, [Keyboard.listenerCount])
+
+    const handleUpdate = async (data: Partial<Notes>) => {
+        await updateNote(data)
+    }
+
+    return (
+        <PageLayout_3>
+            <Stack.Screen options={{ animation: "fade_from_bottom", headerShadowVisible: false, title: '' }} />
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={{ flex: 1 }}>
+                <EditorJS note={Note} updateNote={(data) => handleUpdate(data)} />
+            </KeyboardAvoidingView>
+        </PageLayout_3>
     )
 }
