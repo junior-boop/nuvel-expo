@@ -1,6 +1,8 @@
 import { QueryForTable } from '@/constants/Queryuilder';
 import * as Groups from '@/Database/groups';
 import * as Notes from '@/Database/notes';
+import * as Session from '@/Database/session';
+import * as User from '@/Database/users';
 import React, {
     createContext,
     ReactNode,
@@ -10,7 +12,7 @@ import React, {
     useMemo,
     useState
 } from 'react';
-import type { Groups as GroupsType, Notes as NotesType, usersession } from '../Database/db';
+import type { Groups as GroupsType, Notes as NotesType, Session as SessionType, User as UserType } from '../Database/db';
 
 // Définition d'un type pour les erreurs de base de données
 type DatabaseError = {
@@ -23,10 +25,13 @@ type DatabaseError = {
 interface DatabaseContextType {
     notesQuery: QueryForTable<NotesType> | null;
     groupsQuery: QueryForTable<GroupsType> | null;
-    session: usersession | null;
+    session: SessionType | null;
+    usersQuery: QueryForTable<UserType> | null;
     isLoading: boolean;
     error: DatabaseError | null;
     addNote: (noteData: Partial<NotesType>) => Promise<NotesType | undefined>;
+    adduser: (data: UserType) => Promise<UserType | undefined>
+    deletedUser: (id: string) => Promise<boolean | null>;
     updateNote: (noteData: Partial<NotesType>) => Promise<void>;
     deleteNote: (id: string) => Promise<void>;
     toggleNotePinned: (note: NotesType) => Promise<void>;
@@ -43,8 +48,9 @@ const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined
 export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     const [notesQuery, setNotes] = useState<QueryForTable<NotesType> | null>(null);
     const [groupsQuery, setGroups] = useState<QueryForTable<GroupsType> | null>(null);
+    const [usersQuery, setUsers] = useState<QueryForTable<UserType> | null>(null);
+    const [session, setSession] = useState<SessionType | null>(null);
 
-    const [session, setSession] = useState<usersession | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<DatabaseError | null>(null);
 
@@ -69,16 +75,21 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         await Groups.createtable();
         clearError();
         try {
-            const [notesResult, groupesResult] = await Promise.all([
+            const [notesResult, groupesResult, sessionResult, userResult] = await Promise.all([
                 Notes.getall(),
-                Groups.getall()
+                Groups.getall(),
+                Session.get(),
+                User.getAll()
             ]);
             const notesArray = new QueryForTable<NotesType>(notesResult || []);
             const groupArray = new QueryForTable<GroupsType>(groupesResult || []);
+            const userArray = new QueryForTable<UserType>(userResult || []);
+            console.log(userResult)
 
+            setUsers(userArray);
             setGroups(groupArray);
             setNotes(notesArray);
-            // setSession(sessionResult || null);
+            setSession(sessionResult || null);
         } catch (error) {
             handleError(error, 'initial data loading');
         } finally {
@@ -192,14 +203,45 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [loadInitialData])
 
+    const adduser = useCallback(async (data: UserType) => {
+        clearError();
+        try {
+            await Session.set(data)
+            const result = await User.created(data);
+            if (result) loadInitialData()
+
+            return result;
+        }
+        catch (error) {
+            handleError(error, 'adding note');
+        }
+    }, [loadInitialData])
+
+    const deletedUser = useCallback(async (id: string) => {
+        clearError();
+        try {
+            await Session.deleted()
+            const result = await User.deleted(id);
+            if (result) loadInitialData()
+
+            return result;
+        }
+        catch (error) {
+            handleError(error, 'adding note');
+        }
+    }, [loadInitialData])
+
     // Optimisation avec useMemo pour la valeur du contexte
     const contextValue = useMemo(() => ({
         notesQuery,
         groupsQuery,
+        usersQuery,
         session,
         isLoading,
         error,
         addNote,
+        adduser,
+        deletedUser,
         updateNote,
         deleteNote,
         toggleNotePinned,
@@ -212,10 +254,13 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     }), [
         notesQuery,
         groupsQuery,
+        usersQuery,
         session,
         isLoading,
         error,
         addNote,
+        adduser,
+        deletedUser,
         updateNote,
         deleteNote,
         toggleNotePinned,

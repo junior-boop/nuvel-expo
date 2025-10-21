@@ -32,7 +32,7 @@ export async function set(data: UserType): Promise<SessionType | null> {
   return session;
 }
 
-export async function deleted(id: string): Promise<Boolean> {
-  const session = await Session.delete(id);
+export async function deleted(): Promise<Boolean> {
+  const session = await Session.delete("sessionuser-01");
   return session;
 }

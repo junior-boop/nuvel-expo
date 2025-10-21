@@ -1,4 +1,4 @@
-import Svg, { Path, SvgProps } from 'react-native-svg';
+import Svg, { Circle, G, Path, SvgProps } from 'react-native-svg';
 
 
 
@@ -256,5 +256,20 @@ export function FluentArrowDownload32Filled(props: SvgProps) {
 export function FluentCloudArrowUp32Regular(props: SvgProps) {
     return (
         <Svg viewBox="0 0 32 32" {...props}><Path fill="currentColor" d="M11.399 7.008C10.439 8.182 10 9.7 10 11a1 1 0 0 1-1 1c-3.624 0-5 2.528-5 4c0 .855.216 1.835.878 2.592C5.515 19.32 6.708 20 9 20h4.852c-.185.64-.3 1.31-.338 2H9c-2.707 0-4.515-.82-5.628-2.091C2.284 18.665 2 17.145 2 16c0-2.356 1.93-5.53 6.057-5.953c.172-1.456.74-3.016 1.794-4.305C11.166 4.134 13.201 3 16 3c1.7 0 3.682.562 5.258 1.851c1.421 1.163 2.473 2.887 2.697 5.206c1.378.165 2.714.683 3.781 1.508C29.063 12.589 30 14.114 30 16q.001.696-.124 1.342a9 9 0 0 0-1.942-2.017c-.173-.868-.681-1.607-1.42-2.177C25.577 12.424 24.296 12 23 12a1 1 0 0 1-1-1c0-2.2-.866-3.666-2.008-4.601C18.818 5.439 17.3 5 16 5c-2.2 0-3.666.866-4.601 2.008M30 22.5a7.5 7.5 0 1 0-15 0a7.5 7.5 0 0 0 15 0m-7.78-5.28a.75.75 0 0 1 1.06 0l4 4a.75.75 0 1 1-1.06 1.06l-2.72-2.72v7.69a.75.75 0 0 1-1.5 0v-7.69l-2.72 2.72a.75.75 0 1 1-1.06-1.06z" /></Svg>
+    )
+}
+
+
+
+
+export function SvgSpinnersRingResize(props: SvgProps) {
+    return (
+        <Svg width="1em" height="1em" viewBox="0 0 24 24" {...props}>{/* Icon from SVG Spinners by Utkarsh Verma - https://github.com/n3r4zzurr0/svg-spinners/blob/main/LICENSE */}<G stroke="currentColor"><Circle cx="12" cy="12" r="9.5" fill="none" strokeLinecap="round" strokeWidth="3"><animate attributeName="stroke-dasharray" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0 150;42 150;42 150;42 150" /><animate attributeName="stroke-dashoffset" calcMode="spline" dur="1.5s" keySplines="0.42,0,0.58,1;0.42,0,0.58,1;0.42,0,0.58,1" keyTimes="0;0.475;0.95;1" repeatCount="indefinite" values="0;-16;-59;-59" /></Circle><animateTransform attributeName="transform" dur="2s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12" /></G></Svg>
+    )
+}
+
+export function FluentChevronRight32Regular(props: SvgProps) {
+    return (
+        <Svg width="1em" height="1em" viewBox="0 0 32 32" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<Path fill="currentColor" d="M11.293 26.707a1 1 0 0 1 0-1.414L20.586 16l-9.293-9.293a1 1 0 0 1 1.414-1.414l10 10a1 1 0 0 1 0 1.414l-10 10a1 1 0 0 1-1.414 0" /></Svg>
     )
 }

@@ -11,7 +11,7 @@ import { useDatabase } from '@/context/database.context';
 import { Stack, router } from 'expo-router';
 
 export default function TabTwoScreen() {
-    const { addNote, notesQuery } = useDatabase()
+    const { addNote, notesQuery, session } = useDatabase()
 
 
     const handleNewNote = async () => {
@@ -23,7 +23,7 @@ export default function TabTwoScreen() {
             pinned: false,
             archived: false,
             grouped: null,
-            creator: "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+            creator: session?.iduser as string
         })
 
         if (result) {

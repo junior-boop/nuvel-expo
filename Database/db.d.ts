@@ -14,11 +14,16 @@ export type Notes = {
 export type User = {
   id: string;
   name: string;
+  first_name: string;
   email: string;
-  created: string;
-  modified: string;
-  lastlogin: string;
-  lastlogout: string;
+  church_status: "Pastor" | "Elder" | "Deacon" | "Leader" | "Member";
+  domination: string;
+  biography: string;
+  photo: string;
+  created: Date | string;
+  modified: Date | string;
+  lastlogin: Date | string;
+  lastlogout: Date | string;
 };
 
 export type Groups = {

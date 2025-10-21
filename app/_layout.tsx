@@ -80,6 +80,7 @@ function RootLayoutNav() {
           <Stack.Screen name='noteeditor' options={{ headerShown: true }} />
           <Stack.Screen name='groupeitems' options={{ headerShown: true, headerShadowVisible: false, animation: 'fade_from_bottom', headerTitle: '' }} />
           <Stack.Screen name="login" options={{ headerShown: false, contentStyle: { backgroundColor: "#fff" } }} />
+          <Stack.Screen name="profils" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
         </Stack>
       </DatabaseProvider>
     </ThemeProvider>
