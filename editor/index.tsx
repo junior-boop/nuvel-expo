@@ -7,7 +7,7 @@ import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import React, { useCallback, useEffect, useState } from 'react'
 import { FluentAppsList20Filled, FluentArrowEnterLeft24Filled, FluentCode24Regular, FluentCodeBlock32Regular, FluentLineHorizontal128Regular, FluentTextBold24Regular, FluentTextHeader1Lines24Regular, FluentTextHeader2Lines24Regular, FluentTextHeader3Lines24Regular, FluentTextItalic24Filled, FluentTextNumberList24Regular, FluentTextQuote32Filled, FluentTextStrikethroughS24Regular } from './editor_icons'
-import './style.css'
+import styles from './styles'
 
 const extensions = [TextStyleKit, StarterKit]
 
@@ -52,28 +52,28 @@ function MenuBar({ editor }: { editor: Editor }) {
                         disabled={!editorState.canBold}
                         className={editorState.isBold ? 'is-active' : ''}
                     >
-                        <FluentTextBold24Regular className='w-5 h-5' />
+                        <FluentTextBold24Regular width={20} height={20} />
                     </button>
                     <button
                         onClick={() => editor.chain().focus().toggleItalic().run()}
                         disabled={!editorState.canItalic}
                         className={editorState.isItalic ? 'is-active' : ''}
                     >
-                        <FluentTextItalic24Filled className="w-5 h-5" />
+                        <FluentTextItalic24Filled width={20} height={20} />
                     </button>
                     <button
                         onClick={() => editor.chain().focus().toggleStrike().run()}
                         disabled={!editorState.canStrike}
                         className={editorState.isStrike ? 'is-active' : ''}
                     >
-                        <FluentTextStrikethroughS24Regular className="w-5 h-5" />
+                        <FluentTextStrikethroughS24Regular width={20} height={20} />
                     </button>
                     <button
                         onClick={() => editor.chain().focus().toggleCode().run()}
                         disabled={!editorState.canCode}
                         className={editorState.isCode ? 'is-active' : ''}
                     >
-                        <FluentCode24Regular className='w-5 h-5' />
+                        <FluentCode24Regular width={20} height={20} />
                     </button>
                     {/* <button onClick={() => editor.chain().focus().toggleMark("italic").run()}>Clear marks</button>
                     <button onClick={() => editor.chain().focus().clearNodes().run()}>Clear nodes</button> */}
@@ -82,47 +82,47 @@ function MenuBar({ editor }: { editor: Editor }) {
                         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                         className={editorState.isHeading1 ? 'is-active' : ''}
                     >
-                        <FluentTextHeader1Lines24Regular className='h-5 w-5' />
+                        <FluentTextHeader1Lines24Regular width={20} height={20} />
                     </button>
                     <button
                         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                         className={editorState.isHeading2 ? 'is-active' : ''}
                     >
-                        <FluentTextHeader2Lines24Regular className='w-5 h-5' />
+                        <FluentTextHeader2Lines24Regular width={20} height={20} />
                     </button>
                     <button
                         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
                         className={editorState.isHeading3 ? 'is-active' : ''}
                     >
-                        <FluentTextHeader3Lines24Regular className="w-5 h-5" />
+                        <FluentTextHeader3Lines24Regular width={20} height={20} />
                     </button>
                     <button
                         onClick={() => editor.chain().focus().toggleBulletList().run()}
                         className={editorState.isBulletList ? 'is-active' : ''}
                     >
-                        <FluentAppsList20Filled className="w-5 h-5" />
+                        <FluentAppsList20Filled width={20} height={20} />
                     </button>
                     <button
                         onClick={() => editor.chain().focus().toggleOrderedList().run()}
                         className={editorState.isOrderedList ? 'is-active' : ''}
                     >
-                        <FluentTextNumberList24Regular className='w-5 h-5' />
+                        <FluentTextNumberList24Regular width={20} height={20} />
                     </button>
                     <button
                         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
                         className={editorState.isCodeBlock ? 'is-active' : ''}
                     >
-                        <FluentCodeBlock32Regular className='w-5 h-5' />
+                        <FluentCodeBlock32Regular width={20} height={20} />
                     </button>
                     <button
                         onClick={() => editor.chain().focus().toggleBlockquote().run()}
                         className={editorState.isBlockquote ? 'is-active' : ''}
                     >
-                        <FluentTextQuote32Filled className='w-5 h-5' />
+                        <FluentTextQuote32Filled width={20} height={20} />
                     </button>
                     <button onClick={() => editor.chain().focus().setHorizontalRule().run()}> <FluentLineHorizontal128Regular className='w-5 h-5' /> </button>
                     <button onClick={() => editor.chain().focus().setHardBreak().run()}>
-                        <FluentArrowEnterLeft24Filled className="w-5 h-5" />
+                        <FluentArrowEnterLeft24Filled width={20} height={20} />
                     </button>
                     <button onClick={() => editor.chain().focus().undo().run()} disabled={!editorState.canUndo}>
                         Undo
@@ -204,10 +204,15 @@ export default function EditorJS({ note, updateNote }: { note: Notes, keyboardSt
         })
     }
 
+
     return (
-        <div className="relative h-svh">
-            <MenuBar editor={editor} />
-            <EditorContent editor={editor} onFocus={() => setIsFocus(true)} onBlur={() => setIsFocus(false)} />
+
+        <div style={{ width: '100vw', overflow: 'hidden' }}>
+            <style dangerouslySetInnerHTML={{ __html: styles }}></style>
+            <div style={{ position: "relative", height: "100svh" }}>
+                <MenuBar editor={editor} />
+                <EditorContent editor={editor} onFocus={() => setIsFocus(true)} onBlur={() => setIsFocus(false)} />
+            </div>
         </div>
     )
 }

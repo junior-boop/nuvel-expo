@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Andada+Pro:ital,wght@0,400..840;1,400..840&display=swap');
+export default `
+    @import url('https://fonts.googleapis.com/css2?family=Andada+Pro:ital,wght@0,400..840;1,400..840&display=swap');
 @import "tailwindcss";
 
 
@@ -513,26 +514,26 @@ p {
     display: flex;
     width: 100vw;
     overflow-y: hidden;
+    
+}
 
-    button {
+.control-group button {
         display: inline-block;
         height: 47px;
         padding: 0 12px;
+        border : none;
+        background-color : white;
     }
 
-
-    &>div {
-        padding: 0 .3rem;
+.control-group > div {
+        padding: 0 .2rem;
     }
-
-    .button-group {
+.control-group .button-group {
         width: max-content;
         display: flex;
         align-items: center;
-
-
-        bottom.is-active {
+    }
+control-groupe .button-group bottom.is-active {
             background-color: "#999";
         }
-    }
-}
+`;
