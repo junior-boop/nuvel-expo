@@ -3,18 +3,11 @@ import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useCallback, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { DatabaseProvider } from '@/context/database.context';
-
-import * as AiStore from "@/Database/ai";
-import * as Groups from "@/Database/groups";
-import * as Notes from "@/Database/notes";
-import * as Session from "@/Database/session";
-import * as Sync from '@/Database/sync_event';
-import * as Users from "@/Database/users";
 
 
 export {
@@ -30,24 +23,18 @@ export const unstable_settings = {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
+function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
 
-  const initialisationDatabase = useCallback(async () => {
-    await Sync.createEvent()
-    await Users.createTable()
-    await Groups.createtable()
-    await Notes.createdtable()
-    await Session.createTable()
-    await AiStore.createTable()
-  }, [])
+  const [session, setSession] = useState<Partial<Session> | null>(null)
 
-  useEffect(() => {
-    initialisationDatabase()
-  }, [])
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
@@ -64,6 +51,10 @@ export default function RootLayout() {
     return null;
   }
 
+
+  // if (session) {
+  //   Redirect('login')
+  // }
 
 
   return <RootLayoutNav />;
@@ -82,6 +73,7 @@ function RootLayoutNav() {
           <Stack.Screen name='groupeitems' options={{ headerShown: true, headerShadowVisible: false, animation: 'fade_from_bottom', headerTitle: '' }} />
           <Stack.Screen name="login" options={{ headerShown: false, contentStyle: { backgroundColor: "#fff" } }} />
           <Stack.Screen name="profils" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
+          <Stack.Screen name="biblepage" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
         </Stack>
       </DatabaseProvider>
     </ThemeProvider>

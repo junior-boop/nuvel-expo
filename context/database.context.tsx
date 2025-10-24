@@ -1,7 +1,11 @@
 import { QueryForTable } from '@/constants/Queryuilder';
+import * as AiStore from '@/Database/ai';
+import * as BibleVerse from "@/Database/bible.content";
+import * as BibleMetadata from "@/Database/bible.metadata";
 import * as Groups from '@/Database/groups';
 import * as Notes from '@/Database/notes';
 import * as Session from '@/Database/session';
+import * as Sync from '@/Database/sync_event';
 import * as User from '@/Database/users';
 import React, {
     createContext,
@@ -12,7 +16,7 @@ import React, {
     useMemo,
     useState
 } from 'react';
-import type { Groups as GroupsType, Notes as NotesType, Session as SessionType, User as UserType } from '../Database/db';
+import type { BibleMetadata as BibleMetadataType, Groups as GroupsType, Notes as NotesType, Session as SessionType, User as UserType } from '../Database/db';
 
 // Définition d'un type pour les erreurs de base de données
 type DatabaseError = {
@@ -27,6 +31,7 @@ interface DatabaseContextType {
     groupsQuery: QueryForTable<GroupsType> | null;
     session: SessionType | null;
     usersQuery: QueryForTable<UserType> | null;
+    biblemetadatState: QueryForTable<BibleMetadataType> | null;
     isLoading: boolean;
     error: DatabaseError | null;
     addNote: (noteData: Partial<NotesType>) => Promise<NotesType | undefined>;
@@ -40,6 +45,8 @@ interface DatabaseContextType {
     addGroup: (data: GroupsType) => Promise<GroupsType>;
     updatedGroup: (data: GroupsType) => Promise<GroupsType>;
     deletedGroup: (id: string) => Promise<Boolean>;
+    addBible: (data: BibleMetadataType) => Promise<Partial<BibleMetadataType> | undefined>;
+    deletedBible: (id: string) => Promise<void>;
     clearError: () => void;
 }
 
@@ -50,6 +57,8 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     const [groupsQuery, setGroups] = useState<QueryForTable<GroupsType> | null>(null);
     const [usersQuery, setUsers] = useState<QueryForTable<UserType> | null>(null);
     const [session, setSession] = useState<SessionType | null>(null);
+    const [biblemetadatState, setBibleMetadataState] = useState<QueryForTable<BibleMetadataType> | null>(null);
+
 
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<DatabaseError | null>(null);
@@ -69,33 +78,46 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         setError(null);
     }, []);
 
+
+
     const loadInitialData = useCallback(async () => {
         setIsLoading(true);
-        await Notes.createdtable();
-        await Groups.createtable();
+        await Notes.createdtable()
+        await Groups.createtable()
+        await User.createTable()
+        await Session.createTable()
+        await BibleMetadata.createTable()
+        await BibleVerse.createTable()
+        await AiStore.createTable()
+        await Sync.createEvent()
         clearError();
         try {
-            const [notesResult, groupesResult, sessionResult, userResult] = await Promise.all([
+            const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, bibleVerseResult] = await Promise.all([
                 Notes.getall(),
                 Groups.getall(),
                 Session.get(),
-                User.getAll()
+                User.getAll(),
+                BibleMetadata.getall(),
+                BibleVerse.getall()
             ]);
             const notesArray = new QueryForTable<NotesType>(notesResult || []);
             const groupArray = new QueryForTable<GroupsType>(groupesResult || []);
             const userArray = new QueryForTable<UserType>(userResult || []);
-            console.log(userResult)
+            const bibleMetadataArray = new QueryForTable<BibleMetadataType>(bibleMetadataResult || []);
+
 
             setUsers(userArray);
             setGroups(groupArray);
             setNotes(notesArray);
             setSession(sessionResult || null);
+            setBibleMetadataState(bibleMetadataArray)
         } catch (error) {
             handleError(error, 'initial data loading');
         } finally {
             setIsLoading(false);
         }
     }, [handleError, clearError]);
+
 
     useEffect(() => {
         loadInitialData();
@@ -231,11 +253,35 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [loadInitialData])
 
+    const addBible = useCallback(async (data: BibleMetadataType) => {
+        clearError();
+        try {
+            const result = await BibleMetadata.created(data);
+            if (result) loadInitialData();
+            return result;
+        } catch (error) {
+            handleError(error, 'adding bible');
+        }
+    }, [loadInitialData])
+
+    const deletedBible = useCallback(async (id: string) => {
+        clearError();
+        try {
+            const result = await BibleMetadata.deleted(id);
+            if (result) loadInitialData();
+            return result
+        } catch (error) {
+            handleError(error, 'deleting bible');
+        }
+    }, [loadInitialData])
+
+
     // Optimisation avec useMemo pour la valeur du contexte
     const contextValue = useMemo(() => ({
         notesQuery,
         groupsQuery,
         usersQuery,
+        biblemetadatState,
         session,
         isLoading,
         error,
@@ -248,6 +294,8 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         toggleNoteArchived,
         addNotetoGroup,
         addGroup,
+        addBible,
+        deletedBible,
         updatedGroup,
         deletedGroup,
         clearError
@@ -255,6 +303,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         notesQuery,
         groupsQuery,
         usersQuery,
+        biblemetadatState,
         session,
         isLoading,
         error,
@@ -267,6 +316,8 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         toggleNoteArchived,
         addNotetoGroup,
         addGroup,
+        addBible,
+        deletedBible,
         updatedGroup,
         deletedGroup,
         clearError

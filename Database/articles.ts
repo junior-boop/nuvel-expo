@@ -11,7 +11,7 @@ const Articles = db.createModel<ArticlesType>("articles", {
   topic: "TEXT",
   appreciation: "TEXT NOT NULL UNIQUE",
   createdAt: "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
-  updatedAt: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+  updatedAt: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
 });
 
 export const createTable = async () => {

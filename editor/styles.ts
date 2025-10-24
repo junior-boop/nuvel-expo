@@ -7,14 +7,19 @@ html {
     font-size: 16px;
 }
 
+* {
+    box-sizing : border-box
+}
+
 /* Conteneur principal de l'éditeur Tiptap */
 .tiptap {
     padding: 1.25rem;
+    padding-buttom : 30px;
     /* min-height: 200px; */
     height: 100%;
-    width: 100dvw;
+    width: 100%;
     outline: none;
-    margin-top: 48px;
+    margin-top: 48px
 }
 
 /* Paragraphes */
@@ -187,11 +192,10 @@ p {
 
 /* Citations */
 .tiptap blockquote {
-    border-left: 4px solid #d1d5db;
+    border-left: 4px solid #777;
     padding-left: 1rem;
     margin: 1rem 0;
     font-style: italic;
-    color: #6b7280;
 }
 
 /* Blocs de code */
@@ -222,13 +226,13 @@ p {
 .tiptap img {
     max-width: 100%;
     height: auto;
-    border-radius: 0.5rem;
+    border-radius: 0.1rem;
     margin: 1rem 0;
     display: block;
 }
 
 .tiptap img.ProseMirror-selectednode {
-    outline: 3px solid #3b82f6;
+    outline: none;
 }
 
 /* Tableaux */
@@ -518,11 +522,24 @@ p {
 }
 
 .control-group button {
-        display: inline-block;
+        display: inline-flex;
         height: 47px;
         padding: 0 12px;
         border : none;
         background-color : white;
+        align-items: center;
+    }
+.control-group button.long-btn {
+        display: inline-flex;
+        height: 40px;
+        padding: 0 12px;
+        border : none;
+        background-color : #00edff27;
+        align-items: center;
+        gap : 12px;
+        font-size : 16px;
+        font-weight : 600;
+       /* margin:0 12px */
     }
 
 .control-group > div {
@@ -533,6 +550,28 @@ p {
         display: flex;
         align-items: center;
     }
+.control-group .inputImage {
+    appearance: none;
+    visibility: hidden;
+    width : 90px;
+    height : 40px;
+    position : absolute;
+    background-color : red;
+    top : 0;
+    left : 0;
+}
+
+.control-group .inputImage::before {
+    width: 90px;
+    height: 40px;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: trasparent;
+    visibility: visible;
+    appearance: none;
+}
 control-groupe .button-group bottom.is-active {
             background-color: "#999";
         }

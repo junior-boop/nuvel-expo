@@ -100,3 +100,45 @@ export interface Articles {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface BibleMetadata {
+  name: string;
+  shortname: string;
+  module: string;
+  year: string;
+  publisher: string | null;
+  owner: string | null;
+  description: string;
+  lang: string;
+  lang_short: string;
+  copyright: number;
+  copyright_statement: string;
+  url: string | null;
+  citation_limit: number;
+  restrict: number;
+  italics: number;
+  strongs: number;
+  red_letter: number;
+  paragraph: number;
+  official: number;
+  research: number;
+  module_version: string;
+}
+
+// Type pour un verset
+export interface BibleVerse {
+  id: string;
+  book_id: string;
+  book_name: string;
+  book: number;
+  chapter: number;
+  verse: number;
+  text: string;
+}
+
+// Type pour l'objet Bible complet
+export interface BibleData {
+  metadata: BibleMetadata;
+  verses: BibleVerse[];
+  lien: string;
+}

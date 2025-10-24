@@ -90,3 +90,17 @@ export function FluentArrowEnterLeft24Filled(props: SVGProps<SVGSVGElement>) {
         <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<path fill="currentColor" d="M21 4a1 1 0 0 1 .993.883L22 5v6.5a3.5 3.5 0 0 1-3.308 3.495L18.5 15H5.415l3.292 3.293a1 1 0 0 1 .083 1.32l-.083.094a1 1 0 0 1-1.32.083l-.094-.083l-5-5a1 1 0 0 1-.097-.112l-.071-.11l-.054-.114l-.035-.105l-.025-.117l-.007-.06L2 14l.003-.075l.017-.126l.03-.111l.044-.111l.052-.098l.064-.092l.083-.094l5-5a1 1 0 0 1 1.497 1.32l-.083.094L5.415 13H18.5a1.5 1.5 0 0 0 1.493-1.355L20 11.5V5a1 1 0 0 1 1-1" /></svg>
     )
 }
+
+
+export function FluentImageAdd32Regular(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 32 32" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<path fill="currentColor" d="M8.5 16a7.5 7.5 0 1 0 0-15a7.5 7.5 0 0 0 0 15m1-12.25V7.5h3.75a.75.75 0 0 1 0 1.5H9.5v3.75a.75.75 0 0 1-1.5 0V9H4.25a.75.75 0 0 1 0-1.5H8V3.75a.75.75 0 0 1 1.5 0M3 15.625c.61.47 1.28.865 2 1.17V24.5c0 .29.05.567.14.825l9.092-9.093a2.5 2.5 0 0 1 3.536 0l9.093 9.093c.09-.258.139-.536.139-.825v-17A2.5 2.5 0 0 0 24.5 5h-7.706a9 9 0 0 0-1.17-2H24.5A4.5 4.5 0 0 1 29 7.5v17a4.5 4.5 0 0 1-4.5 4.5h-17A4.5 4.5 0 0 1 3 24.5zm22.5 11.167l-9.146-9.146a.5.5 0 0 0-.707 0L6.5 26.792c.306.134.644.208.999.208h17a2.5 2.5 0 0 0 1-.208M18 11a3.5 3.5 0 1 1 7 0a3.5 3.5 0 0 1-7 0m3.5-1.5a1.5 1.5 0 1 0 0 3a1.5 1.5 0 0 0 0-3" /></svg>
+    )
+}
+
+
+export function FluentTaskList24Filled(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<path fill="currentColor" d="M6.707 3.293a1 1 0 0 0-1.414 0L4 4.586l-.293-.293a1 1 0 0 0-1.414 1.414l1 1a1 1 0 0 0 1.414 0l2-2a1 1 0 0 0 0-1.414m14.296 13.7H10L9.883 17A1 1 0 0 0 10 18.993h11.003l.117-.006a1 1 0 0 0-.117-1.994m0-5.993H10l-.117.007A1 1 0 0 0 10 13h11.003l.117-.007A1 1 0 0 0 21.003 11m0-6H10l-.117.007A1 1 0 0 0 10 7h11.003l.117-.007A1 1 0 0 0 21.003 5M6.707 16.293a1 1 0 0 0-1.414 0L4 17.586l-.293-.293a1 1 0 0 0-1.414 1.414l1 1a1 1 0 0 0 1.414 0l2-2a1 1 0 0 0 0-1.414m-1.414-6.5a1 1 0 0 1 1.414 1.414l-2 2a1 1 0 0 1-1.414 0l-1-1a1 1 0 1 1 1.414-1.414l.293.293z" /></svg>
+    )
+}

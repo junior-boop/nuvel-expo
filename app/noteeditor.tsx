@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { Keyboard, KeyboardAvoidingView, Platform } from "react-native";
 
 export default function NoteEditor() {
-    const [isKeyboard, setIskeyboard] = useState<{ height: number, screenY: number, width: number } | undefined>(undefined)
+    const [isKeyboard, setIskeyboard] = useState<{ height: number | string, screenY: number | string, width?: number } | undefined>(undefined)
     const data = useLocalSearchParams()
     const { notesQuery, updateNote } = useDatabase()
 
@@ -15,8 +15,12 @@ export default function NoteEditor() {
     const Note = notesQuery?.findById(data.id as string) as Notes
     useEffect(() => {
         Keyboard.addListener("keyboardDidHide", () => {
+            setIskeyboard({ height: "100vh", screenY: "100vh" })
+        })
+        Keyboard.addListener("keyboardDidShow", () => {
             setIskeyboard(Keyboard.metrics())
         })
+
     }, [Keyboard.listenerCount])
 
     const handleUpdate = async (data: Partial<Notes>) => {
@@ -28,7 +32,8 @@ export default function NoteEditor() {
             <Stack.Screen options={{ animation: "fade_from_bottom", headerShadowVisible: false, title: '' }} />
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={{ flex: 1 }}>
+                style={{ flex: 1 }}
+            >
                 <EditorJS note={Note} updateNote={(data) => handleUpdate(data)} />
             </KeyboardAvoidingView>
         </PageLayout_3>

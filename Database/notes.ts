@@ -10,9 +10,9 @@ const Notes = db.createModel<NotesType>("notes", {
   pinned: "INTEGER",
   archived: "INTEGER",
   grouped: "TEXT NULL",
-  created: "DATETIME DEFAULT CURRENT_TIMESTAMP",
-  modified: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-  version: "INT NOT NULL DEFAULT 1",
+  created: "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
+  modified: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+  version: "INTEGER NOT NULL DEFAULT 1",
 });
 
 export const createdtable = async () => {

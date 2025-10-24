@@ -7,7 +7,7 @@ const Users = db.createModel<UserType>("users", {
   first_name: "TEXT NOT NULL",
   domination: "TEXT NULL",
   biography: "TEXT NULL",
-  church_status: "TEXT NOT NULL DEFAULT Menber",
+  church_status: "TEXT NOT NULL DEFAULT Member",
   email: "TEXT NOT NULL UNIQUE",
   photo: "TEXT NULL",
   lastlogin: "TEXT",

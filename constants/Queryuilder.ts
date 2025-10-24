@@ -1,8 +1,6 @@
 // Types et interfaces de base
 interface BaseEntity {
   id: string;
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 interface QueryOptions {
@@ -181,9 +179,9 @@ export class QueryForTable<T extends BaseEntity> {
   }
 
   // Fusionner avec une autre instance de QueryBuilder
-  merge(other: QueryBuilder<T>): QueryBuilder<T> {
+  merge(other: QueryForTable<T>): QueryForTable<T> {
     const mergedArray = [...this.findAll(), ...other.findAll()];
-    return new QueryBuilder(mergedArray);
+    return new QueryForTable(mergedArray);
   }
 
   // Vider la collection
@@ -249,8 +247,6 @@ export class QueryForTable<T extends BaseEntity> {
       const updatedItem = {
         ...existingItem,
         ...item,
-        createdAt: existingItem.createdAt, // Conserver la date de création
-        updatedAt: new Date(),
       };
       this.dataMap.set(item.id, updatedItem);
     } else {
@@ -313,17 +309,17 @@ export class QueryForTable<T extends BaseEntity> {
   }
 
   // Créer un nouvel QueryBuilder à partir d'un sous-ensemble
-  filter(predicate: PredicateFunction<T>): QueryBuilder<T> {
+  filter(predicate: PredicateFunction<T>): QueryForTable<T> {
     const filteredItems = this.where(predicate);
-    return new QueryBuilder(filteredItems);
+    return new QueryForTable(filteredItems);
   }
 
   // Transformer les données
   map<U extends BaseEntity>(
     callback: (item: T, index: number, array: T[]) => U
-  ): QueryBuilder<U> {
+  ): QueryForTable<U> {
     const transformedItems = this.findAll().map(callback);
-    return new QueryBuilder(transformedItems);
+    return new QueryForTable(transformedItems);
   }
 
   // Réduire la collection à une valeur

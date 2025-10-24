@@ -60,7 +60,11 @@ export default function NoteItems({ note }: { note: NotesType }) {
 
     const block_titre = () => {
         const t = data.content.filter(el => el.type === "heading")
-        return t[0].content[0].text
+        if (t.length === 0) {
+            return null
+        } else {
+            return t[0].content[0].text
+        }
     }
 
     const handleCloseSelect = () => {

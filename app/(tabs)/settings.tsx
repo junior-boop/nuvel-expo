@@ -1,22 +1,25 @@
-import { Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { Text, View } from '@/components/Themed';
 import { convert } from '@/constants/convert';
 import { Stack } from 'expo-router';
 
-import { FluentChevronRight32Regular } from '@/constants/icons';
+import { w } from '@/constants/Colors';
+import { BxsBible, FluentChevronRight32Regular } from '@/constants/icons';
 import { useDatabase } from "@/context/database.context";
 import { router } from "expo-router";
+import { StatusBar } from 'expo-status-bar';
 
 export default function TabTwoScreen() {
-  const { usersQuery, session } = useDatabase()
+  const { usersQuery, session, biblemetadatState } = useDatabase()
   const userinfo = usersQuery?.findById(session?.iduser as string)
+  const biblelist = biblemetadatState?.findAll()
 
-  console.log(userinfo, session)
   return (
     <View style={styles.container}>
+      <StatusBar style="dark" />
       <Stack.Screen options={{ headerShown: true, headerShadowVisible: false, title: "Settings" }} />
-      <View style={{ paddingHorizontal: convert(16), paddingTop: convert(16) }}>
+      <ScrollView style={{ paddingHorizontal: convert(16), paddingTop: convert(16) }}>
         <Text style={{ ...styles.title, marginBottom: convert(16) }}>Account</Text>
         <View style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee' }}>
           <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>Email adress</Text>
@@ -40,8 +43,34 @@ export default function TabTwoScreen() {
             </View>
           </View>
         </TouchableOpacity>
-      </View>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
+        <View style={{ height: 40, width: 200 }} />
+        <Text style={{ ...styles.title, marginBottom: convert(16) }}>Bible Downloads</Text>
+        {
+          biblelist?.length === 0 && (<View style={{ marginBottom: 24 }}>
+            <Text style={{ fontSize: convert(16), color: "#777", fontStyle: 'italic' }}>
+              No Bibles available rigth now. Just click "Add a Bible" to upload one
+            </Text>
+          </View>)
+        }
+        <View style={{ marginBottom: convert(14), gap: 8 }}>
+          {
+            biblelist?.map((bible, index) => (
+              <View style={{ backgroundColor: '#004f9913', padding: 14 }} key={index}>
+                <Text style={{ fontWeight: 'bold', fontSize: convert(16) }}>{bible.name}</Text>
+              </View>))
+          }
+        </View>
+        <TouchableOpacity onPress={() => router.navigate('/biblepage')} style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee', flexDirection: 'row', alignItems: 'center', justifyContent: "space-between" }}>
+          <View>
+            <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>Add a Bible</Text>
+            <Text style={{ fontSize: convert(16), width: convert(w * 70 / 100) }}>Download the version you'll use in your notes</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "space-between", gap: convert(6) }}>
+            <BxsBible width={convert(28)} height={convert(28)} color={'#333'} />
+            <FluentChevronRight32Regular width={convert(20)} height={convert(20)} />
+          </View>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }

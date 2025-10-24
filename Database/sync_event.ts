@@ -16,7 +16,7 @@ const sync_event = db.createModel<Sync_Event>("sync_event", {
   elementid: "TEXT NOT NULL",
   need_sync: "BOOLEAN DEFAULT 0",
   table_name: "TEXT NOT NULL",
-  timestamp: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+  timestamp: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
 });
 
 export const createEvent = async () => {

@@ -259,6 +259,12 @@ export function FluentCloudArrowUp32Regular(props: SvgProps) {
     )
 }
 
+export function FluentCheckmark28Filled(props: SvgProps) {
+    return (
+        <Svg width="1em" height="1em" viewBox="0 0 12 12" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<Path fill="currentColor" d="M9.765 3.205a.75.75 0 0 1 .03 1.06l-4.25 4.5a.75.75 0 0 1-1.075.015L2.22 6.53a.75.75 0 0 1 1.06-1.06l1.705 1.704l3.72-3.939a.75.75 0 0 1 1.06-.03" /></Svg>
+    )
+}
+
 
 
 
@@ -271,5 +277,11 @@ export function SvgSpinnersRingResize(props: SvgProps) {
 export function FluentChevronRight32Regular(props: SvgProps) {
     return (
         <Svg width="1em" height="1em" viewBox="0 0 32 32" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<Path fill="currentColor" d="M11.293 26.707a1 1 0 0 1 0-1.414L20.586 16l-9.293-9.293a1 1 0 0 1 1.414-1.414l10 10a1 1 0 0 1 0 1.414l-10 10a1 1 0 0 1-1.414 0" /></Svg>
+    )
+}
+
+export function BxsBible(props: SvgProps) {
+    return (
+        <Svg width="1em" height="1em" viewBox="0 0 24 24" {...props}>{/* Icon from BoxIcons Solid by Atisa - https://creativecommons.org/licenses/by/4.0/ */}<Path fill="currentColor" d="M6 22h15v-2H6.012C5.55 19.988 5 19.805 5 19s.55-.988 1.012-1H21V4a2 2 0 0 0-2-2H6c-1.206 0-3 .799-3 3v14c0 2.201 1.794 3 3 3M8 7h3V5h2v2h3v2h-3v6h-2V9H8z" /></Svg>
     )
 }

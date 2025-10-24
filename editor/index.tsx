@@ -1,17 +1,34 @@
 "use dom"
 
 import { Notes } from '@/Database/db'
+import Image from '@tiptap/extension-image'
+import { TaskItem, TaskList } from '@tiptap/extension-list'
 import { TextStyleKit } from '@tiptap/extension-text-style'
 import type { Editor } from '@tiptap/react'
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import React, { useCallback, useEffect, useState } from 'react'
-import { FluentAppsList20Filled, FluentArrowEnterLeft24Filled, FluentCode24Regular, FluentCodeBlock32Regular, FluentLineHorizontal128Regular, FluentTextBold24Regular, FluentTextHeader1Lines24Regular, FluentTextHeader2Lines24Regular, FluentTextHeader3Lines24Regular, FluentTextItalic24Filled, FluentTextNumberList24Regular, FluentTextQuote32Filled, FluentTextStrikethroughS24Regular } from './editor_icons'
+import { FluentAppsList20Filled, FluentArrowEnterLeft24Filled, FluentCode24Regular, FluentCodeBlock32Regular, FluentImageAdd32Regular, FluentLineHorizontal128Regular, FluentTaskList24Filled, FluentTextBold24Regular, FluentTextHeader1Lines24Regular, FluentTextHeader2Lines24Regular, FluentTextHeader3Lines24Regular, FluentTextItalic24Filled, FluentTextNumberList24Regular, FluentTextQuote32Filled, FluentTextStrikethroughS24Regular } from './editor_icons'
 import styles from './styles'
 
-const extensions = [TextStyleKit, StarterKit]
+const extensions = [TextStyleKit, StarterKit, Image, TaskList,
+    TaskItem.configure({
+        nested: true,
+    })]
 
 function MenuBar({ editor }: { editor: Editor }) {
+
+    const handleImage = ({ target }: { target: HTMLInputElement }) => {
+
+        if (target.files) {
+            const readfile = new FileReader()
+            readfile.onload = () => {
+                editor.chain().focus().setImage({ src: readfile.result as string }).run()
+            }
+            readfile.readAsDataURL(target.files[0])
+        }
+    }
+
     // Read the current editor's state, and re-render the component when it changes
     const editorState = useEditorState({
         editor,
@@ -124,12 +141,25 @@ function MenuBar({ editor }: { editor: Editor }) {
                     <button onClick={() => editor.chain().focus().setHardBreak().run()}>
                         <FluentArrowEnterLeft24Filled width={20} height={20} />
                     </button>
-                    <button onClick={() => editor.chain().focus().undo().run()} disabled={!editorState.canUndo}>
+                    <div style={{ position: 'relative' }}>
+                        <input type='file' className='inputImage' onChange={handleImage} />
+                        <button className='long-btn'>
+                            <FluentImageAdd32Regular width={20} height={20} />
+                            <span>Image</span>
+                        </button>
+                    </div>
+                    <button
+                        onClick={() => editor.chain().focus().toggleTaskList().run()}
+                        className={editor.isActive('taskList') ? 'is-active' : ''}
+                    >
+                        <FluentTaskList24Filled width={20} height={20} />
+                    </button>
+                    {/* <button onClick={() => editor.chain().focus().undo().run()} disabled={!editorState.canUndo}>
                         Undo
                     </button>
                     <button onClick={() => editor.chain().focus().redo().run()} disabled={!editorState.canRedo}>
                         Redo
-                    </button>
+                    </button> */}
                 </div>
             </div>
         </div>
@@ -207,7 +237,7 @@ export default function EditorJS({ note, updateNote }: { note: Notes, keyboardSt
 
     return (
 
-        <div style={{ width: '100vw', overflow: 'hidden' }}>
+        <div style={{ width: '100vw' }}>
             <style dangerouslySetInnerHTML={{ __html: styles }}></style>
             <div style={{ position: "relative", height: "100svh" }}>
                 <MenuBar editor={editor} />

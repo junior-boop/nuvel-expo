@@ -5,8 +5,8 @@ import { generateUUID as uuidv4 } from "./uuid";
 const Groups = db.createModel<GroupeType>("groups", {
   id: "TEXT PRIMARY KEY NOT NULL",
   name: "TEXT NOT NULL",
-  created: "DATETIME DEFAULT CURRENT_TIMESTAMP",
-  modified: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+  created: "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
+  modified: "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
 });
 
 export const createtable = async () => {
