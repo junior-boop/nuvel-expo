@@ -1,6 +1,7 @@
 "use dom"
 
-import { Notes } from '@/Database/db'
+import BibleVerset from '@/components/bible_component/extension'
+import { BibleMetadata, Notes } from '@/Database/db'
 import Image from '@tiptap/extension-image'
 import { TaskItem, TaskList } from '@tiptap/extension-list'
 import { TextStyleKit } from '@tiptap/extension-text-style'
@@ -8,15 +9,26 @@ import type { Editor } from '@tiptap/react'
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import React, { useCallback, useEffect, useState } from 'react'
-import { FluentAppsList20Filled, FluentArrowEnterLeft24Filled, FluentCode24Regular, FluentCodeBlock32Regular, FluentImageAdd32Regular, FluentLineHorizontal128Regular, FluentTaskList24Filled, FluentTextBold24Regular, FluentTextHeader1Lines24Regular, FluentTextHeader2Lines24Regular, FluentTextHeader3Lines24Regular, FluentTextItalic24Filled, FluentTextNumberList24Regular, FluentTextQuote32Filled, FluentTextStrikethroughS24Regular } from './editor_icons'
+import { BxsBible, FluentAppsList20Filled, FluentArrowEnterLeft24Filled, FluentCode24Regular, FluentCodeBlock32Regular, FluentImageAdd32Regular, FluentLineHorizontal128Regular, FluentTaskList24Filled, FluentTextBold24Regular, FluentTextHeader1Lines24Regular, FluentTextHeader2Lines24Regular, FluentTextHeader3Lines24Regular, FluentTextItalic24Filled, FluentTextNumberList24Regular, FluentTextQuote32Filled, FluentTextStrikethroughS24Regular, IcSharpArrowDownward } from './editor_icons'
 import styles from './styles'
 
-const extensions = [TextStyleKit, StarterKit, Image, TaskList,
+const extensions = [BibleVerset, TextStyleKit, StarterKit, Image, TaskList,
     TaskItem.configure({
         nested: true,
     })]
 
-function MenuBar({ editor }: { editor: Editor }) {
+function MenuBar({ editor, biblemetadatState, trie }: {
+    editor: Editor, biblemetadatState: BibleMetadata[], trie: (data: [book_id: string, book_name: string, chapter: string, vers1?: string, vers2?: string]) => Promise<{
+        ref_bible: string;
+        content: {
+            n: string | number | undefined;
+            text: string | undefined;
+        }[];
+    } | undefined>
+}) {
+    const [bible_id, setBible_id] = useState<string | null>(null)
+    const [openBible, setOpenBible] = useState(false)
+    const [verse, setVerse] = useState<string>("")
 
     const handleImage = ({ target }: { target: HTMLInputElement }) => {
 
@@ -60,6 +72,31 @@ function MenuBar({ editor }: { editor: Editor }) {
         },
     })
 
+    const handleBible = (el: BibleMetadata) => {
+        // @ts-ignore
+        setBible_id(el.id)
+    }
+
+
+
+    const handleVerse = async (verse: string) => {
+        const check = /[;:\-v]/g
+        const replace = verse.replace(RegExp(check), ' ')
+        const spliter = replace.split(RegExp(/\s+/g)) as [book_name: string, chapter: string, vers1?: string, vers2?: string]
+        if (bible_id !== null) {
+            const result = await trie([bible_id, ...spliter])
+            if (verse.trim() !== "") {
+                if (result !== undefined) {
+                    editor?.commands.setVerset(result)
+                    setOpenBible(false)
+                    setVerse("")
+                }
+            }
+        }
+
+    }
+
+
     return (
         <div className="control-group">
             <div>
@@ -92,8 +129,6 @@ function MenuBar({ editor }: { editor: Editor }) {
                     >
                         <FluentCode24Regular width={20} height={20} />
                     </button>
-                    {/* <button onClick={() => editor.chain().focus().toggleMark("italic").run()}>Clear marks</button>
-                    <button onClick={() => editor.chain().focus().clearNodes().run()}>Clear nodes</button> */}
 
                     <button
                         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
@@ -142,6 +177,12 @@ function MenuBar({ editor }: { editor: Editor }) {
                         <FluentArrowEnterLeft24Filled width={20} height={20} />
                     </button>
                     <div style={{ position: 'relative' }}>
+                        <button onClick={() => setOpenBible(!openBible)}>
+                            <BxsBible width={20} height={20} />
+                        </button>
+
+                    </div>
+                    <div style={{ position: 'relative' }}>
                         <input type='file' className='inputImage' onChange={handleImage} />
                         <button className='long-btn'>
                             <FluentImageAdd32Regular width={20} height={20} />
@@ -154,19 +195,40 @@ function MenuBar({ editor }: { editor: Editor }) {
                     >
                         <FluentTaskList24Filled width={20} height={20} />
                     </button>
-                    {/* <button onClick={() => editor.chain().focus().undo().run()} disabled={!editorState.canUndo}>
-                        Undo
-                    </button>
-                    <button onClick={() => editor.chain().focus().redo().run()} disabled={!editorState.canRedo}>
-                        Redo
-                    </button> */}
                 </div>
             </div>
+            {
+                openBible && (<div className='input-group'>
+                    <div className='input'>
+                        <input value={verse} onChange={({ target }) => setVerse(target.value)} type="text" placeholder='Type your bible ref' />
+                        <button onClick={() => handleVerse(verse)}>
+                            <IcSharpArrowDownward width={25} height={25} />
+                        </button>
+                    </div>
+                    <div className='books'>
+                        <div>
+                            {
+                                biblemetadatState?.map((el, key) => <BibleItem
+                                    key={key} el={el}
+                                    onClick={() => { handleBible(el) }}
+                                    // @ts-ignore
+                                    isActived={bible_id === el.id}
+                                />)
+                            }
+                        </div>
+                    </div>
+                </div>)
+            }
         </div>
     )
 }
 
-export default function EditorJS({ note, updateNote }: { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void }) {
+
+const BibleItem = ({ el, isActived, onClick }: { el: BibleMetadata, onClick: () => void, isActived: boolean }) => {
+    return (<button onClick={onClick} style={{ backgroundColor: isActived ? "#0002" : "#eee" }}>{el.name}</button>)
+}
+
+export default function EditorJS({ note, updateNote, biblemetadatState, trie }: { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any }) {
     const [isFocus, setIsFocus] = useState(false)
     const [content, setContent] = useState(note !== undefined && JSON.parse(note.body))
     const [isTyping, setIsTyping] = useState(false)
@@ -225,22 +287,13 @@ export default function EditorJS({ note, updateNote }: { note: Notes, keyboardSt
 
     }, [content])
 
-    const handlegoback = () => {
-        updateNote({
-            id: note.id,
-            body: content,
-            version: version,
-            html: html
-        })
-    }
-
 
     return (
 
         <div style={{ width: '100vw' }}>
             <style dangerouslySetInnerHTML={{ __html: styles }}></style>
             <div style={{ position: "relative", height: "100svh" }}>
-                <MenuBar editor={editor} />
+                <MenuBar editor={editor} biblemetadatState={biblemetadatState} trie={trie} />
                 <EditorContent editor={editor} onFocus={() => setIsFocus(true)} onBlur={() => setIsFocus(false)} />
             </div>
         </div>

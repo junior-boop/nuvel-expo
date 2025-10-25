@@ -1,126 +1,89 @@
-import Genese from "./Gen.json";
-import Exode from "./Exo.json";
-import Levitique from "./Lev.json";
-import Nombre from "./Nbr.json";
-import Deut from "./Deut.json";
-import Josue from "./Jos.json";
-import juges from "./Jug.json";
-import Ruth from "./Rut.json";
-import Sam1 from "./1Sam.json";
-import Sam2 from "./2Sam.json";
-import Rois1 from "./1Rois.json";
-import Rois2 from "./2Rois.json";
-import Chron1 from "./1Ch.json";
-import Chron2 from "./2Ch.json";
-import Esdra from "./Esd.json";
-import Nehemie from "./Neh.json";
-import Esth from "./Est.json";
-import Job from "./Job.json";
-import Psaum from "./Ps.json";
-import Prov from "./Pr.json";
-import Eccl from "./Ecc.json";
-import Cantic from "./Can.json";
-import Essaie from "./Es.json";
-import Jeremie from "./Jer.json";
-import Lam from "./Lam.json";
-import Eze from "./Eze.json";
-import Dan from "./Dan.json";
-import Ose from "./Os.json";
-import Joel from "./Joel.json";
-import Amos from "./Amos.json";
-import Abdias from "./Abd.json";
-import Jonas from "./Jon.json";
-import Miche from "./Mich.json";
-import Nahum from "./Nah.json";
-import habacuc from "./Hab.json";
-import Sophonie from "./Soph.json";
-import Agge from "./Agg.json";
-import Zach from "./Zach.json";
-import Malachi from "./Mal.json";
-import Matt from "./Matt.json";
-import Marc from "./Marc.json";
-import Luc from "./Luc.json";
-import Jean from "./Jn.json";
-import Act from "./Act.json";
-import Romain from "./Rom.json";
-import Cor1 from "./1Cor.json";
-import Cor2 from "./2Cor.json";
-import Gal from "./Gal.json";
-import Eph from "./Eph.json";
-import Phil from "./Phil.json";
-import Colo from "./Col.json";
-import Thes1 from "./1The.json";
-import Thes2 from "./2The.json";
-import Tim1 from "./1Tim.json";
-import Tim2 from "./2Tim.json";
-import Tit from "./Tit.json";
-import Philemon from "./Phile.json";
-import Heb from "./Heb.json";
-import Jacque from "./Jacq.json";
-import Pier1 from "./1P.json";
-import Pier2 from "./2P.json";
-import Jean1 from "./1Jn.json";
-import Jean2 from "./2jn.json";
-import Jean3 from "./3Jn.json";
-import Jude from "./Jude.json";
-import Apcalipse from "./Apo.json";
+import * as BibleVerse from "@/Database/bible.content";
 
-const data = [
+const listBooks = [
   {
     titre: "Genèse",
-    abr: ["gen", "Gen", "gns", "GNS", "GEN", "Gns", "Gn", "Gn"],
+    abr: [
+      "gen",
+      "Gen",
+      "gns",
+      "GNS",
+      "GEN",
+      "Gns",
+      "Gn",
+      "gn",
+      "Geneses",
+      "GENESES",
+      "GENES",
+      "Genes",
+      "genes",
+      "genese",
+    ],
     index: "A1",
     nbr_chap: 50,
-    livre: Genese,
+    livre: 1,
   },
   {
     titre: "Exode",
-    abr: ["Ex", "Exo", "exo", "ex", "EXO", "EX"],
+    abr: [
+      "Ex",
+      "Exo",
+      "exo",
+      "ex",
+      "EXO",
+      "EX",
+      "EXODE",
+      "Exode",
+      "exode",
+      "exodus",
+      "EXODUS",
+      "Exodus",
+    ],
     index: "A2",
     nbr_chap: 40,
-    livre: Exode,
+    livre: 2,
   },
   {
     titre: "Lévitique",
     abr: ["LV", "Lv", "lv", "LEV", "Lev", "lev"],
     index: "A3",
     nbr_chap: 27,
-    livre: Levitique,
+    livre: 3,
   },
   {
     titre: "Nombres",
     abr: ["NOMB", "Nomb", "nomb", "NBR", "Nbr", "nbr"],
     index: "A4",
     nbr_chap: 36,
-    livre: Nombre,
+    livre: 4,
   },
   {
     titre: "Deutéronome",
     abr: ["DEUT", "Deut", "deut"],
     index: "A5",
     nbr_chap: 34,
-    livre: Deut,
+    livre: 5,
   },
   {
     titre: "Josué",
     abr: ["JOS", "Jos", "jos"],
     index: "A6",
     nbr_chap: 24,
-    livre: Josue,
+    livre: 6,
   },
   {
     titre: "Juges",
     abr: ["JUG", "jug", "jug"],
     index: "A7",
     nbr_chap: 21,
-    livre: juges,
+    livre: 7,
   },
   {
     titre: "Ruth",
-    abr: ["RUT", "Rut", "rut", "ruth", "Ruth"],
+    abr: ["RUT", "Rut", "rut", "ruth", "Ruth", "Rt", "RT", "rt"],
     index: "A8",
     nbr_chap: 4,
-    livre: Ruth,
+    livre: 8,
   },
   {
     titre: "1 Samuel",
@@ -142,7 +105,7 @@ const data = [
     ],
     index: "A9",
     nbr_chap: 31,
-    livre: Sam1,
+    livre: 9,
   },
   {
     titre: "2 Samuel",
@@ -164,7 +127,7 @@ const data = [
     ],
     index: "A10",
     nbr_chap: 24,
-    livre: Sam2,
+    livre: 10,
   },
   {
     titre: "1 Rois",
@@ -182,7 +145,7 @@ const data = [
     ],
     index: "A11",
     nbr_chap: 22,
-    livre: Rois1,
+    livre: 11,
   },
   {
     titre: "2 Rois",
@@ -200,56 +163,56 @@ const data = [
     ],
     index: "A12",
     nbr_chap: 25,
-    livre: Rois2,
+    livre: 12,
   },
   {
     titre: "1 Chroniques",
     abr: ["1CH", "1Ch", "1ch", "1 CH", "1 Ch", "1 ch"],
     index: "A13",
     nbr_chap: 29,
-    livre: Chron1,
+    livre: 13,
   },
   {
     titre: "2 Chroniques",
     abr: ["2CH", "2Ch", "2ch", "2 CH", "2 Ch", "2 ch"],
     index: "A14",
     nbr_chap: 36,
-    livre: Chron2,
+    livre: 14,
   },
   {
     titre: "Esdras",
     abr: ["ESD", "Esd", "esd"],
     index: "A15",
     nbr_chap: 10,
-    livre: Esdra,
+    livre: 15,
   },
   {
     titre: "Néhémie",
     abr: ["NEH", "Neh", "neh", "NH", "Nh", "nh"],
     index: "A16",
     nbr_chap: 13,
-    livre: Nehemie,
+    livre: 16,
   },
   {
     titre: "Esther",
     abr: ["EST", "Est", "est", "Esth", "esth", "ESTH"],
     index: "A17",
     nbr_chap: 10,
-    livre: Esth,
+    livre: 17,
   },
   {
     titre: "Job",
     abr: ["JOB", "job", "jb", "Jb", "JB"],
     index: "A18",
     nbr_chap: 42,
-    livre: Job,
+    livre: 18,
   },
   {
     titre: "Psaumes",
     abr: ["PS", "Ps", "ps"],
     index: "A19",
     nbr_chap: 150,
-    livre: Psaum,
+    livre: 19,
   },
   {
     titre: "Proverbes",
@@ -269,21 +232,21 @@ const data = [
     ],
     index: "A20",
     nbr_chap: 31,
-    livre: Prov,
+    livre: 20,
   },
   {
     titre: "Ecclésiaste",
     abr: ["EC", "Ec", "ec"],
     index: "A21",
     nbr_chap: 12,
-    livre: Eccl,
+    livre: 21,
   },
   {
     titre: "Cantique",
     abr: ["CAN", "Can", "can", "Cant", "CANT", "cant"],
     index: "A22",
     nbr_chap: 8,
-    livre: Cantic,
+    livre: 22,
   },
   {
     titre: "Esaïe",
@@ -309,28 +272,28 @@ const data = [
     ],
     index: "A23",
     nbr_chap: 66,
-    livre: Essaie,
+    livre: 23,
   },
   {
     titre: "Jérémie",
     abr: ["JER", "Jer", "jer", "JR", "Jr", "jr"],
     index: "A24",
     nbr_chap: 52,
-    livre: Jeremie,
+    livre: 24,
   },
   {
     titre: "Lamentations",
     abr: ["LAM", "Lam", "lam"],
     index: "A25",
     nbr_chap: 5,
-    livre: Lam,
+    livre: 25,
   },
   {
     titre: "Ezéchiel",
     abr: ["EZ", "Ez", "ez", "EZE", "Eze", "eze"],
     index: "A26",
     nbr_chap: 48,
-    livre: Eze,
+    livre: 26,
   },
   {
     titre: "Daniel",
@@ -347,70 +310,70 @@ const data = [
     ],
     index: "A27",
     nbr_chap: 12,
-    livre: Dan,
+    livre: 27,
   },
   {
     titre: "Osée",
     abr: ["OS", "Os", "os", "OSE", "Ose", "ose"],
     index: "A28",
     nbr_chap: 14,
-    livre: Ose,
+    livre: 28,
   },
   {
     titre: "Joël",
     abr: ["joel", "JOEL", "Joel"],
     index: "A29",
     nbr_chap: 3,
-    livre: Joel,
+    livre: 29,
   },
   {
     titre: "Amos",
     abr: ["AMOS", "amos", "AM", "Am", "am"],
     index: "A30",
     nbr_chap: 9,
-    livre: Amos,
+    livre: 30,
   },
   {
     titre: "Abdias",
     abr: ["ABD", "Abd", "abd"],
     index: "A31",
     nbr_chap: 1,
-    livre: Abdias,
+    livre: 31,
   },
   {
     titre: "Jonas",
     abr: ["JONAS", "jonas", "Jon", "JON", "jon"],
     index: "A32",
     nbr_chap: 4,
-    livre: Jonas,
+    livre: 32,
   },
   {
     titre: "Michée",
     abr: ["MIC", "Mic", "mic", "MICH", "Mich", "mich"],
     index: "A33",
     nbr_chap: 7,
-    livre: Miche,
+    livre: 33,
   },
   {
     titre: "Nahum",
     abr: ["NAH", "Nah", "nah"],
     index: "A34",
     nbr_chap: 3,
-    livre: Nahum,
+    livre: 34,
   },
   {
     titre: "Habacuc",
     abr: ["HAB", "Hab", "hab"],
     index: "A35",
     nbr_chap: 3,
-    livre: habacuc,
+    livre: 35,
   },
   {
     titre: "Sophonie",
     abr: ["SOPH", "Soph", "soph"],
     index: "A36",
     nbr_chap: 3,
-    livre: Sophonie,
+    livre: 36,
   },
   {
     titre: "Aggée",
@@ -428,7 +391,7 @@ const data = [
     ],
     index: "A37",
     nbr_chap: 2,
-    livre: Agge,
+    livre: 37,
   },
   {
     titre: "Zacharie",
@@ -445,14 +408,14 @@ const data = [
     ],
     index: "A38",
     nbr_chap: 14,
-    livre: Zach,
+    livre: 38,
   },
   {
     titre: "Malachie",
     abr: ["MAL", "Mal", "mal", "malachie", "Malachie", "MALACHIE"],
     index: "A39",
     nbr_chap: 4,
-    livre: Malachi,
+    livre: 39,
   },
   {
     titre: "Matthieu",
@@ -481,35 +444,35 @@ const data = [
     ],
     index: "N1",
     nbr_chap: 28,
-    livre: Matt,
+    livre: 40,
   },
   {
     titre: "Marc",
     abr: ["MARC", "marc", "Marc", "mrc", "MRC", "Mrc"],
     index: "N2",
     nbr_chap: 16,
-    livre: Marc,
+    livre: 41,
   },
   {
     titre: "Luc",
     abr: ["LUC", "luc", "Luc", "lc", "LC", "lc"],
     index: "N3",
     nbr_chap: 24,
-    livre: Luc,
+    livre: 42,
   },
   {
     titre: "Jean",
     abr: ["JN", "Jn", "jn", "Jean", "jean", "JEAN"],
     index: "N4",
     nbr_chap: 21,
-    livre: Jean,
+    livre: 43,
   },
   {
     titre: "Actes",
     abr: ["ACT", "Act", "act", "Actes", "ACTES", "actes"],
     index: "N5",
     nbr_chap: 28,
-    livre: Act,
+    livre: 44,
   },
   {
     titre: "Romains",
@@ -526,7 +489,7 @@ const data = [
     ],
     index: "N6",
     nbr_chap: 16,
-    livre: Romain,
+    livre: 45,
   },
   {
     titre: "1 Corinthiens",
@@ -543,211 +506,222 @@ const data = [
     ],
     index: "N7",
     nbr_chap: 16,
-    livre: Cor1,
+    livre: 46,
   },
   {
     titre: "2 Corinthiens",
     abr: ["2COR", "2Cor", "2cor", "2 COR", "2 Cor", "2 cor"],
     index: "N8",
     nbr_chap: 13,
-    livre: Cor2,
+    livre: 47,
   },
   {
     titre: "Galates",
     abr: ["GAL", "Gal", "gal"],
     index: "N9",
     nbr_chap: 6,
-    livre: Gal,
+    livre: 48,
   },
   {
     titre: "Ephésiens",
     abr: ["EPH", "Eph", "eph"],
     index: "N10",
     nbr_chap: 6,
-    livre: Eph,
+    livre: 49,
   },
   {
     titre: "Philippiens",
     abr: ["PHIL", "Phil", "phil"],
     index: "N11",
     nbr_chap: 4,
-    livre: Phil,
+    livre: 50,
   },
   {
     titre: "Colossiens",
     abr: ["COL", "Col", "col"],
     index: "N12",
     nbr_chap: 4,
-    livre: Colo,
+    livre: 51,
   },
   {
     titre: "1 Thessalonicien",
     abr: ["1TH", "1Th", "1th", "1 TH", "1 Th", "1 th"],
     index: "N12",
     nbr_chap: 5,
-    livre: Thes1,
+    livre: 52,
   },
   {
     titre: "2 Thessalonicien",
     abr: ["2TH", "2Th", "2th", "2 TH", "2 Th", "2 th"],
     index: "N13",
     nbr_chap: 3,
-    livre: Thes2,
+    livre: 53,
   },
   {
     titre: "1 Timothée",
     abr: ["1TIM", "1Tim", "1tim", "1 TIM", "1 Tim", "1 tim"],
     index: "N14",
     nbr_chap: 6,
-    livre: Tim1,
+    livre: 54,
   },
   {
     titre: "2 Timothée",
     abr: ["2TIM", "2Tim", "2tim", "2 TIM", "2 Tim", "2 tim"],
     index: "N15",
     nbr_chap: 4,
-    livre: Tim2,
+    livre: 55,
   },
   {
     titre: "Tite",
     abr: ["TIT", "tit"],
     index: "N16",
     nbr_chap: 3,
-    livre: Tit,
+    livre: 56,
   },
   {
     titre: "Philémon",
     abr: ["PHIL", "Phil", "phil"],
     index: "N17",
     nbr_chap: 1,
-    livre: Philemon,
+    livre: 57,
   },
   {
     titre: "Hébreux",
     abr: ["HEB", "Heb", "heb"],
     index: "N18",
     nbr_chap: 13,
-    livre: Heb,
+    livre: 58,
   },
   {
     titre: "Jacques",
     abr: ["JACQ", "Jacq", "jacq"],
     index: "N19",
     nbr_chap: 5,
-    livre: Jacque,
+    livre: 59,
   },
   {
     titre: "1 Pierre",
     abr: ["1 P", "1 p", "1P", "1p"],
     index: "N20",
     nbr_chap: 5,
-    livre: Pier1,
+    livre: 60,
   },
   {
     titre: "2 Pierre",
     abr: ["2 P", "2 p", "2P", "2p"],
     index: "N21",
     nbr_chap: 3,
-    livre: Pier2,
+    livre: 61,
   },
   {
     titre: "1 Jean",
     abr: ["1Jn", "1JN", "1jn", "1 JN", "1 Jn", "1 jn"],
     index: "N22",
     nbr_chap: 5,
-    livre: Jean1,
+    livre: 62,
   },
   {
     titre: "2 Jean",
     abr: ["2Jn", "2JN", "2jn", "2 JN", "2 Jn", "2 jn"],
     index: "N23",
     nbr_chap: 1,
-    livre: Jean2,
+    livre: 63,
   },
   {
     titre: "3 Jean",
     abr: ["3Jn", "3JN", "3jn", "3 JN", "3 Jn", "3 jn"],
     index: "N24",
     nbr_chap: 1,
-    livre: Jean3,
+    livre: 64,
   },
   {
     titre: "Jude",
     abr: ["JUDE", "jude", "Jud", "jud", "JUD", "Jude", "Jd", "jd", "JD"],
     index: "N25",
     nbr_chap: 1,
-    livre: Jude,
+    livre: 65,
   },
   {
     titre: "Révélation",
     abr: ["APO", "Apo", "apo"],
     index: "N26",
     nbr_chap: 22,
-    livre: Apcalipse,
+    livre: 66,
   },
 ];
 
-export interface filterProps {
-  livre: string;
-  chap: string;
-  vers1: string;
-  vers2?: string;
-}
+/**
+ * Recherche des versets dans la base de données
+ */
+export const filterBible = async (
+  data: [
+    book_id: string,
+    book_name: string,
+    chapter: string,
+    vers1?: string,
+    vers2?: string
+  ]
+) => {
+  const [book_id, book_name, chapter, vers1, vers2] = data;
 
-export interface filterResultProps {
-  chapitre: string | undefined;
-  vers: (
-    | {
-        n: number;
-        v: string;
-      }
-    | undefined
-  )[];
-  versChar: string;
-  reference: string;
-}
+  const findbook = listBooks.find((el) => el.abr.includes(book_name));
+  const ref = {
+    book_id: book_id,
+    book: findbook?.livre,
+    chapter: parseInt(chapter),
+  };
+  const find = await BibleVerse.find(ref);
+  if (vers1 && vers2) {
+    const verseStart = parseInt(vers1);
+    const verseEnd = parseInt(vers2);
+    const arr = [];
+    const titre = find[0].book_name;
 
-export default function filtre({
-  livre,
-  chap,
-  vers1,
-  vers2,
-}: filterProps): filterResultProps | undefined {
-  const book = livre;
-  const chapt = parseInt(chap);
-  const verset1 = parseInt(vers1);
-  const verset2 = vers2 !== undefined ? parseInt(vers2) : null;
-
-  for (let i = 0; i < data.length; i++) {
-    const abr = data[i]?.abr;
-
-    for (let t = 0; t < abr.length; t++) {
-      if (book === abr[t]) {
-        const CC = data[i]?.livre;
-        const chapter = CC[chapt - 1]?.chapitre;
-        if (verset2 !== null) {
-          const arr = [];
-          for (let v = verset1 - 1; v < verset2; v++) {
-            const z = CC[chapt - 1]?.contenu[v];
-            arr.push(z);
-          }
-          const versChar = verset1 + "-" + verset2;
-          const reference = chapter + ": " + versChar;
-          const result = { chapitre: chapter, vers: arr, versChar, reference };
-          return result;
-        } else {
-          const ref = CC[chapt - 1]?.contenu[verset1 - 1];
-          const versChar = verset1;
-          const reference = chapter + ": " + versChar;
-          const result = {
-            chapitre: chapter,
-            vers: [ref],
-            versChar,
-            reference,
-          };
-          return result;
-        }
-      }
+    for (let i = verseStart; i <= verseEnd; i++) {
+      const v = find.filter((el) => el.verse === i)[0].text;
+      const obj = {
+        n: i < 10 ? `0${i}` : i,
+        text: v,
+      };
+      arr.push(obj);
     }
+
+    const ref_complet = {
+      ref_bible: `${titre} ${chapter}: ${vers1}-${vers2}`,
+      content: arr,
+    };
+
+    return ref_complet;
   }
-}
+  if (vers1 && !vers2) {
+    const verseStart = parseInt(vers1);
+    const titre = find[0].book_name;
+    const v = find.filter((el) => el.verse === verseStart)[0].text;
+
+    const ref_complet = {
+      ref_bible: `${titre} ${chapter}: ${vers1}`,
+      content: [{ n: verseStart, text: v }],
+    };
+    return ref_complet;
+  }
+  if (!vers1 && !vers2) {
+    const arr = [];
+    const titre = find[0].book_name;
+
+    for (let i = 0; i < find.length; i++) {
+      const v = find.filter((el) => el.verse === i)[0].text;
+      const obj = {
+        n: find[i]?.verse < 10 ? `0${find[i].verse}` : find[i]?.verse,
+        text: v,
+      };
+      arr.push(obj);
+    }
+
+    const ref_complet = {
+      ref_bible: `${titre} ${chapter}`,
+      content: arr,
+    };
+
+    return ref_complet;
+  }
+};

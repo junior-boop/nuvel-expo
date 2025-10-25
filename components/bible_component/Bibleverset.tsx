@@ -1,6 +1,5 @@
 import { NodeViewWrapper } from '@tiptap/react';
-import { useEffect, useState } from 'react';
-import { filterResultProps } from './livre';
+import { useState } from 'react';
 // import filtre from './livre';
 
 
@@ -14,30 +13,33 @@ type FilterProps = {
     reference: string;
 }
 
-export default function BibleVerset({ node }: { node: { attrs: { entry: string } } }) {
-    const [content, setContent] = useState<filterResultProps | null>(null)
 
-    useEffect(() => {
-        const check = /[;:\-v]/g
-        const replace = node.attrs.entry.replace(RegExp(check), ' ')
-        const spliter = replace.split(RegExp(/\s+/g))
-
-
-        const verset = window.api.bible({ livre: spliter[0] as string, chap: spliter[1] as string, vers1: spliter[2], vers2: spliter[3] })
-        if (verset !== undefined) setContent(verset)
-
-    }, [node.attrs.entry,])
-
+type attrsProps = {
+    attrs: {
+        content: {
+            n: string,
+            text: string
+        }[],
+        ref_bible: string
+    },
+    type: string
+}
+export default function BibleVerset({ node }: { node: attrsProps }) {
+    const [content, setContent] = useState<{
+        n: string,
+        text: string
+    }[] | null>(node.attrs.content)
+    const [ref_bible, setRef_bible] = useState<string>(node.attrs.ref_bible)
 
 
     return (
-        <NodeViewWrapper className=" h-auto w-full bg-red-50 mt-4 rounded-lg">
-            <div className='px-4 pt-3 pb-1'>
-                <span className='font-semibold text-red-800'>{content?.reference}</span>
+        <NodeViewWrapper className="bible-ref">
+            <div>
+                <p style={{ fontWeight: 'bold' }}>{ref_bible}</p>
             </div>
             <div className='px-4 pb-3'>
                 {
-                    content?.vers.map((el) => (<span key={el.n}><span className='inline-block p-1 text-xs font-bold'>{el.n}</span>{el.v}</span>))
+                    content?.map((el) => (<span key={el.n} style={{ lineHeight: 1.5, fontSize: '17px' }}><span style={{ display: 'inline-block', padding: "0 5px", fontSize: 12, fontWeight: 'bold', verticalAlign: 'middle' }}>{el.n}</span >{el.text}</span>))
                 }
             </div>
         </NodeViewWrapper>

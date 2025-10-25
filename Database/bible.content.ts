@@ -31,6 +31,23 @@ export const get = async (id: string) => {
   return await Bible.findAll();
 };
 
+export const find = async (ref: {
+  book_id: string;
+  book: number | undefined;
+  chapter: number;
+}) => {
+  const result = await Bible.findAll({
+    where: {
+      book_id: ref.book_id,
+      book: ref.book as number,
+      chapter: ref.chapter,
+    },
+
+    orderBy: { column: "verse", direction: "ASC" },
+  });
+  return result;
+};
+
 export const deleted = async (id: string) => {
   return await Bible.delete(id);
 };

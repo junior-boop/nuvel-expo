@@ -20,3 +20,21 @@
     visibility: visible;
     appearance: none;
 }
+
+.input-group {
+    position: absolute;
+    bottom: 52px;
+    background-color: white;
+    z-index: 100;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center
+}
+
+.bible-ref {
+    width: 100%;
+    height: auto;
+    padding: 12px 14px;
+    background-color: rgba(255, 1, 1, 0.068);
+}

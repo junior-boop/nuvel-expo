@@ -263,7 +263,6 @@ export class SimpleORM {
     }
 
     let results = await this.query<T>(sql, params);
-
     if (include && results.length > 0) {
       results = await this.handleIncludes<T>(tableName, results, include);
     }

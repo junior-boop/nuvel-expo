@@ -12,9 +12,15 @@ declare module "@tiptap/core" {
        * @example
        * editor
        *   .commands
-       *   .setVerset({ entry: 'Matth 12: 4-12'})
+       *   .setVerset({ ref_bible: 'string', content : {n:"string", text : "string"}[]})
        */
-      setVerset: (options: { entry: string }) => ReturnType;
+      setVerset: (options: {
+        ref_bible: string;
+        content: {
+          n: string | number | undefined;
+          text: string | undefined;
+        }[];
+      }) => ReturnType;
     };
   }
 }
@@ -38,7 +44,10 @@ export default Node.create({
 
   addAttributes() {
     return {
-      entry: {
+      ref_bible: {
+        default: null,
+      },
+      content: {
         default: null,
       },
     };

@@ -511,13 +511,13 @@ p {
     top: 0;
     z-index: 10;
     background-color: white;
-    height: 48px;
-    max-height: 52px;
+    // /* height: 88px; */
+    max-height: 102px;
     overflow-x: scroll;
     border-bottom: 1px solid #efefef;
     display: flex;
     width: 100vw;
-    overflow-y: hidden;
+    // /* overflow-y: hidden; */
     
 }
 
@@ -546,9 +546,12 @@ p {
         padding: 0 .2rem;
     }
 .control-group .button-group {
+    position: relative;
         width: max-content;
         display: flex;
         align-items: center;
+        z-index : 10;
+        background-color : white;
     }
 .control-group .inputImage {
     appearance: none;
@@ -572,7 +575,76 @@ p {
     visibility: visible;
     appearance: none;
 }
+.control-group .input-group {
+    position: fixed;
+    top: 48px;
+    background-color: #eee;
+    z-index: 1;
+    width: 100%;
+    height : 80px;
+    border: 1px solid #efefef;
+}
+
+.input-group .input {
+    height:42px;
+    width : 100%;
+    display: flex;
+    padding :0 8px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.input-group .input>button {
+    width: 42px;
+    height : 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #eee;
+}
+
+.input-group .input>input {
+    height:42px;
+    width : calc(100% - 42px);
+    padding: 12px 7px;
+    border: none;
+    outline : none;
+    font-size : 1.25rem;
+    font-weight : 600;
+    color : #333;
+    background-color: #eee;
+}
+
+
+.input-group .books  {
+     width: max-content;
+        display: flex;
+        align-items: center;
+}
+
+.input-group > div  {
+     padding : 0 6px;
+}
+
+
+.input-group .books button {
+    display: inline-flex;
+    height: 30px;
+    padding: 0 10px;
+    border : none;
+    // background-color : #eee;
+    font-weight : bold;
+    margin-right : 8px
+}
+
 control-groupe .button-group bottom.is-active {
             background-color: "#999";
         }
+
+.bible-ref {
+    width: 100%;
+    height: auto;
+    padding: 12px 14px;
+    background-color: rgba(255, 1, 1, 0.068);
+}
 `;

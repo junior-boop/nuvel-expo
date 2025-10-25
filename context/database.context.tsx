@@ -125,6 +125,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
 
 
 
+
     const addNote = useCallback(async (noteData: NotesType) => {
         clearError();
         try {
