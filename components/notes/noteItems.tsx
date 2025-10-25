@@ -29,18 +29,9 @@ export default function NoteItems({ note }: { note: NotesType }) {
     const { deleteNote, toggleNotePinned } = useDatabase()
 
     const Blocks_reference = useMemo(() => {
-        if (note !== undefined && typeof note.note_content === 'string') {
-            if (data !== null && data.hasOwnProperty('blocks')) {
-                const t = data.blocks.filter((el) => el.type === 'bible_ref')
-                if (t.length === 0) {
-                    return null
-                }
-                if (t.length > 3) {
-                    return t.slice(0, 2)
-                } else return t
-            }
+        const t = data.content.filter((el) => el.type === 'bibleverset')
 
-        } else return null
+        return t
     }, [data])
 
     const block_text = () => {
@@ -136,7 +127,7 @@ export default function NoteItems({ note }: { note: NotesType }) {
                 </View>
             </TouchableOpacity>
             {Blocks_reference !== null && Blocks_reference !== undefined && (<ScrollView horizontal={true} contentContainerStyle={{ paddingHorizontal: 14, gap: 8, paddingTop: 12 }} showsHorizontalScrollIndicator={false}>
-                {Blocks_reference.map((el, key) => (<Text style={styles.ref} key={key}>{el.data.reference}</Text>))}
+                {Blocks_reference.map((el, key) => (<Text style={styles.ref} key={key}>{el.attrs.ref_bible}</Text>))}
             </ScrollView>)}
         </View>
     )

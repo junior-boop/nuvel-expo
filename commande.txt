@@ -1,0 +1,4 @@
+eas update:configure
+eas update --platform=android --channel=preview --message="60% pour editeur de text"
+eas build --platform android --profile preview 
+eas build --platform android --profile preview --local
