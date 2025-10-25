@@ -44,7 +44,6 @@ export default function NoteItems({ note }: { note: NotesType }) {
     }, [data])
 
     const block_text = () => {
-
         const t = data.content.filter((el) => el.type === 'paragraph')
         let String = ''
         t.forEach((element, key) => {

@@ -577,12 +577,13 @@ p {
 }
 .control-group .input-group {
     position: fixed;
-    top: 48px;
-    background-color: #eee;
+    top: 47px;
+    background-color: white;
     z-index: 1;
     width: 100%;
     height : 80px;
-    border: 1px solid #efefef;
+    border-bottom: 1px solid #efefef;
+    box-shadow: 0px 0px 20px -5px black;
 }
 
 .input-group .input {
@@ -600,7 +601,7 @@ p {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #eee;
+    background-color: white;
 }
 
 .input-group .input>input {
@@ -612,39 +613,45 @@ p {
     font-size : 1.25rem;
     font-weight : 600;
     color : #333;
-    background-color: #eee;
+    background-color: white;
 }
 
 
 .input-group .books  {
-     width: max-content;
-        display: flex;
-        align-items: center;
+    width: max-content;
+    display: flex;
+    align-items: center;
+    background-color : white;
+    margin-top : 3px;
 }
 
 .input-group > div  {
-     padding : 0 6px;
+    padding : 0 6px;
 }
 
 
 .input-group .books button {
     display: inline-flex;
-    height: 30px;
+    height: 28px;
     padding: 0 10px;
+    border-radius: 15px;
     border : none;
-    // background-color : #eee;
+    background-color : white;
     font-weight : bold;
-    margin-right : 8px
+    margin-right : 5px
 }
 
 control-groupe .button-group bottom.is-active {
-            background-color: "#999";
-        }
+    color :rgb(16, 83, 170) ;
+    background-color: rgba(0, 110, 255, 0.096);
+}
 
 .bible-ref {
     width: 100%;
     height: auto;
     padding: 12px 14px;
     background-color: rgba(255, 1, 1, 0.068);
+    margin-bottom : 8px
 }
+
 `;

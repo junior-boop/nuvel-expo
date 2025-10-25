@@ -202,7 +202,7 @@ function MenuBar({ editor, biblemetadatState, trie }: {
                     <div className='input'>
                         <input value={verse} onChange={({ target }) => setVerse(target.value)} type="text" placeholder='Type your bible ref' />
                         <button onClick={() => handleVerse(verse)}>
-                            <IcSharpArrowDownward width={25} height={25} />
+                            <IcSharpArrowDownward width={35} height={35} />
                         </button>
                     </div>
                     <div className='books'>
@@ -225,7 +225,7 @@ function MenuBar({ editor, biblemetadatState, trie }: {
 
 
 const BibleItem = ({ el, isActived, onClick }: { el: BibleMetadata, onClick: () => void, isActived: boolean }) => {
-    return (<button onClick={onClick} style={{ backgroundColor: isActived ? "#0002" : "#eee" }}>{el.name}</button>)
+    return (<button onClick={onClick} style={{ backgroundColor: isActived ? "rgba(0, 153, 255, 0.14)" : "white", color: isActived ? "rgb(16, 83, 170)" : 'black' }}>{el.name}</button>)
 }
 
 export default function EditorJS({ note, updateNote, biblemetadatState, trie }: { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any }) {
