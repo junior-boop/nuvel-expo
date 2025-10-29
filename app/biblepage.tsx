@@ -6,7 +6,8 @@ import { convert } from '@/constants/convert';
 import { FluentArrowDownload32Filled, FluentCheckmark28Filled } from '@/constants/icons';
 import { useDatabase } from '@/context/database.context';
 import * as BibleContent from '@/Database/bible.content';
-import { BibleData } from '@/Database/db';
+import { BibleDownloader } from '@/Database/bibledownload';
+import { BibleData, BibleMetadata } from '@/Database/db';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 
@@ -63,7 +64,6 @@ export default function BiblePage() {
     }, [liste])
 
     useEffect(() => {
-        console.log(biblemetadatState?.findAll())
         bible()
     }, [])
 
@@ -105,7 +105,15 @@ async function addbiblebook(data, bible_id: string, pourcentage: (value: number)
 }
 
 const BibleItems = ({ item }: { item: BibleData }) => {
-    const [progress, setProgress] = useState(0)
+    const [progress, setProgress] = useState<{
+        current: number;
+        total: number;
+        percent: number;
+    } | null>({
+        current: 0,
+        total: 0,
+        percent: 0,
+    })
     const [download, setDownload] = useState(false)
     const [btnstate, setBtnstate] = useState(false)
 
@@ -115,9 +123,8 @@ const BibleItems = ({ item }: { item: BibleData }) => {
     const alreadyDownload = biblemetadatState?.filter(el => el.module === item.metadata.module)?.count() > 0
 
     useEffect(() => {
-        console.log(progress)
         Animated.timing(animatedWidth, {
-            toValue: progress,
+            toValue: progress?.percent || 0,
             duration: 500,
             easing: Easing.out(Easing.ease),
             useNativeDriver: false,
@@ -135,10 +142,16 @@ const BibleItems = ({ item }: { item: BibleData }) => {
 
     const handleBibleMetadata = async (data: Partial<BibleData>) => {
         setDownload(true)
-        const request = await fetch(`https://nuvelserver.godigital.workers.dev/bible${data.lien}`)
-        const result = await request.json()
-        const bible = await addBible(data.metadata)
-        if (bible) await addbiblebook(result, bible?.id as string, (value) => setProgress(value));
+        const bible = await addBible(data.metadata as BibleMetadata)
+        if (bible) {
+            const download = new BibleDownloader()
+            try {
+                await download.init()
+                await download.downloadVersion(data.lien, bible?.id, (value) => setProgress(value))
+            } catch (e) {
+                console.log("il y a une erreur", e)
+            }
+        }
         setDownload(false)
         setBtnstate(true)
     }
@@ -168,8 +181,6 @@ const BibleItems = ({ item }: { item: BibleData }) => {
                                 </>
 
                         }
-
-
                     </TouchableOpacity>
                 </View>
             </View>

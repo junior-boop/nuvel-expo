@@ -3,8 +3,9 @@ import { View } from '@/components/Themed';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useNavigation } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { EdgeInsets, Rect, SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PageLayout({ children, addnote = true }: { children: React.ReactNode, addnote?: boolean }) {
     const navigation = useNavigation()
@@ -54,12 +55,24 @@ export function PageLayout_2({ children, addnote = true }: { children: React.Rea
 
 export function PageLayout_3({ children, addnote = true }: { children: React.ReactNode, addnote?: boolean }) {
     const navigation = useNavigation()
+    const [data, setData] = useState<{
+        insets: EdgeInsets;
+        frame: Rect;
+    } | null>(null);
+
+    useEffect(() => {
+        console.log(data)
+    }, [data])
 
     return (
-        <View style={styles_2.container}>
-            <StatusBar style="dark" />
-            {children}
-        </View>
+        <SafeAreaProvider>
+            <View style={styles_2.container}>
+                <StatusBar style="dark" />
+                <SafeAreaView style={{ flex: 1 }}>
+                    {children}
+                </SafeAreaView>
+            </View>
+        </SafeAreaProvider>
     );
 }
 

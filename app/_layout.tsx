@@ -5,7 +5,9 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { DatabaseProvider } from '@/context/database.context';
 
@@ -57,11 +59,19 @@ export default function RootLayout() {
   // }
 
 
-  return <RootLayoutNav />;
+  return (
+    <SafeAreaProvider>
+      <RootLayoutNav />
+    </SafeAreaProvider>
+  );
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+
+  const frame = useSafeAreaInsets()
+
+  console.log(frame)
 
   return (
     <ThemeProvider value={DefaultTheme}>
@@ -75,6 +85,7 @@ function RootLayoutNav() {
           <Stack.Screen name="profils" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
           <Stack.Screen name="biblepage" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
         </Stack>
+        <View style={{ height: frame.bottom }} />
       </DatabaseProvider>
     </ThemeProvider>
   );

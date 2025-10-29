@@ -1,10 +1,7 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Link, Tabs } from 'expo-router';
+import { Tabs } from 'expo-router';
 import React from 'react';
-import { Pressable } from 'react-native';
 
 import { useColorScheme } from '@/components/useColorScheme';
-import Colors from '@/constants/Colors';
 
 
 import { FluentBookmark32Filled, FluentBookmark32Regular, FluentDocumentFolder32Filled, FluentDocumentFolder32Regular, FluentHome32Filled, FluentHome32Regular, FluentSearch32Filled, FluentSettings32Filled, FluentSettings32Regular } from '@/constants/icons';
@@ -24,7 +21,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          height: 70,
+          height: 60,
           borderTopColor: "#eee",
           borderTopWidth: 1,
           elevation: 0, // Pour Android
@@ -42,21 +39,8 @@ export default function TabLayout() {
         options={{
           tabBarIcon: ({ color, focused, size }) => {
             return (!focused ? <FluentHome32Regular width={size} height={size} color={color} /> : <FluentHome32Filled width={size} height={size} color={color} />)
-          },
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <MaterialIcons
-                    name="info"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
+          }
+
         }}
       />
       <Tabs.Screen
