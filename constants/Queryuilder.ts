@@ -222,7 +222,7 @@ export class QueryForTable<T extends BaseEntity> {
   }
 
   // Ajouter un élément
-  add(item: T): void {
+  add(item: T): T[] {
     // Ajouter timestamps automatiquement si pas présents
     const now = new Date();
     const itemWithTimestamps = {
@@ -230,6 +230,7 @@ export class QueryForTable<T extends BaseEntity> {
     };
 
     this.dataMap.set(item.id, itemWithTimestamps);
+    return this.findAll();
   }
 
   // Ajouter plusieurs éléments
@@ -272,8 +273,9 @@ export class QueryForTable<T extends BaseEntity> {
   }
 
   // Supprimer un élément
-  delete(id: string): boolean {
-    return this.dataMap.delete(id);
+  delete(id: string): T[] {
+    this.dataMap.delete(id);
+    return this.findAll();
   }
 
   // Obtenir la taille de la collection

@@ -7,6 +7,7 @@ import * as Notes from '@/Database/notes';
 import * as Session from '@/Database/session';
 import * as Sync from '@/Database/sync_event';
 import * as User from '@/Database/users';
+import { generateUUID as uuidv4 } from '@/Database/uuid';
 import React, {
     createContext,
     ReactNode,
@@ -16,7 +17,7 @@ import React, {
     useMemo,
     useState
 } from 'react';
-import type { BibleMetadata as BibleMetadataType, Groups as GroupsType, Notes as NotesType, Session as SessionType, User as UserType } from '../Database/db';
+import type { AiHistoryType, BibleMetadata as BibleMetadataType, Groups as GroupsType, Notes as NotesType, Session as SessionType, User as UserType } from '../Database/db';
 
 // Définition d'un type pour les erreurs de base de données
 type DatabaseError = {
@@ -48,6 +49,12 @@ interface DatabaseContextType {
     addBible: (data: BibleMetadataType) => Promise<Partial<BibleMetadataType> | undefined>;
     deletedBible: (id: string) => Promise<void>;
     clearError: () => void;
+    getAiHistory: (id: string) => AiHistoryType[];
+    setAiHistory: (data: {
+        iduser: string,
+        role: string,
+        content: string,
+    }) => AiHistoryType[]
 }
 
 const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined);
@@ -129,9 +136,23 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     const addNote = useCallback(async (noteData: NotesType) => {
         clearError();
         try {
-            const result = await Notes.created(noteData);
+            const objdata = {
+                id: uuidv4(),
+                body: noteData.body,
+                html: noteData.html,
+                creator: noteData.creator,
+                pinned: noteData.pinned,
+                archived: noteData.archived,
+                grouped: noteData.grouped,
+                created: new Date().toISOString(),
+                modified: new Date().toISOString(),
+                version: 1
+            }
+            setNotes(new QueryForTable(notesQuery?.add(objdata)))
+
+            const result = await Notes.created(objdata);
             if (result) loadInitialData();
-            return result;
+            return objdata;
         } catch (error) {
             handleError(error, 'adding note');
         }
@@ -152,6 +173,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await Notes.deleted(id);
+            setNotes(new QueryForTable(notesQuery?.delete(id)))
             if (result) loadInitialData();
         } catch (error) {
             handleError(error, 'deleting note');
@@ -276,6 +298,33 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [loadInitialData])
 
+    const getAiHistory = useCallback(async (id: string) => {
+        clearError();
+        try {
+            const result = await AiStore.get(id)
+            return result
+        } catch (error) {
+            console.log(error)
+            handleError(error, 'deleting bible');
+        }
+
+
+    }, [loadInitialData, handleError])
+
+    const setAiHistory = useCallback(async (id: string) => {
+
+        clearError();
+        try {
+            const result = await AiStore.get(id)
+            return result
+        } catch (error) {
+            console.log(error)
+            handleError(error, 'deleting bible');
+        }
+
+
+    }, [loadInitialData, handleError])
+
 
     // Optimisation avec useMemo pour la valeur du contexte
     const contextValue = useMemo(() => ({
@@ -299,7 +348,9 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         deletedBible,
         updatedGroup,
         deletedGroup,
-        clearError
+        clearError,
+        getAiHistory,
+        setAiHistory
     }), [
         notesQuery,
         groupsQuery,
@@ -321,7 +372,9 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         deletedBible,
         updatedGroup,
         deletedGroup,
-        clearError
+        clearError,
+        getAiHistory,
+        setAiHistory
     ]);
 
     return (

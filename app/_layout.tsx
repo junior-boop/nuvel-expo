@@ -69,8 +69,6 @@ function RootLayoutNav() {
 
   const frame = useSafeAreaInsets()
 
-  console.log(frame)
-
   return (
     <ThemeProvider value={DefaultTheme}>
       <DatabaseProvider>

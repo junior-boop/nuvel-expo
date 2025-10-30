@@ -1,10 +1,10 @@
 import { filterBible } from "@/components/bible_component/livre";
 import { useDatabase } from '@/context/database.context';
-import type { BibleMetadata, Notes } from "@/Database/db";
+import type { AiHistoryType, BibleMetadata, Notes } from "@/Database/db";
 import EditorJS from "@/editor";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, TextInput, TouchableOpacity } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, Pressable, TextInput, TouchableOpacity } from "react-native";
 
 import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
@@ -14,12 +14,15 @@ import { FluentDelete32Regular, FluentFolderLink32Regular, FluentGlobeArrowForwa
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import * as AiStore from '@/Database/ai';
+
 export default function NoteEditor() {
     const [isKeyboard, setIskeyboard] = useState<{ height: number | string, screenY: number | string, width?: number } | undefined>(undefined)
     const data = useLocalSearchParams()
-    const { notesQuery, updateNote, biblemetadatState } = useDatabase()
+    const { notesQuery, updateNote, biblemetadatState, usersQuery } = useDatabase()
     const [isOpen, setIsOpen] = useState(false)
     const [aiOpen, setAiOpen] = useState(false)
+    const [ai_conversation, setConversation] = useState<AiHistoryType[]>([])
 
     const bible = biblemetadatState?.findAll()
     const sheetRef = useRef<BottomSheet>(null);
@@ -27,6 +30,7 @@ export default function NoteEditor() {
     // variables
     const snapPoints = useMemo(() => ["40%"], []);
     const aisnapPoints = useMemo(() => ['100%'], [])
+
 
 
     const Note = notesQuery?.findById(data.id as string) as Notes
@@ -37,13 +41,25 @@ export default function NoteEditor() {
 
     // listening to keyboadEvent
     Keyboard.addListener('keyboardDidShow', (event) => {
-        console.log(event)
         setIskeyboard(event.endCoordinates)
     })
     Keyboard.addListener('keyboardDidHide', (event) => {
-        console.log(event)
         setIskeyboard(undefined)
     })
+
+    const getconversation = useCallback(async () => {
+        const result = await AiStore.get(data.id as string)
+        setConversation(result as AiHistoryType[])
+    }, [Note])
+
+
+    useEffect(() => {
+
+    }, [])
+
+    useEffect(() => {
+        getconversation()
+    }, [])
 
 
     // bottom sheet
@@ -88,7 +104,11 @@ export default function NoteEditor() {
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
                     style={{ flex: 1 }}
                 >
-                    <EditorJS note={Note} updateNote={(data) => handleUpdate(data)} biblemetadatState={bible as BibleMetadata[]} trie={filterBible} />
+                    {
+                        Note === undefined
+                            ? <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><View style={{ alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size={'large'} color={'black'} /><Text>Page Loading...</Text> </View></View>
+                            : <EditorJS note={Note} updateNote={(data) => handleUpdate(data)} biblemetadatState={bible as BibleMetadata[]} trie={filterBible} />
+                    }
                 </KeyboardAvoidingView>
                 {
                     isOpen && <Pressable onPress={() => setIsOpen(false)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.2)', width: '100%', height: '100%' }}></Pressable>

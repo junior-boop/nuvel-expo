@@ -1,7 +1,7 @@
+import { useColorScheme } from '@/components/useColorScheme';
 import { Tabs } from 'expo-router';
 import React from 'react';
-
-import { useColorScheme } from '@/components/useColorScheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 import { FluentBookmark32Filled, FluentBookmark32Regular, FluentDocumentFolder32Filled, FluentDocumentFolder32Regular, FluentHome32Filled, FluentHome32Regular, FluentSearch32Filled, FluentSettings32Filled, FluentSettings32Regular } from '@/constants/icons';
@@ -10,7 +10,7 @@ import { FluentBookmark32Filled, FluentBookmark32Regular, FluentDocumentFolder32
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-
+  const frame = useSafeAreaInsets()
 
   return (
     <Tabs
@@ -21,7 +21,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          height: 60,
+          height: frame.bottom >= 20 ? 55 : 60,
           borderTopColor: "#eee",
           borderTopWidth: 1,
           elevation: 0, // Pour Android

@@ -6,7 +6,7 @@ import { convert } from '@/constants/convert';
 import { FluentArrowDownload32Filled, FluentCheckmark28Filled } from '@/constants/icons';
 import { useDatabase } from '@/context/database.context';
 import * as BibleContent from '@/Database/bible.content';
-import { BibleDownloader } from '@/Database/bibledownload';
+import { bibleDownloader } from '@/Database/bibledownload';
 import { BibleData, BibleMetadata } from '@/Database/db';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -72,7 +72,7 @@ export default function BiblePage() {
     return (
         <View style={styles.container}>
             <StatusBar style="dark" />
-            <ScrollView style={{ paddingHorizontal: convert(16), paddingTop: convert(16) }}>
+            <ScrollView contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: convert(16), paddingTop: convert(16) }}>
                 <Text style={{ ...styles.title, marginBottom: convert(16) }}>Bible Library</Text>
                 <View style={{ marginBottom: 24 }}>
                     <Text style={{ fontSize: convert(16), color: "#777", fontStyle: 'italic' }}>
@@ -144,10 +144,36 @@ const BibleItems = ({ item }: { item: BibleData }) => {
         setDownload(true)
         const bible = await addBible(data.metadata as BibleMetadata)
         if (bible) {
-            const download = new BibleDownloader()
+            // const download = new BibleDownloader()
+
+            async function initApp() {
+                try {
+                    await bibleDownloader.init();
+                    console.log("App prête");
+                } catch (error) {
+                    console.error("Erreur init:", error);
+                }
+            }
+
+            async function download(link: string, bible_id: string, pourcentage: (value: {
+                current: number;
+                total: number;
+                percent: number;
+            }) => void) {
+                try {
+                    await bibleDownloader.downloadVersion(
+                        link,
+                        bible_id,
+                        pourcentage
+                    );
+                } catch (error) {
+                    console.error("Erreur:", error);
+                }
+            }
+
             try {
-                await download.init()
-                await download.downloadVersion(data.lien, bible?.id, (value) => setProgress(value))
+                await initApp()
+                await download(data.lien as string, bible?.id, (value) => setProgress(value))
             } catch (e) {
                 console.log("il y a une erreur", e)
             }

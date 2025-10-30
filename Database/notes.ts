@@ -1,6 +1,5 @@
 import type { Notes as NotesType } from "./db";
 import db from "./index";
-import { generateUUID as uuidv4 } from "./uuid";
 
 const Notes = db.createModel<NotesType>("notes", {
   id: "TEXT PRIMARY KEY",
@@ -23,16 +22,16 @@ export const created = async (data: NotesType) => {
   const items = Notes;
 
   const result = await items.create({
-    id: uuidv4(),
+    id: data.id,
     body: data.body,
     html: data.html,
     grouped: data.grouped,
     creator: data.creator,
     archived: data.archived,
     pinned: data.pinned,
-    created: new Date().toISOString(),
-    modified: new Date().toISOString(),
-    version: 1,
+    created: data.created,
+    modified: data.modified,
+    version: data.version,
   });
 
   return result;

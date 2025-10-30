@@ -651,7 +651,8 @@ control-groupe .button-group bottom.is-active {
     height: auto;
     padding: 12px 14px;
     background-color: rgba(255, 1, 1, 0.068);
-    margin-bottom : 8px
+    margin-bottom : 8px;
+    border-radius : 5px
 }
 
 `;

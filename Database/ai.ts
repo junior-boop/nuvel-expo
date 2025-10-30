@@ -27,7 +27,9 @@ export async function get(id: string): Promise<AiHistoryType[] | null | []> {
   }
 }
 
-export async function set(data: AiHistoryType): Promise<AiHistoryType | null> {
+export async function set(
+  data: Partial<AiHistoryType>
+): Promise<AiHistoryType | null> {
   const history = await AIhistory.create({
     id: uuidv4() as string,
     iduser: data.iduser as string,
