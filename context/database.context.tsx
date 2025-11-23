@@ -6,6 +6,7 @@ import * as Groups from '@/Database/groups';
 import * as Notes from '@/Database/notes';
 import * as Session from '@/Database/session';
 import * as Sync from '@/Database/sync_event';
+import { Sync_to_serveur } from '@/Database/sync_online';
 import * as User from '@/Database/users';
 import { generateUUID as uuidv4 } from '@/Database/uuid';
 import React, {
@@ -86,7 +87,6 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
 
-
     const loadInitialData = useCallback(async () => {
         setIsLoading(true);
         await Notes.createdtable()
@@ -97,21 +97,25 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         await BibleVerse.createTable()
         await AiStore.createTable()
         await Sync.createEvent()
+        Sync_to_serveur()
         clearError();
         try {
-            const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, bibleVerseResult] = await Promise.all([
+            const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, bibleVerseResult, Sync_EventResult] = await Promise.all([
                 Notes.getall(),
                 Groups.getall(),
                 Session.get(),
                 User.getAll(),
                 BibleMetadata.getall(),
-                BibleVerse.getall()
+                BibleVerse.getall(),
+                Sync.getAll()
             ]);
             const notesArray = new QueryForTable<NotesType>(notesResult || []);
             const groupArray = new QueryForTable<GroupsType>(groupesResult || []);
             const userArray = new QueryForTable<UserType>(userResult || []);
             const bibleMetadataArray = new QueryForTable<BibleMetadataType>(bibleMetadataResult || []);
 
+            console.log("Note length:", notesResult.length)
+            console.log("Sync_event :", Sync_EventResult.length)
 
             setUsers(userArray);
             setGroups(groupArray);
@@ -150,6 +154,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             }
             setNotes(new QueryForTable(notesQuery?.add(objdata)))
 
+            const objet: Partial<Sync.Sync_Event> = {
+                elementid: objdata.id,
+                action: "CREATE",
+                need_sync: true,
+                table_name: "notes",
+            }
+            const sync = await Sync.Set(objet)
+            console.log(`Sync_event ${objdata.id}`, sync)
             const result = await Notes.created(objdata);
             if (result) loadInitialData();
             return objdata;
@@ -162,6 +174,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await Notes.update(noteData);
+            const objet: Partial<Sync.Sync_Event> = {
+                elementid: noteData.id,
+                action: "UPDATE",
+                need_sync: true,
+                table_name: "notes",
+            }
+            const sync = await Sync.Set(objet)
+            console.log(`Sync_event updated ${noteData.id}`, sync)
             if (result) loadInitialData();
         } catch (error) {
             handleError(error, 'updating note');
@@ -173,6 +193,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await Notes.deleted(id);
+            const objet: Partial<Sync.Sync_Event> = {
+                elementid: id,
+                action: "DELETE",
+                need_sync: true,
+                table_name: "notes",
+            }
+            const sync = await Sync.Set(objet)
+            console.log(`Sync_event deleted ${id}`, sync)
             setNotes(new QueryForTable(notesQuery?.delete(id)))
             if (result) loadInitialData();
         } catch (error) {
@@ -185,6 +213,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         try {
             const updatedNote = { ...note, pinned: note.pinned };
             const result = await Notes.setpinned(updatedNote);
+            const objet: Partial<Sync.Sync_Event> = {
+                elementid: note.id,
+                action: "UPDATE",
+                need_sync: true,
+                table_name: "notes",
+            }
+            const sync = await Sync.Set(objet)
+            console.log(`Sync_event updated ${note.id}`, sync)
             if (result) loadInitialData();
 
         } catch (error) {
@@ -198,6 +234,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         try {
             const updatedNote = { ...note, archived: note.archived };
             const result = await Notes.update(updatedNote);
+            const objet: Partial<Sync.Sync_Event> = {
+                elementid: note.id,
+                action: "UPDATE",
+                need_sync: true,
+                table_name: "notes",
+            }
+            const sync = await Sync.Set(objet)
+            console.log(`Sync_event updated ${note.id}`, sync)
             if (result) loadInitialData();
         } catch (error) {
             handleError(error, 'toggling note archive status');
@@ -208,7 +252,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         try {
             const result = await Notes.addtogroup(data);
             if (result) loadInitialData();
-
+            const objet: Partial<Sync.Sync_Event> = {
+                elementid: result?.id,
+                action: "UPDATE",
+                need_sync: true,
+                table_name: "notes",
+            }
+            const sync = await Sync.Set(objet)
+            console.log(`Sync_event updated ${result?.id}`, sync)
             return result;
         } catch (error) {
             handleError(error, 'adding note');
@@ -219,6 +270,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await Groups.created(data);
+            const objet: Partial<Sync.Sync_Event> = {
+                elementid: result.id,
+                action: "CREATE",
+                need_sync: true,
+                table_name: "groups",
+            }
+            const sync = await Sync.Set(objet)
+            console.log(`Sync_event created ${result.id}`, sync)
             if (result) loadInitialData();
             return result;
         } catch (error) {
@@ -230,6 +289,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await Groups.updated(data);
+            const objet: Partial<Sync.Sync_Event> = {
+                elementid: result?.id,
+                action: "UPDATE",
+                need_sync: true,
+                table_name: "groups",
+            }
+            const sync = await Sync.Set(objet)
+            console.log(`Sync_event updated ${result?.id}`, sync)
             if (result) loadInitialData();
             return result;
         } catch (error) {
@@ -241,6 +308,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await Groups.deleted(id);
+            const objet: Partial<Sync.Sync_Event> = {
+                elementid: id,
+                action: "DELETE",
+                need_sync: true,
+                table_name: "groups",
+            }
+            const sync = await Sync.Set(objet)
+            console.log(`Sync_event deleted ${id}`, sync)
             if (result) loadInitialData();
             return result;
         } catch (error) {

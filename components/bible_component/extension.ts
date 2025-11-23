@@ -16,10 +16,7 @@ declare module "@tiptap/core" {
        */
       setVerset: (options: {
         ref_bible: string;
-        content: {
-          n: string | number | undefined;
-          text: string | undefined;
-        }[];
+        content: string;
       }) => ReturnType;
     };
   }

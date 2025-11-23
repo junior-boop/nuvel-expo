@@ -688,7 +688,7 @@ export const filterBible = async (
 
     const ref_complet = {
       ref_bible: `${titre} ${chapter}: ${vers1}-${vers2}`,
-      content: arr,
+      content: JSON.stringify(arr),
     };
 
     return ref_complet;
@@ -700,7 +700,7 @@ export const filterBible = async (
 
     const ref_complet = {
       ref_bible: `${titre} ${chapter}: ${vers1}`,
-      content: [{ n: verseStart, text: v }],
+      content: JSON.stringify([{ n: verseStart, text: v }]),
     };
     return ref_complet;
   }
@@ -719,7 +719,7 @@ export const filterBible = async (
 
     const ref_complet = {
       ref_bible: `${titre} ${chapter}`,
-      content: arr,
+      content: JSON.stringify(arr),
     };
 
     return ref_complet;

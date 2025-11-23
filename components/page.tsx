@@ -3,7 +3,7 @@ import { View } from '@/components/Themed';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useNavigation } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 import { EdgeInsets, Rect, SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -59,10 +59,6 @@ export function PageLayout_3({ children, addnote = true }: { children: React.Rea
         insets: EdgeInsets;
         frame: Rect;
     } | null>(null);
-
-    useEffect(() => {
-        console.log(data)
-    }, [data])
 
     return (
         <SafeAreaProvider>

@@ -16,10 +16,7 @@ type FilterProps = {
 
 type attrsProps = {
     attrs: {
-        content: {
-            n: string,
-            text: string
-        }[],
+        content: string,
         ref_bible: string
     },
     type: string
@@ -28,14 +25,14 @@ export default function BibleVerset({ node }: { node: attrsProps }) {
     const [content, setContent] = useState<{
         n: string,
         text: string
-    }[] | null>(node.attrs.content)
+    }[] | null>(JSON.parse(node.attrs.content))
     const [ref_bible, setRef_bible] = useState<string>(node.attrs.ref_bible)
 
 
     return (
         <NodeViewWrapper className="bible-ref">
             <div>
-                <p style={{ fontWeight: 'bold' }}>{ref_bible}</p>
+                <p style={{ fontWeight: 'bold', fontSize: 16 }}>{ref_bible}</p>
             </div>
             <div className='px-4 pb-3'>
                 {

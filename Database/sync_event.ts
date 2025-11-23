@@ -23,7 +23,7 @@ export const createEvent = async () => {
   await sync_event.createTable();
 };
 
-export async function Set(data: Sync_Event) {
+export async function Set(data: Partial<Sync_Event>) {
   const result = await sync_event.create({
     id: uuidv4(),
     action: data.action || "CREATE",

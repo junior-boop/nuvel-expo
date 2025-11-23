@@ -44,6 +44,11 @@ export const getall = async () => {
   return result;
 };
 
+export const get = async (id: string) => {
+  const result = await Notes.findById(id);
+  return result;
+}
+
 export const update = async (data: Partial<NotesType>) => {
   const items = Notes;
   const result = await items.update(data.id as string, {

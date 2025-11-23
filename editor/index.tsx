@@ -8,7 +8,7 @@ import { TextStyleKit } from '@tiptap/extension-text-style'
 import type { Editor } from '@tiptap/react'
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
 import { BxsBible, FluentAppsList20Filled, FluentArrowEnterLeft24Filled, FluentCode24Regular, FluentCodeBlock32Regular, FluentImageAdd32Regular, FluentLineHorizontal128Regular, FluentTaskList24Filled, FluentTextBold24Regular, FluentTextHeader1Lines24Regular, FluentTextHeader2Lines24Regular, FluentTextHeader3Lines24Regular, FluentTextItalic24Filled, FluentTextNumberList24Regular, FluentTextQuote32Filled, FluentTextStrikethroughS24Regular, IcSharpArrowDownward } from './editor_icons'
 import styles from './styles'
 
@@ -17,15 +17,18 @@ const extensions = [BibleVerset, TextStyleKit, StarterKit, Image, TaskList,
         nested: true,
     })]
 
-function MenuBar({ editor, biblemetadatState, trie }: {
-    editor: Editor, biblemetadatState: BibleMetadata[], trie: (data: [book_id: string, book_name: string, chapter: string, vers1?: string, vers2?: string]) => Promise<{
+
+type bibleverst = {
+    n: string | number | undefined;
+    text: string | undefined;
+}[]
+
+const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
+    editor: Editor, biblemetadatState: BibleMetadata[], menubtn?: { teste: () => void }, trie: (data: [book_id: string, book_name: string, chapter: string, vers1?: string, vers2?: string]) => Promise<{
         ref_bible: string;
-        content: {
-            n: string | number | undefined;
-            text: string | undefined;
-        }[];
+        content: string;
     } | undefined>
-}) {
+}, ref) => {
     const [bible_id, setBible_id] = useState<string | null>(null)
     const [openBible, setOpenBible] = useState(false)
     const [verse, setVerse] = useState<string>("")
@@ -77,6 +80,12 @@ function MenuBar({ editor, biblemetadatState, trie }: {
         setBible_id(el.id)
     }
 
+    useImperativeHandle(ref, () => ({
+        test() {
+            console.log("test from menubar")
+        }
+    }))
+
 
 
     const handleVerse = async (verse: string) => {
@@ -95,6 +104,12 @@ function MenuBar({ editor, biblemetadatState, trie }: {
         }
 
     }
+
+    useEffect(() => {
+        if (menubtn) {
+            menubtn.teste = () => editor.chain().focus().toggleBold().run()
+        }
+    }, [])
 
 
     return (
@@ -221,14 +236,19 @@ function MenuBar({ editor, biblemetadatState, trie }: {
             }
         </div>
     )
-}
+})
 
 
 const BibleItem = ({ el, isActived, onClick }: { el: BibleMetadata, onClick: () => void, isActived: boolean }) => {
     return (<button onClick={onClick} style={{ backgroundColor: isActived ? "rgba(0, 153, 255, 0.14)" : "white", color: isActived ? "rgb(16, 83, 170)" : 'black' }}>{el.name}</button>)
 }
 
-export default function EditorJS({ note, updateNote, biblemetadatState, trie }: { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any }) {
+// export default function EditorJS({ note, updateNote, biblemetadatState, trie, menubtn }: { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void } }) {
+
+// }
+
+
+const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubtn }: { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void } }, ref) => {
     const [isFocus, setIsFocus] = useState(false)
     const [content, setContent] = useState(note !== undefined && JSON.parse(note.body))
     const [isTyping, setIsTyping] = useState(false)
@@ -293,9 +313,11 @@ export default function EditorJS({ note, updateNote, biblemetadatState, trie }: 
         <div style={{ width: '100vw' }}>
             <style dangerouslySetInnerHTML={{ __html: styles }}></style>
             <div style={{ position: "relative", height: "100svh" }}>
-                <MenuBar editor={editor} biblemetadatState={biblemetadatState} trie={trie} />
-                <EditorContent editor={editor} onFocus={() => setIsFocus(true)} onBlur={() => setIsFocus(false)} />
+                <MenuBar editor={editor} biblemetadatState={biblemetadatState} trie={trie} menubtn={menubtn} />
+                <EditorContent editor={editor} onFocus={() => setIsFocus(true)} onBlur={() => setIsFocus(false)} ref={ref} />
             </div>
         </div>
     )
-}
+})
+
+export default EditorJS
