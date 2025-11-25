@@ -174,6 +174,23 @@ export default function NoteEditor() {
         setInputValue("")
     };
 
+    const handlePublish = async () => {
+        const note = notesQuery?.findById(data.id as string)
+        if (note) {
+            const obj_article = {
+                articleId: uuidv4(),
+                title: JSON.parse(note.body as string).content[0].content[0].text,
+                body: note.html as string,
+                creator: note.creator as string,
+            }
+
+            router.navigate({
+                pathname: "/newarticle",
+                params: obj_article
+            })
+        }
+    }
+
     return (
         <PageLayout_3>
             <GestureHandlerRootView style={{
@@ -241,7 +258,7 @@ export default function NoteEditor() {
                                 <IcTwotoneWhatsapp width={24} height={24} color={'black'} />
                                 <Text style={{ fontSize: convert(18) }}>Share on Whatsapp</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}>
+                            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handlePublish}>
                                 <FluentGlobeArrowForward32Regular width={24} height={24} color={'black'} />
                                 <Text style={{ fontSize: convert(18) }}>Publish as article</Text>
                             </TouchableOpacity>

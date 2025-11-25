@@ -93,6 +93,7 @@ export interface Articles {
   imageurl: string;
   userid: string;
   noteid: string;
+  body: string;
   description: string;
   topic: string;
   title: string;

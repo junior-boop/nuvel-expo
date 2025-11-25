@@ -8,11 +8,13 @@ export default function AllNotesFilters() {
     const { notesQuery } = useDatabase()
 
     const note = notesQuery?.where((item) => item.pinned === 0 && item.archived === 0 && item.grouped === null)
+    const notepinned = notesQuery?.where((item) => item.pinned === 1 && item.archived === 0 && item.grouped === null)
     // console.log(note)
+    console.log("notepinned:", notepinned?.length)
 
     return (
         <View>
-            <View style={{ paddingHorizontal: 14 }}><Text style={{ fontSize: convert(18), fontWeight: "bold", marginBottom: convert(12) }}>Toutes les Notes</Text></View>
+            {notepinned?.length > 0 && <View style={{ paddingHorizontal: 14 }}><Text style={{ fontSize: convert(18), fontWeight: "bold", marginBottom: convert(12) }}>Toutes les Notes</Text></View>}
             <Column data={note as Notes[]} />
         </View>
     );

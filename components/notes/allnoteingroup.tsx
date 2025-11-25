@@ -10,7 +10,6 @@ export default function AllNotesFiltersGroup({ id }: { id: string }) {
 
     return (
         <View>
-            {/* <View style={{ paddingHorizontal: 14 }}><Text style={{ fontSize: convert(18), fontWeight: "bold", marginBottom: convert(12) }}>Toutes les Notes</Text></View> */}
             <Column data={note as Notes[]} />
         </View>
     );
