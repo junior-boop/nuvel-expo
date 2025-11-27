@@ -176,7 +176,6 @@ export const first_sync = async () => {
   // note sync
   const sync_note =await fetch(serveur + "/notes/" + session?.iduser)
   const result_note = await sync_note.json() as {data : NotesType[]}
-  console.log("notes online",result_note.data.length)
 
   if( check_sync.length === 0 && check_notes.length === 0){
     for(let note of result_note.data){
@@ -199,7 +198,6 @@ export const first_sync = async () => {
   // group sync
   const sync_group =await fetch(serveur + "/groups/" + session?.iduser)
   const result_group = await sync_group.json() as { data : GroupsType[]}
-  console.log("groupes online",result_group.data.length)
 
   if(check_sync.length === 0 && check_groups.length === 0){
     for(let group of result_group.data){
