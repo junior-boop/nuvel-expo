@@ -1,6 +1,5 @@
 import { QueryForTable } from '@/constants/Queryuilder';
 import * as AiStore from '@/Database/ai';
-import * as BibleVerse from "@/Database/bible.content";
 import * as BibleMetadata from "@/Database/bible.metadata";
 import * as Groups from '@/Database/groups';
 import * as Notes from '@/Database/notes';
@@ -40,6 +39,7 @@ interface DatabaseContextType {
     adduser: (data: UserType) => Promise<UserType | undefined>
     deletedUser: (id: string) => Promise<boolean | null>;
     updateNote: (noteData: Partial<NotesType>) => Promise<void>;
+    publishNote: (noteData: { id: string, publishId: string, version: number }) => Promise<void>;
     deleteNote: (id: string) => Promise<void>;
     toggleNotePinned: (note: NotesType) => Promise<void>;
     toggleNoteArchived: (note: NotesType) => Promise<void>;
@@ -110,20 +110,18 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         await User.createTable()
         await Session.createTable()
         await BibleMetadata.createTable()
-        await BibleVerse.createTable()
         await AiStore.createTable()
         await Sync.createEvent()
 
         await syncToServer()
         clearError();
         try {
-            const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, bibleVerseResult, Sync_EventResult] = await Promise.all([
+            const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, Sync_EventResult] = await Promise.all([
                 Notes.getall(),
                 Groups.getall(),
                 Session.get(),
                 User.getAll(),
                 BibleMetadata.getall(),
-                BibleVerse.getall(),
                 Sync.getAll()
             ]);
             const notesArray = new QueryForTable<NotesType>(notesResult || []);
@@ -197,6 +195,24 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await Notes.update(noteData);
+            const objet: Partial<Sync.Sync_Event> = {
+                elementid: noteData.id,
+                action: "UPDATE",
+                need_sync: true,
+                table_name: "notes",
+            }
+            const sync = await Sync.Set(objet)
+            console.log(`Sync_event updated ${noteData.id}`, sync)
+            if (result) loadInitialData();
+        } catch (error) {
+            handleError(error, 'updating note');
+        }
+    }, [loadInitialData]);
+
+    const publishNote = useCallback(async (noteData: { id: string, publishId: string, version: number }) => {
+        clearError();
+        try {
+            const result = await Notes.publish(noteData);
             const objet: Partial<Sync.Sync_Event> = {
                 elementid: noteData.id,
                 action: "UPDATE",
@@ -437,6 +453,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         adduser,
         deletedUser,
         updateNote,
+        publishNote,
         deleteNote,
         toggleNotePinned,
         toggleNoteArchived,
@@ -461,6 +478,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         adduser,
         deletedUser,
         updateNote,
+        publishNote,
         deleteNote,
         toggleNotePinned,
         toggleNoteArchived,

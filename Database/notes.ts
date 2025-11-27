@@ -61,6 +61,16 @@ export const update = async (data: Partial<NotesType>) => {
   return result;
 };
 
+export const publish = async (data: Partial<NotesType>) => {
+  const items = Notes;
+  const result = await items.update(data.id as string, {
+    publishId: data.publishId,
+    modified: new Date().toISOString(),
+    version: data.version + 1 || 2,
+  });
+  return result;
+};
+
 export async function addtogroup(data: NotesType) {
   const items = Notes;
 

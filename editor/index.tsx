@@ -291,7 +291,7 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
             })
             setSavingState("Saved")
             setIsTyping(false)
-        }, 3000)
+        }, 500)
 
 
         const t2 = setTimeout(() => {

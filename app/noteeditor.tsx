@@ -34,6 +34,7 @@ export default function NoteEditor() {
     const [title, setTitle] = useState<string | null>(null)
     const [inputValue, setInputValue] = useState("");
     const [ai_conversation, setConversation] = useState<AiHistoryType[]>([])
+    const [note_data, set_note_data] = useState<Notes | null>(null)
 
     // menu de modification texte
     const editorRef = useRef<any | null>(null);
@@ -52,12 +53,11 @@ export default function NoteEditor() {
 
     const handleUpdate = async (data: Partial<Notes>) => {
         await updateNote(data)
+        set_note_data(data)
         const ws_vs = htmlToWhatsApp(data.html as string)
         const _ = JSON.parse(data.body as string)
         set_note_whatsapp(ws_vs)
         set_note_body(data.body as string)
-        // console.log(_.content[0].)
-        // setTitle(content.)
 
         if (_.content[0].type === "heading") {
             setTitle(_.content[0].content[0].text)
@@ -86,6 +86,11 @@ export default function NoteEditor() {
         } catch (error) {
             Alert.alert("Erreur WhatsApp", "WhatsApp n'est installé sur votre appareil")
         }
+    }
+
+    const handleBack = async () => {
+        await updateNote(note_data as Notes)
+        router.back()
     }
 
     useEffect(() => {
@@ -178,10 +183,12 @@ export default function NoteEditor() {
         const note = notesQuery?.findById(data.id as string)
         if (note) {
             const obj_article = {
-                articleId: uuidv4(),
                 title: JSON.parse(note.body as string).content[0].content[0].text,
-                body: note.html as string,
+                html: note.html as string,
+                body: note.body as string,
                 creator: note.creator as string,
+                version: note.version,
+                noteid: note.id
             }
 
             router.navigate({
@@ -200,7 +207,7 @@ export default function NoteEditor() {
             }}>
                 <Stack.Screen options={{ animation: "fade_from_bottom", headerShown: false }} />
                 <View style={{ height: convert(62), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
-                    <TouchableOpacity onPress={() => { router.back() }}>
+                    <TouchableOpacity onPress={handleBack}>
                         <IcBaselineArrowBack width={24} height={24} color={'black'} />
                     </TouchableOpacity>
                     <View style={{ flexDirection: "row", alignItems: 'center', gap: convert(16), marginRight: convert(4) }}>
@@ -258,14 +265,32 @@ export default function NoteEditor() {
                                 <IcTwotoneWhatsapp width={24} height={24} color={'black'} />
                                 <Text style={{ fontSize: convert(18) }}>Share on Whatsapp</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handlePublish}>
-                                <FluentGlobeArrowForward32Regular width={24} height={24} color={'black'} />
-                                <Text style={{ fontSize: convert(18) }}>Publish as article</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}>
-                                <FluentDelete32Regular width={24} height={24} color={'black'} />
-                                <Text style={{ fontSize: convert(18) }}>Deleted this note</Text>
-                            </TouchableOpacity>
+                            {
+                                Note.publishId ? (
+                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handlePublish}>
+                                        <FluentGlobeArrowForward32Regular width={24} height={24} color={'black'} />
+                                        <Text style={{ fontSize: convert(18) }}>Updated the article</Text>
+                                    </TouchableOpacity>
+                                ) : (
+                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handlePublish}>
+                                        <FluentGlobeArrowForward32Regular width={24} height={24} color={'black'} />
+                                        <Text style={{ fontSize: convert(18) }}>Publish as article</Text>
+                                    </TouchableOpacity>
+                                )
+                            }
+                            {
+                                Note.publishId ? (
+                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handlePublish}>
+                                        <FluentDelete32Regular width={24} height={24} color={'black'} />
+                                        <Text style={{ fontSize: convert(18) }}>Deleted the note and article</Text>
+                                    </TouchableOpacity>
+                                ) : (
+                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}>
+                                        <FluentDelete32Regular width={24} height={24} color={'black'} />
+                                        <Text style={{ fontSize: convert(18) }}>Deleted this note</Text>
+                                    </TouchableOpacity>
+                                )
+                            }
                         </BottomSheetView>
                     </BottomSheet>
                 }
