@@ -6,7 +6,7 @@ import * as Groups from '@/Database/groups';
 import * as Notes from '@/Database/notes';
 import * as Session from '@/Database/session';
 import * as Sync from '@/Database/sync_event';
-import { Sync_to_serveur } from '@/Database/sync_online';
+import { first_sync, Sync_to_serveur } from '@/Database/sync_online';
 import * as User from '@/Database/users';
 import { generateUUID as uuidv4 } from '@/Database/uuid';
 import React, {
@@ -86,6 +86,22 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         setError(null);
     }, []);
 
+    const syncToServer = useCallback(async () => {
+        const session = await Session.get()
+        if (session) {
+            Sync_to_serveur()
+        }
+
+    }, [])
+
+    const firstSync = useCallback(async () => {
+        const session = await Session.get()
+        if (session) {
+            first_sync()
+        }
+
+    }, [])
+
 
     const loadInitialData = useCallback(async () => {
         setIsLoading(true);
@@ -97,7 +113,8 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         await BibleVerse.createTable()
         await AiStore.createTable()
         await Sync.createEvent()
-        Sync_to_serveur()
+
+        await syncToServer()
         clearError();
         try {
             const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, bibleVerseResult, Sync_EventResult] = await Promise.all([
@@ -129,6 +146,12 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [handleError, clearError]);
 
+
+
+    useEffect(() => {
+        firstSync()
+        loadInitialData()
+    }, [loadInitialData])
 
     useEffect(() => {
         loadInitialData();

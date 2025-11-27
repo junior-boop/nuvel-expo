@@ -1,5 +1,5 @@
 export default `
-@import url('https://fonts.googleapis.com/css2?family=Andada+Pro:ital,wght@0,400..840;1,400..840&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Andada+Pro:ital,wght@0,400..840;1,400..840&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import "tailwindcss";
 
 
@@ -27,12 +27,12 @@ html {
     margin: 0.75rem 0;
     line-height: 1.50;
     letter-spacing : 0.1px;
-    font-size: 1.25rem;
-    font-family: "Andada Pro";
+    font-size: 1.20rem;
+    font-family: "PT Serif", serif;
 }
 
 p {
-    font-family: "Andada Pro", serif;
+    font-family: "PT Serif", serif;
 }
 
 .tiptap p:first-child {

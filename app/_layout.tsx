@@ -10,6 +10,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { View } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { DatabaseProvider } from '@/context/database.context';
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 
 export {
@@ -72,18 +73,20 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={DefaultTheme}>
       <DatabaseProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-          <Stack.Screen name='noteeditor' options={{ headerShown: true }} />
-          <Stack.Screen name='groupeitems' options={{ headerShown: true, headerShadowVisible: false, animation: 'fade_from_bottom', headerTitle: '' }} />
-          <Stack.Screen name='searchnotes' options={{ headerShown: true, headerShadowVisible: false, animation: 'fade_from_bottom', headerTitle: '' }} />
-          <Stack.Screen name="login" options={{ headerShown: false, contentStyle: { backgroundColor: "#fff" } }} />
-          <Stack.Screen name="profils" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
-          <Stack.Screen name="biblepage" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
-          <Stack.Screen name="newarticle" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
-        </Stack>
-        <View style={{ height: frame.bottom }} />
+        <KeyboardProvider>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+            <Stack.Screen name='noteeditor' options={{ headerShown: true }} />
+            <Stack.Screen name='groupeitems' options={{ headerShown: true, headerShadowVisible: false, animation: 'fade_from_bottom', headerTitle: '' }} />
+            <Stack.Screen name='searchnotes' options={{ headerShown: true, headerShadowVisible: false, animation: 'fade_from_bottom', headerTitle: '' }} />
+            <Stack.Screen name="login" options={{ headerShown: false, contentStyle: { backgroundColor: "#fff" } }} />
+            <Stack.Screen name="profils" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
+            <Stack.Screen name="biblepage" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
+            <Stack.Screen name="newarticle" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
+          </Stack>
+          <View style={{ height: frame.bottom }} />
+        </KeyboardProvider>
       </DatabaseProvider>
     </ThemeProvider>
   );

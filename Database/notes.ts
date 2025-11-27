@@ -11,6 +11,7 @@ const Notes = db.createModel<NotesType>("notes", {
   grouped: "TEXT NULL",
   created: "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
   modified: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+  publishId : "TEXT NULL",
   version: "INTEGER NOT NULL DEFAULT 1",
 });
 

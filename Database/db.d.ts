@@ -8,6 +8,7 @@ export type Notes = {
   grouped: string | null;
   created: Date | string;
   modified: Date | string;
+  publishId: string | null;
   version: number;
 };
 

@@ -4,12 +4,39 @@ import * as Session from '@/Database/session';
 import * as Sync from '@/Database/sync_event';
 import { orm } from '.';
 
+
+type NotesType = {
+  id: string;
+  body: string;
+  creator: string;
+  pinned: 0 | 1;
+  archived: 0 | 1;
+  grouped: string | null;
+  html: string;
+  created: Date;
+  modified: Date;
+  clientversion: number;
+  lastSyncUpdate: string | Date;
+  version: number;
+  publishId: string | null;
+};
+
+type GroupsType = {
+  id: string;
+  name: string;
+  userid: string;
+  created: Date;
+  modified: Date;
+  lastSyncUpdate: string | Date;
+  version: number;
+};
+
+
 const serveur = "https://nuvelserver.godigital.workers.dev"
 
 const senddata = async (table_name : string , id : string) => {
   const data = table_name === "notes" ? await Notes.get(id)
   : table_name === "groups" ? await Groups.get(id) : null
-
 
   await fetch(serveur + "/" + table_name + "/" + id, {
     method : "POST",
@@ -90,14 +117,13 @@ export const Sync_to_serveur = async () => {
   const allnotes = await Notes.getall()
   const allgroupes = await Groups.getall()
 
-  
   deleteSyncData()
   const sync_event = await Sync.getAll()
 
 
   if(check.status === 200) {
-    console.log("connecté")
-    if(result.sync.length > 0) {
+    console.log("connecté", result)
+    if(result.data.length > 0) {
       for(let note of sync_event) {
         if(note.table_name === "notes"){
           if(note.action === "CREATE" || note.action === "UPDATE") {
@@ -126,7 +152,7 @@ export const Sync_to_serveur = async () => {
           
       
       }
-    } else {
+    } else if(result.data.length === 0) {
       for(let note of allnotes){
         senddata("notes", note.id)
       }
@@ -139,4 +165,50 @@ export const Sync_to_serveur = async () => {
     console.log("deconneter")
   }
 
+}
+
+export const first_sync = async () => {
+  const check_sync = await Sync.getAll()
+  const check_notes = await Notes.getall()
+  const check_groups = await Groups.getall()
+  const session = await Session.get()
+  
+  // note sync
+  const sync_note =await fetch(serveur + "/notes/" + session?.iduser)
+  const result_note = await sync_note.json() as {data : NotesType[]}
+  console.log("notes online",result_note.data.length)
+
+  if( check_sync.length === 0 && check_notes.length === 0){
+    for(let note of result_note.data){
+      const n = await Notes.created({
+        id: note.id,
+        body: note.body,
+        html: note.html,
+        creator: note.creator,
+        pinned: note.pinned,
+        archived: note.archived,
+        grouped: note.grouped,
+        created: note.created,
+        modified: note.modified,
+        version: note.clientversion,
+        publishId: note.publishId
+      })
+    }
+  }
+
+  // group sync
+  const sync_group =await fetch(serveur + "/groups/" + session?.iduser)
+  const result_group = await sync_group.json() as { data : GroupsType[]}
+  console.log("groupes online",result_group.data.length)
+
+  if(check_sync.length === 0 && check_groups.length === 0){
+    for(let group of result_group.data){
+      const g = await Groups.created({
+        id: group.id,
+        name : group.name,
+        created: group.created,
+        modified: group.modified,
+      })
+    }
+  }
 }
