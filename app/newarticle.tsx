@@ -131,7 +131,7 @@ export default function NewArticle() {
                 title: params.title as string,
                 version: 1
             }
-            const articleid = `${uuidv4()}`
+            const articleid = `article_${uuidv4()}`
             console.log(articleid)
 
             try {
@@ -150,21 +150,20 @@ export default function NewArticle() {
                 }
 
                 const response = await post_req.json()
-                console.log(response)
-                // if (response.status === '/articles 200 OK succes') {
+                if (response.status === '/articles 200 OK succes') {
 
-                //     db.publishNote({
-                //         id: params.noteid as string,
-                //         publishId: JSON.stringify({
-                //             articleid: articleid,
-                //             title: params.title as string,
-                //             imageUrl: imageUrl
-                //         }),
-                //         version: parseInt(params.version as string)
-                //     })
-                //     router.back()
-                // }
-                // setIsSaving(false)
+                    db.publishNote({
+                        id: params.noteid as string,
+                        publishId: JSON.stringify({
+                            articleid: articleid,
+                            title: params.title as string,
+                            imageUrl: imageUrl
+                        }),
+                        version: parseInt(params.version as string)
+                    })
+                    router.back()
+                }
+                setIsSaving(false)
             } catch (error) {
                 console.error('Erreur création article:', error)
                 setIsSaving(false)
