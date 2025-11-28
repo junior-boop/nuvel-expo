@@ -85,7 +85,6 @@ const PublishSqare = () => {
 
     useEffect(() => {
         const query = notesQuery?.filter((note) => note.publishId !== null).findAll()
-        console.log(query)
         setNotes(query)
     }, [])
     return (<View>
