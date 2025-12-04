@@ -9,7 +9,7 @@ import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import moment from 'moment'
 import React, { forwardRef, useEffect, useState } from 'react'
-import styles from './styles'
+import styles from './readerstyle'
 
 const extensions = [BibleVerset, TextStyleKit, StarterKit, Image, TaskList,
     TaskItem.configure({
@@ -62,6 +62,7 @@ const ReaderHtml = forwardRef(({ note, author }: { note: Notes, author: User }, 
                 </div>
 
                 <EditorContent editor={editor} />
+                <div style={{ height: 50 }} />
             </div>
         </div>
     )
