@@ -1,155 +1,293 @@
+import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
 import { w } from "@/constants/Colors";
 import { convert } from "@/constants/convert";
-import { IcBaselineArrowBack, RiDownload2Line, RiMessageLine, RiOpenArmLine, RiShareForwardLine } from "@/constants/icons";
+import { FluentArrowCircleUp20Filled, FluentSubtractCircle12Regular, IcBaselineArrowBack, RiDownload2Line, RiMessageLine, RiOpenArmLine, RiSendPlaneLine, RiShareForwardLine } from "@/constants/icons";
+import { Comments } from "@/Database/db";
 import ReaderHtml from "@/editor/readerhtml";
-import BottomSheet, { BottomSheetFooter, BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, TextInput, TouchableOpacity } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import moment from "moment";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Alert, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
+import EventSource from 'react-native-sse';
 
 export default function ReaderPage() {
-    const frame = useSafeAreaInsets()
     const { article } = useLocalSearchParams()
-    const [author, setAuthor] = useState({})
-    const [comment, setComment] = useState(false)
-    const [keyboardHeight, setKeyboardHeight] = useState(0)
-    const [keyboardState, setKeyboardState] = useState(false)
+    const [articles, setArticles] = useState({})
+    const [commentOpen, setCommentOpen] = useState(false)
+    const [comments, setComments] = useState<Comments[]>([])
+    const [request, setRequest] = useState<{ articlesId: string, comments: Comments[], count: number } | null>(null)
     const note = JSON.parse(article as string)
     const [commentValue, setCommentValue] = useState<String | null>(null)
     const sheetRef = useRef<BottomSheet>(null);
-    const snapPoints = useMemo(() => ["50%", "96%"], []);
+    const snapPoints = useMemo(() => ["100%"], []);
 
-    const fetchAutor = useCallback(async () => {
-        const response = await fetch(`https://nuvelserver.godigital.workers.dev/users/${note.userid}`)
+    const fetchArticles = useCallback(async () => {
+        console.log(note)
+        const response = await fetch(`https://nuvelserver.godigital.workers.dev/articles/${note.id}`)
         const data = await response.json()
-        setAuthor(data)
+        setArticles(data)
     }, [])
 
-    const renderFooter = useCallback(
-        props => (
-            <BottomSheetFooter {...props} bottomInset={keyboardHeight}>
-                <View style={{ backgroundColor: 'white', paddingVertical: convert(5), paddingHorizontal: convert(16) }}>
-                    <TextInput
-                        style={{ width: w - convert(32), minHeight: convert(42), borderRadius: convert(8), color: '#494949ff', fontSize: convert(16) }}
-                        placeholder="Write a comment"
-                        placeholderTextColor="#777"
-                        multiline
-                        numberOfLines={5}
-                        textAlignVertical="top"
-                        textAlign="left"
-                        onPress={() => { sheetRef.current?.expand() }}
-                        keyboardType="email-address"
-                        textContentType="none"
-                        autoCapitalize="none"
-                        autoCorrect={true}
-                        value={commentValue as string}
-                        onChangeText={(e) => setCommentValue(e)}
+    let eventSource: EventSource | null = null
 
-                    />
-                </View>
-            </BottomSheetFooter>
-        ),
-        [keyboardHeight]
-    );
+    function log(message: string, type = 'info') {
+        message = `[${new Date().toLocaleTimeString()}] ${message}`;
+        console.log(message)
+    }
 
-    // ✅ Gestion du clavier - CORRIGÉ
+    function updateStatus(connected: boolean) {
+        if (connected) {
+            log('🟢 Connecté', 'success');
+        } else {
+            log('🔴 Déconnecté', 'error');
+        }
+    }
+
+    function connectSSE() {
+        const articleId = note.id
+
+        if (!articleId) {
+            Alert.alert('Veuillez entrer un ID d\'article');
+            return;
+        }
+
+        if (eventSource) {
+            eventSource.close();
+        }
+
+        const url = `https://nuvelserver.godigital.workers.dev/comments/${articleId}/stream`;
+        log(`Connexion à ${url}...`, 'info');
+
+        eventSource = new EventSource(url);
+
+        eventSource.addEventListener('connected', (event) => {
+            const data = JSON.parse(event.data);
+            log(`✅ ${data.message}`, 'success');
+            updateStatus(true);
+        });
+
+        eventSource.addEventListener('update', (event) => {
+            const data = JSON.parse(event.data);
+            log(`📩 Nouveaux commentaires reçus: ${data.count}`, 'success');
+
+            data.comments.forEach((comment: Comments) => {
+                addComment(comment);
+            });
+        });
+
+        eventSource.addEventListener('ping', (event) => {
+            // Keep-alive
+        });
+
+        eventSource.onerror = (error) => {
+            log('❌ Erreur de connexion SSE', 'error');
+            updateStatus(false);
+        };
+    }
+
+    function addComment(comment: Comments) {
+
+        log('comment added', 'success');
+        setComments((prevComments) => [...prevComments, comment]);
+
+    }
+
+    async function loadComments() {
+        // const articleId = document.getElementById('articleId').value;
+        const articleId = note.id
+
+        if (!articleId) {
+            Alert.alert('Veuillez entrer un ID d\'article');
+            return;
+        }
+
+        try {
+            log(`📥 Chargement des commentaires...`, 'info');
+            const response = await fetch(`https://nuvelserver.godigital.workers.dev/comments/${articleId}`);
+            const data = await response.json();
+            setRequest(data)
+            setComments(data.comments)
+
+            log(`✅ ${data.count} commentaire(s) chargé(s)`, 'success');
+        } catch (error) {
+            log(`❌ Erreur: ${error.message}`, 'error');
+        }
+    }
+
+    async function postComment() {
+        const articleId = note.id;
+        const creator = `${note.user.name} ${note.user.first_name}`;
+        const content = commentValue;
+
+        if (!articleId || !creator || !content) {
+            Alert.alert('Veuillez remplir tous les champs');
+            return;
+        }
+
+        try {
+            log(`📤 Envoi du commentaire...`, 'info');
+
+            const response = await fetch(`https://nuvelserver.godigital.workers.dev/comments/${articleId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    creator,
+                    content
+                })
+            });
+
+            const data = await response.json();
+            setRequest(data)
+            console.log("nouveau post", data.comments)
+
+            if (data.success) {
+                log(`✅ Commentaire envoyé avec succès`, 'success');
+                setCommentValue('')
+            } else {
+                log(`❌ Erreur: ${data.error}`, 'error');
+            }
+        } catch (error) {
+            log(`❌ Erreur: ${error.message}`, 'error');
+        }
+    }
+
     useEffect(() => {
-        // Enregistrer les deux listeners en même temps
-        const showListener = Keyboard.addListener('keyboardDidShow', (e) => {
-            setKeyboardHeight(e.endCoordinates.height)
-            console.log()
-            setKeyboardState(true)
-        })
-
-        // const hideListener = Keyboard.addListener('keyboardDidHide', () => {
-        //     setKeyboardHeight(0)
-        //     setKeyboardState(false)
-        // })
-
-        // Cleanup : supprimer les listeners au démontage
-        // return () => {
-        //     showListener.remove()
-        //     hideListener.remove()
-        // }
-    }, []) // ✅ Dépendances vides = une seule fois au montage
-
-    useEffect(() => {
-        fetchAutor()
+        if (eventSource) {
+            eventSource.close();
+        }
+        connectSSE()
+        fetchArticles()
     }, [])
+
+
+    useEffect(() => {
+        if (commentOpen) loadComments()
+    }, [commentOpen])
 
     return (
-        <GestureHandlerRootView style={{
-            flex: 1,
-            backgroundColor: 'white',
-            position: 'relative'
-        }}>
-            <View style={{ height: frame.top }} />
-            <View style={{ height: convert(52), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
-                <TouchableOpacity onPress={() => { router.back() }}>
-                    <IcBaselineArrowBack width={24} height={24} color={'black'} />
-                </TouchableOpacity>
-            </View>
-            <ReaderHtml note={JSON.parse(article as string)} author={author} />
-            <View style={{ height: 52, width: w, backgroundColor: 'white', elevation: convert(12), justifyContent: 'center' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: convert(16) }}>
-                    <TouchableOpacity style={styles.btn_appreciation}>
-                        <RiOpenArmLine width={24} height={24} color={'#777'} />
-                        <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>22</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => { setComment(true) }}
-                        style={styles.btn_appreciation}>
-                        <RiMessageLine width={24} height={24} color={'#777'} />
-                        <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>210</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.btn_appreciation}>
-                        <RiShareForwardLine width={24} height={24} color={'#777'} />
-                        <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>12</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.btn_appreciation}>
-                        <RiDownload2Line width={24} height={24} color={'#777'} />
+        <PageLayout_3>
+            <GestureHandlerRootView style={{
+                flex: 1,
+                backgroundColor: 'white',
+                position: 'relative'
+            }}>
+                <View style={{ height: convert(52), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
+                    <TouchableOpacity onPress={() => { router.back() }}>
+                        <IcBaselineArrowBack width={24} height={24} color={'black'} />
                     </TouchableOpacity>
                 </View>
-            </View>
-            {
-                comment && (<BottomSheet
-                    ref={sheetRef}
-                    snapPoints={snapPoints}
-                    enableDynamicSizing={false}
-                    enablePanDownToClose={true}
-                    enableContentPanningGesture={true}
-                    footerComponent={renderFooter}
-                    onClose={() => { setComment(false); Keyboard.dismiss() }}
-                    containerStyle={{ backgroundColor: '#0003' }}
+                <Suspense fallback={<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>loading...</Text></View>}>
+                    {articles.body && <ReaderHtml note={articles} />}
+                </Suspense>
+                <View style={{ height: 52, width: w, backgroundColor: 'white', elevation: convert(12), justifyContent: 'center' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: convert(16) }}>
+                        <TouchableOpacity style={styles.btn_appreciation}>
+                            <RiOpenArmLine width={24} height={24} color={'#777'} />
+                            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>22</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => { setCommentOpen(true) }}
+                            style={styles.btn_appreciation}>
+                            <RiMessageLine width={24} height={24} color={'#777'} />
+                            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>{request?.count > 9 ? request?.count : `0${request?.count}`}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.btn_appreciation}>
+                            <RiShareForwardLine width={24} height={24} color={'#777'} />
+                            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>12</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.btn_appreciation}>
+                            <RiDownload2Line width={24} height={24} color={'#777'} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+                {
+                    commentOpen && (<BottomSheet
+                        ref={sheetRef}
+                        snapPoints={snapPoints}
+                        enableDynamicSizing={false}
+                        enablePanDownToClose={true}
+                        enableContentPanningGesture={true}
+                        // footerComponent={renderFooter}
+                        onClose={() => { setCommentOpen(false); Keyboard.dismiss() }}
+                        containerStyle={{ backgroundColor: '#0003' }}
 
-                >
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === "ios" ? "padding" : "height"}
-                        style={{ flex: 1 }}
                     >
-                        <BottomSheetView style={{ flex: 1, height: '100%' }}>
-                            <View style={{ height: convert(42), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
-                                <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>210 Comments</Text>
-                            </View>
-                            <View style={{ flex: 1, backgroundColor: 'white' }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: convert(16), paddingHorizontal: convert(16), paddingVertical: convert(8) }}>
-                                    <View style={{ width: convert(42), height: convert(42), borderRadius: convert(21), overflow: 'hidden', backgroundColor: '#777' }}>
-                                        {/* <Image style={{ width: '100%', height: '100%' }} /> */}
+                        <KeyboardAvoidingView
+                            behavior={Platform.OS === "ios" ? "padding" : "height"}
+                            style={{ flex: 1 }}
+                        >
+                            <BottomSheetView style={{ flex: 1, height: '100%' }}>
+                                <View style={{ height: convert(42), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
+                                    <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>{request?.count > 9 ? request?.count : `0${request?.count}`} Comments</Text>
+                                </View>
+                                <ScrollView style={{ flex: 1, backgroundColor: 'white' }}>
+                                    <View style={{ gap: convert(24), paddingVertical: convert(16) }}>
+                                        {
+                                            comments.map((comment, index) => (
+                                                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: convert(16), paddingHorizontal: convert(16), }} key={index}>
+                                                    <View style={{ width: convert(42), height: convert(42), borderRadius: convert(21), overflow: 'hidden', backgroundColor: '#777' }}>
+                                                        {/* <Image style={{ width: '100%', height: '100%' }} /> */}
+                                                    </View>
+                                                    <View>
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: convert(5) }}>
+                                                            <Text style={{ fontSize: convert(16), fontWeight: 'bold', color: '#252525ff' }}>{comment.creator}</Text>
+                                                            <Text style={{ fontSize: convert(14), fontStyle: "italic", color: '#252525ff' }}>• {moment(comment.created).fromNow()}</Text>
+                                                        </View>
+                                                        <Text style={{ fontSize: convert(16), color: '#202020ff', width: w * 0.7 }}>{comment.content}</Text>
+                                                        <View style={{ marginTop: convert(8), flexDirection: 'row', alignItems: 'center', gap: convert(24) }}>
+                                                            <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: convert(5) }}>
+                                                                <FluentArrowCircleUp20Filled width={24} height={24} color={'#777'} />
+                                                                <Text style={{ fontSize: convert(16), color: '#777', fontWeight: 'bold' }}>{comment.notes}</Text>
+                                                            </Pressable>
+                                                            <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: convert(5) }}>
+                                                                <FluentSubtractCircle12Regular width={20} height={20} color={'#777'} />
+                                                                <Text style={{ fontSize: convert(16), color: '#777', fontWeight: 'bold' }}>Signal</Text>
+                                                            </Pressable>
+                                                        </View>
+                                                    </View>
+
+                                                </View>
+                                            ))
+                                        }
                                     </View>
+                                </ScrollView>
+                                <View style={{ bottom: 0, zIndex: 12, width: w, borderTopWidth: 1, borderColor: '#cfdfeeff', paddingHorizontal: convert(16), minHeight: convert(56), paddingTop: convert(8), paddingBottom: convert(12), height: 'auto', maxHeight: convert(150), flexDirection: 'row', gap: 12, alignItems: "flex-end" }}>
+                                    <TextInput
+                                        multiline={true}
+                                        value={commentValue as string}
+                                        onChangeText={setCommentValue}
+                                        autoFocus={false}
+                                        autoCapitalize="sentences"
+                                        placeholder="Types your request"
+                                        placeholderTextColor={"#a7a7a7ff"}
+                                        style={{
+                                            minHeight: 40,
+                                            height: 'auto',
+                                            color: 'black',
+                                            flex: 1,
+                                            fontSize: convert(16)
+                                        }}
+                                    />
                                     <View>
-                                        <Text style={{ fontSize: convert(14), fontWeight: 'bold', color: '#252525ff' }}>John Doe</Text>
-                                        <Text style={{ fontSize: convert(16), color: '#202020ff' }}>210 Comments</Text>
+                                        <TouchableOpacity
+                                            onPress={postComment}
+                                            disabled={!commentValue?.trim()}
+                                            style={{ width: 40, aspectRatio: 1, borderRadius: 26, alignItems: 'center', justifyContent: "center", backgroundColor: "#238dffff" }}>
+                                            <RiSendPlaneLine width={24} height={24} color={"white"} style={{ marginBottom: convert(-5), marginLeft: convert(-5) }} />
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
-                            </View>
-                        </BottomSheetView>
-                    </KeyboardAvoidingView>
-                </BottomSheet>)
-            }
-        </GestureHandlerRootView>
+                            </BottomSheetView>
+                        </KeyboardAvoidingView>
+                    </BottomSheet>)
+                }
+            </GestureHandlerRootView>
+        </PageLayout_3>
     )
 }
 

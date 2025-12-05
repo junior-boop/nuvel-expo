@@ -388,3 +388,15 @@ export function RiSendPlaneLine(props: SvgProps) {
         <Svg width="1em" height="1em" viewBox="0 0 24 24" {...props}>{/* Icon from Remix Icon by Remix Design - https://github.com/Remix-Design/RemixIcon/blob/master/License */}<Path fill="currentColor" d="m21.727 2.957l-5.454 19.086c-.15.529-.475.553-.717.07L11 13L1.923 9.37c-.51-.205-.503-.51.034-.689L21.043 2.32c.529-.176.832.12.684.638m-2.692 2.14L6.812 9.17l5.637 2.255l3.04 6.08z" /></Svg>
     )
 }
+
+export function FluentArrowCircleUp20Filled(props: SvgProps) {
+    return (
+        <Svg width="1em" height="1em" viewBox="0 0 20 20" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<Path fill="currentColor" d="M2 10a8 8 0 1 1 16 0a8 8 0 0 1-16 0m4.646-.854a.5.5 0 1 0 .708.708L9.5 7.707V13.5a.5.5 0 0 0 1 0V7.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0z" /></Svg>
+    )
+}
+
+export function FluentSubtractCircle12Regular(props: SvgProps) {
+    return (
+        <Svg width="1em" height="1em" viewBox="0 0 12 12" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<Path fill="currentColor" d="M4 5.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zM6 1a5 5 0 1 0 0 10A5 5 0 0 0 6 1M2 6a4 4 0 1 1 8 0a4 4 0 0 1-8 0" /></Svg>
+    )
+}

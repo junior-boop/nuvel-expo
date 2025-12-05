@@ -144,3 +144,37 @@ export interface BibleData {
   verses: BibleVerse[];
   lien: string;
 }
+
+export interface Comments {
+  id: string;
+  articleId: string;
+  creator: string;
+  content: string;
+  notes: number;
+  created: string;
+  modified: string;
+}
+
+export interface Appreciations {
+  id: string;
+  articleId: string;
+  userid: string;
+}
+
+export interface SyncEvent {
+  id: string;
+  userid: string;
+  deviceid: string;
+  noteid: string;
+  action: string;
+  timestamp: string;
+  synced: boolean;
+}
+
+export interface Devices {
+  id: string;
+  userid: string;
+  devicename: string;
+  devicecharac: string;
+  created: string;
+}

@@ -1,7 +1,7 @@
 "use dom"
 
 import BibleVerset from '@/components/bible_component/extension'
-import { Notes, User } from '@/Database/db'
+import { Notes } from '@/Database/db'
 import Image from '@tiptap/extension-image'
 import { TaskItem, TaskList } from '@tiptap/extension-list'
 import { TextStyleKit } from '@tiptap/extension-text-style'
@@ -10,6 +10,7 @@ import StarterKit from '@tiptap/starter-kit'
 import moment from 'moment'
 import React, { forwardRef, useEffect, useState } from 'react'
 import styles from './readerstyle'
+
 
 const extensions = [BibleVerset, TextStyleKit, StarterKit, Image, TaskList,
     TaskItem.configure({
@@ -20,12 +21,9 @@ const extensions = [BibleVerset, TextStyleKit, StarterKit, Image, TaskList,
 
 
 
-const ReaderHtml = forwardRef(({ note, author }: { note: Notes, author: User }, ref) => {
-    const [isFocus, setIsFocus] = useState(false)
+const ReaderHtml = forwardRef(({ note }: { note: Notes, }, ref) => {
     const [content, setContent] = useState(note.body)
-    const [isTyping, setIsTyping] = useState(false)
-    const [savingState, setSavingState] = useState('Saving...')
-    const [version, setVersion] = useState(0)
+    const [readTime, setReadTime] = useState(0)
 
     const editor = useEditor({
         extensions,
@@ -41,10 +39,12 @@ const ReaderHtml = forwardRef(({ note, author }: { note: Notes, author: User }, 
     }
 
     useEffect(() => {
-        document.querySelector('h1')?.remove()
-        const text = document.body.innerText
-        console.log(tempslecture(text))
-
+        console.log("content ", content)
+        if (content) {
+            document.querySelector('h1')?.remove()
+            const text = document.body.innerText
+            setReadTime(tempslecture(text))
+        }
     }, [])
 
 
@@ -57,17 +57,17 @@ const ReaderHtml = forwardRef(({ note, author }: { note: Notes, author: User }, 
                 </div>
                 <div style={{ padding: "24px" }}>
                     <span style={{ fontSize: "2rem", fontWeight: "bold", color: "black" }}>{note.title}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: "1rem", color: "#444", display: 'block', marginTop: '8px', fontWeight: 'normal' }}>#{note.topic}</span> |
-                        <span style={{ fontSize: "1rem", color: "#444", display: 'inline-block', marginTop: '8px', fontWeight: 'normal' }}>{tempslecture(note.body)} mins read</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: "2rem", }}>
+                        <span style={{ fontSize: "1rem", color: "#444", display: 'block', marginTop: '8px', fontWeight: 'normal' }}>#{note.topic}</span> <span style={{ display: 'inline-block', width: '5px', height: '1rem', verticalAlign: 'middle', marginBottom: '6px' }}>•</span>
+                        <span style={{ fontSize: "1rem", color: "#444", display: 'inline-block', marginTop: '8px', fontWeight: 'normal' }}>{readTime} mins read</span>
                     </div>
                     <p style={{ fontSize: "1.20rem", color: "#444", fontStyle: "italic" }}>{note.description}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ backgroundColor: '#333', width: '42px', aspectRatio: 1, borderRadius: 21, overflow: 'hidden' }}>
-                            <img src={`https://${author.imageurl}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={`https://${note.user.imageurl}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                         <div>
-                            <span style={{ fontSize: "1.15rem", color: "#444", display: 'block', marginBottom: 2, fontWeight: 'bold' }}>{author.name} {author.first_name}</span>
+                            <span style={{ fontSize: "1.15rem", color: "#444", display: 'block', marginBottom: 2, fontWeight: 'bold' }}>{note.user.name} {note.user.first_name}</span>
                             <span style={{ fontSize: "1rem", color: "#444", fontStyle: "italic" }}>published: {moment(note.createdAt).fromNow()}</span>
                         </div>
                     </div>
