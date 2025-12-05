@@ -33,13 +33,22 @@ const ReaderHtml = forwardRef(({ note, author }: { note: Notes, author: User }, 
         editable: false,
     })
 
+
+    const tempslecture = (text: string) => {
+        const mots = text.split(/\s+/).length
+        const temps = Math.ceil(mots / 150)
+        return temps
+    }
+
     useEffect(() => {
         document.querySelector('h1')?.remove()
+        const text = document.body.innerText
+        console.log(tempslecture(text))
+
     }, [])
 
 
     return (
-
         <div style={{ width: '100vw' }}>
             <style dangerouslySetInnerHTML={{ __html: styles }}></style>
             <div style={{ position: "relative", height: "100svh", backgroundColor: 'white' }}>
@@ -48,7 +57,10 @@ const ReaderHtml = forwardRef(({ note, author }: { note: Notes, author: User }, 
                 </div>
                 <div style={{ padding: "24px" }}>
                     <span style={{ fontSize: "2rem", fontWeight: "bold", color: "black" }}>{note.title}</span>
-                    <span style={{ fontSize: "rem", color: "#444", display: 'block', marginTop: '8px', fontWeight: 'bold' }}>#{note.topic}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: "1rem", color: "#444", display: 'block', marginTop: '8px', fontWeight: 'normal' }}>#{note.topic}</span> |
+                        <span style={{ fontSize: "1rem", color: "#444", display: 'inline-block', marginTop: '8px', fontWeight: 'normal' }}>{tempslecture(note.body)} mins read</span>
+                    </div>
                     <p style={{ fontSize: "1.20rem", color: "#444", fontStyle: "italic" }}>{note.description}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ backgroundColor: '#333', width: '42px', aspectRatio: 1, borderRadius: 21, overflow: 'hidden' }}>

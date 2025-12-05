@@ -18,7 +18,7 @@ export default function ReaderPage() {
     const [keyboardHeight, setKeyboardHeight] = useState(0)
     const [keyboardState, setKeyboardState] = useState(false)
     const note = JSON.parse(article as string)
-
+    const [commentValue, setCommentValue] = useState<String | null>(null)
     const sheetRef = useRef<BottomSheet>(null);
     const snapPoints = useMemo(() => ["50%", "96%"], []);
 
@@ -45,6 +45,8 @@ export default function ReaderPage() {
                         textContentType="none"
                         autoCapitalize="none"
                         autoCorrect={true}
+                        value={commentValue as string}
+                        onChangeText={(e) => setCommentValue(e)}
 
                     />
                 </View>
@@ -58,19 +60,20 @@ export default function ReaderPage() {
         // Enregistrer les deux listeners en même temps
         const showListener = Keyboard.addListener('keyboardDidShow', (e) => {
             setKeyboardHeight(e.endCoordinates.height)
+            console.log()
             setKeyboardState(true)
         })
 
-        const hideListener = Keyboard.addListener('keyboardDidHide', () => {
-            setKeyboardHeight(0)
-            setKeyboardState(false)
-        })
+        // const hideListener = Keyboard.addListener('keyboardDidHide', () => {
+        //     setKeyboardHeight(0)
+        //     setKeyboardState(false)
+        // })
 
         // Cleanup : supprimer les listeners au démontage
-        return () => {
-            showListener.remove()
-            hideListener.remove()
-        }
+        // return () => {
+        //     showListener.remove()
+        //     hideListener.remove()
+        // }
     }, []) // ✅ Dépendances vides = une seule fois au montage
 
     useEffect(() => {
@@ -131,8 +134,16 @@ export default function ReaderPage() {
                             <View style={{ height: convert(42), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
                                 <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>210 Comments</Text>
                             </View>
-                            <View style={{ flex: 1, backgroundColor: '#555' }}>
-                                <Text>Content</Text>
+                            <View style={{ flex: 1, backgroundColor: 'white' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: convert(16), paddingHorizontal: convert(16), paddingVertical: convert(8) }}>
+                                    <View style={{ width: convert(42), height: convert(42), borderRadius: convert(21), overflow: 'hidden', backgroundColor: '#777' }}>
+                                        {/* <Image style={{ width: '100%', height: '100%' }} /> */}
+                                    </View>
+                                    <View>
+                                        <Text style={{ fontSize: convert(14), fontWeight: 'bold', color: '#252525ff' }}>John Doe</Text>
+                                        <Text style={{ fontSize: convert(16), color: '#202020ff' }}>210 Comments</Text>
+                                    </View>
+                                </View>
                             </View>
                         </BottomSheetView>
                     </KeyboardAvoidingView>
