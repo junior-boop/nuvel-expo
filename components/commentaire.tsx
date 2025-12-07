@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { Text } from "./Themed";
 
-export default function Commentaire() {
+export default function Commentaire({ onPress }: { onPress: () => void }) {
     const { article } = useLocalSearchParams();
     const note = JSON.parse(article as string);
 
@@ -68,13 +68,17 @@ export default function Commentaire() {
         <>
             {/* Bouton pour ouvrir les commentaires */}
             <TouchableOpacity
-                onPress={() => setCommentOpen(true)}
+                onPress={onPress}
                 style={styles.btn_appreciation}
             >
                 <RiMessageLine width={24} height={24} color={'#777'} />
-                <Text style={styles.countText}>
-                    {count > 9 ? count : `0${count}`}
-                </Text>
+                {
+                    loading
+                        ? <ActivityIndicator size="small" color="#000" />
+                        : <Text style={styles.countText}>
+                            {count > 9 ? count : `0${count}`}
+                        </Text>
+                }
                 {connected && <View style={styles.connectedDot} />}
             </TouchableOpacity>
             {/* Bottom Sheet avec les commentaires */}
@@ -89,6 +93,7 @@ export default function Commentaire() {
                         <Text style={styles.sheetTitle}>
                             Commentaires ({count})
                         </Text>
+                        {/* {console.log('je suis dans les commentaires', comments)} */}
                         {/* Affichage des erreurs */}
                         {error && (
                             <View style={styles.errorContainer}>

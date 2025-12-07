@@ -62,7 +62,7 @@ export default function TabOneScreen() {
             <View style={{ paddingHorizontal: convert(16), gap: convert(12) }}>
               <View>
                 <Text style={{ fontSize: convert(28), fontWeight: "bold", width: '90%', marginBottom: convert(8) }}>{articles?.[0].title}</Text>
-                <Text style={{ fontSize: convert(16), color: '#444', width: '90%', marginBottom: convert(8) }}>{articles?.[0].description.substring(0, 100)}...</Text>
+                <Text style={{ fontSize: convert(16), color: '#444', width: '90%', marginBottom: convert(8) }}>{articles?.[0].description.substring(0, 120)}...</Text>
                 <View style={{ flexDirection: 'row', gap: convert(8), alignItems: 'center' }}>
                   <View style={{ width: convert(32), height: convert(32), backgroundColor: "#444", borderRadius: convert(16) }} />
                   <Text style={{ fontSize: convert(16), color: "#444" }}>{articles?.[0].topic}</Text>
@@ -76,6 +76,7 @@ export default function TabOneScreen() {
             {articles?.map((article) => (
               <ArticlesItems key={article.id} article={article} />
             ))}
+            <View style={{ height: convert(72) }} />
           </View>
         </ScrollView>
       </GestureHandlerRootView>
