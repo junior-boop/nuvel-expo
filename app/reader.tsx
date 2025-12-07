@@ -1,8 +1,10 @@
+import { LikeButton } from "@/components/appreciation";
+import Commentaire from "@/components/commentaire";
 import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
 import { w } from "@/constants/Colors";
 import { convert } from "@/constants/convert";
-import { FluentArrowCircleUp20Filled, FluentSubtractCircle12Regular, IcBaselineArrowBack, RiDownload2Line, RiMessageLine, RiOpenArmLine, RiSendPlaneLine, RiShareForwardLine } from "@/constants/icons";
+import { FluentArrowCircleUp20Filled, FluentSubtractCircle12Regular, IcBaselineArrowBack, RiDownload2Line, RiSendPlaneLine, RiShareForwardLine } from "@/constants/icons";
 import { Comments } from "@/Database/db";
 import ReaderHtml from "@/editor/readerhtml";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
@@ -186,16 +188,8 @@ export default function ReaderPage() {
                 </Suspense>
                 <View style={{ height: 52, width: w, backgroundColor: 'white', elevation: convert(12), justifyContent: 'center' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: convert(16) }}>
-                        <TouchableOpacity style={styles.btn_appreciation}>
-                            <RiOpenArmLine width={24} height={24} color={'#777'} />
-                            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>22</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => { setCommentOpen(true) }}
-                            style={styles.btn_appreciation}>
-                            <RiMessageLine width={24} height={24} color={'#777'} />
-                            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>{request?.count > 9 ? request?.count : `0${request?.count}`}</Text>
-                        </TouchableOpacity>
+                        <LikeButton articleId={note.id} userId={note.user.id} apiBase="https://nuvelserver.godigital.workers.dev" />
+                        <Commentaire />
                         <TouchableOpacity style={styles.btn_appreciation}>
                             <RiShareForwardLine width={24} height={24} color={'#777'} />
                             <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>12</Text>
