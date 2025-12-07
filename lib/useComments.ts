@@ -1,7 +1,5 @@
-// hooks/useCommentsSSE.ts
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
-import EventSource from 'react-native-sse';
 interface Comment {
   id: string;
   articleId: string;
@@ -11,7 +9,7 @@ interface Comment {
   created: string;
   modified: string;
 }
-interface UseCommentsSSEResult {
+interface UseCommentsWebSocketResult {
   comments: Comment[];
   count: number;
   loading: boolean;
@@ -20,35 +18,33 @@ interface UseCommentsSSEResult {
   loadComments: () => Promise<void>;
   connected: boolean;
 }
-export const useCommentsSSE = (
+export const useCommentsWebSocket = (
   articleId: string,
   apiBase: string = 'https://nuvelserver.godigital.workers.dev'
-): UseCommentsSSEResult => {
+): UseCommentsWebSocketResult => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [count, setCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState<boolean>(false);
   
-  const eventSourceRef = useRef<EventSource | null>(null);
-  // Fonction pour logger (peut être remplacée par votre logger)
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttempts = useRef<number>(0);
+  const maxReconnectAttempts = 5;
   const log = useCallback((message: string, type: 'info' | 'success' | 'error' = 'info') => {
     const timestamp = new Date().toLocaleTimeString();
     console.log(`[${timestamp}] [${type.toUpperCase()}] ${message}`);
   }, []);
-  // Ajouter un commentaire à la liste (éviter les doublons)
+  // Ajouter un commentaire (éviter doublons)
   const addComment = useCallback((comment: Comment) => {
     setComments((prev) => {
-      // Vérifier si le commentaire existe déjà
       const exists = prev.some(c => c.id === comment.id);
       if (exists) return prev;
-      
-      // Ajouter le nouveau commentaire au début
       return [comment, ...prev];
     });
-    setCount((prev) => prev + 1);
   }, []);
-  // Charger tous les commentaires
+  // Charger commentaires initiaux via HTTP
   const loadComments = useCallback(async () => {
     if (!articleId) {
       log('Article ID manquant', 'error');
@@ -80,7 +76,7 @@ export const useCommentsSSE = (
       setLoading(false);
     }
   }, [articleId, apiBase, log]);
-  // Poster un nouveau commentaire
+  // Poster un commentaire via HTTP
   const postComment = useCallback(async (content: string, creator: string): Promise<boolean> => {
     if (!articleId || !content || !creator) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs');
@@ -106,8 +102,8 @@ export const useCommentsSSE = (
       const data = await response.json();
       
       if (data.success) {
-        log('✅ Commentaire envoyé avec succès', 'success');
-        // Le SSE mettra à jour automatiquement la liste
+        log('✅ Commentaire envoyé', 'success');
+        // Le WebSocket va broadcaster automatiquement
         return true;
       } else {
         throw new Error(data.error || 'Erreur lors de l\'envoi');
@@ -122,58 +118,95 @@ export const useCommentsSSE = (
       setLoading(false);
     }
   }, [articleId, apiBase, log]);
-  // Connexion SSE
-  useEffect(() => {
+  // Connexion WebSocket
+  const connectWebSocket = useCallback(() => {
     if (!articleId) return;
-    const url = `${apiBase}/comments/${articleId}/stream`;
+    // Convertir https:// en wss://
+    const wsUrl = apiBase.replace(/^https?:\/\//, 'wss://');
+    const url = `${wsUrl}/comments/${articleId}/ws`;
     
-    log(`🔌 Connexion SSE à: ${url}`, 'info');
-    
-    const es = new EventSource(url);
-    eventSourceRef.current = es;
-    // Événement de connexion
-    es.addEventListener('connected', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        log(`✅ ${data.message}`, 'success');
+    log(`🔌 Connexion WebSocket: ${url}`, 'info');
+    try {
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+      ws.onopen = () => {
+        log('✅ WebSocket connecté', 'success');
         setConnected(true);
         setError(null);
-      } catch (err) {
-        log('Erreur parsing connected event', 'error');
-      }
-    });
-    // Événement de mise à jour (nouveaux commentaires)
-    es.addEventListener('update', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        log(`📩 ${data.count} nouveau(x) commentaire(s)`, 'success');
+        reconnectAttempts.current = 0;
+      };
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          switch (data.type) {
+            case 'connected':
+              log(`Connecté à l'article ${data.articleId}`, 'success');
+              setCount(data.count || 0);
+              break;
+              
+            case 'comment_added':
+              log('📩 Nouveau commentaire reçu', 'success');
+              addComment(data.comment);
+              setCount(data.count || 0);
+              break;
+              
+            case 'comment_deleted':
+              log('🗑️ Commentaire supprimé', 'info');
+              setComments(prev => prev.filter(c => c.id !== data.commentId));
+              setCount(data.count || 0);
+              break;
+              
+            case 'count_update':
+              setCount(data.count || 0);
+              break;
+          }
+        } catch (err) {
+          log('Erreur parsing message WebSocket', 'error');
+        }
+      };
+      ws.onerror = (event) => {
+        log('❌ Erreur WebSocket', 'error');
+        setConnected(false);
+        setError('Erreur de connexion WebSocket');
+      };
+      ws.onclose = () => {
+        log('🔌 WebSocket fermé', 'info');
+        setConnected(false);
+        wsRef.current = null;
         
-        // Ajouter les nouveaux commentaires
-        data.comments.forEach((comment: Comment) => {
-          addComment(comment);
-        });
-      } catch (err) {
-        log('Erreur parsing update event', 'error');
-      }
-    });
-    // Événement ping (keep-alive)
-    es.addEventListener('ping', () => {
-      // Keep-alive, ne rien faire
-    });
-    // Gestion des erreurs
-    es.addEventListener('error', (event) => {
-      log('❌ Erreur de connexion SSE', 'error');
-      setConnected(false);
-      setError('Connexion SSE perdue');
-    });
-    // Cleanup
-    return () => {
-      log('🔌 Déconnexion SSE', 'info');
-      es.close();
-      eventSourceRef.current = null;
-      setConnected(false);
-    };
+        // Reconnexion automatique
+        if (reconnectAttempts.current < maxReconnectAttempts) {
+          reconnectAttempts.current++;
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 10000);
+          log(`Reconnexion dans ${delay/1000}s (tentative ${reconnectAttempts.current}/${maxReconnectAttempts})`, 'info');
+          
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connectWebSocket();
+          }, delay);
+        } else {
+          log('❌ Nombre maximum de tentatives de reconnexion atteint', 'error');
+          setError('Impossible de se connecter au serveur');
+        }
+      };
+    } catch (err) {
+      log(`Erreur création WebSocket: ${err}`, 'error');
+      setError('Erreur de création WebSocket');
+    }
   }, [articleId, apiBase, log, addComment]);
+  // Connexion au montage
+  useEffect(() => {
+    connectWebSocket();
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
+  }, [connectWebSocket]);
   return {
     comments,
     count,

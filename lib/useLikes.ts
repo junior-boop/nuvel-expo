@@ -1,93 +1,49 @@
-// hooks/useLikesSSE.ts
-import { useEffect, useState, useCallback, useRef } from 'react';
-import EventSource from 'react-native-sse';
+// hooks/useAppreciationsWebSocket.ts
+import { useCallback, useEffect, useRef, useState } from 'react';
 interface Appreciation {
   id: string;
   articleId: string;
   userid: string;
 }
-interface UseLikesSSEResult {
+interface UseAppreciationsWebSocketResult {
   count: number;
   liked: boolean;
+  appreciations: Appreciation[];
   loading: boolean;
   error: string | null;
   toggleLike: () => Promise<void>;
-  appreciations: Appreciation[];
+  connected: boolean;
 }
-export const useLikesSSE = (
+export const useAppreciationsWebSocket = (
   articleId: string,
   userId: string,
-  apiBase: string = 'http://localhost:8787'
-): UseLikesSSEResult => {
+  apiBase: string = 'https://nuvelserver.godigital.workers.dev'
+): UseAppreciationsWebSocketResult => {
   const [count, setCount] = useState<number>(0);
   const [liked, setLiked] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [appreciations, setAppreciations] = useState<Appreciation[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [connected, setConnected] = useState<boolean>(false);
   
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttempts = useRef<number>(0);
+  const maxReconnectAttempts = 5;
+  const log = useCallback((message: string, type: 'info' | 'success' | 'error' = 'info') => {
+    const timestamp = new Date().toLocaleTimeString();
+    console.log(`[${timestamp}] [${type.toUpperCase()}] ${message}`);
+  }, []);
   // Vérifier si l'utilisateur a liké
   const checkIfLiked = useCallback((appreciationsList: Appreciation[]) => {
     return appreciationsList.some(a => a.userid === userId);
   }, [userId]);
-  // Connexion SSE
-  useEffect(() => {
-    const url = `${apiBase}/appreciations/${articleId}/stream`;
-    
-    console.log('[SSE] Connexion à:', url);
-    
-    const es = new EventSource(url);
-    eventSourceRef.current = es;
-    // Événement de connexion
-    es.addEventListener('connected', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('[SSE] Connecté:', data);
-        
-        setCount(data.count || 0);
-        setAppreciations(data.appreciations || []);
-        setLiked(checkIfLiked(data.appreciations || []));
-        setLoading(false);
-        setError(null);
-      } catch (err) {
-        console.error('[SSE] Erreur parsing connected:', err);
-        setError('Erreur de connexion');
-      }
-    });
-    // Événement de mise à jour
-    es.addEventListener('update', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('[SSE] Mise à jour:', data);
-        
-        setCount(data.count || 0);
-        setAppreciations(data.appreciations || []);
-        setLiked(checkIfLiked(data.appreciations || []));
-      } catch (err) {
-        console.error('[SSE] Erreur parsing update:', err);
-      }
-    });
-    // Événement ping (keep-alive)
-    es.addEventListener('ping', () => {
-      // Keep-alive, ne rien faire
-    });
-    // Gestion des erreurs
-    es.addEventListener('error', (event) => {
-      console.error('[SSE] Erreur:', event);
-      setError('Erreur de connexion au stream');
-      setLoading(false);
-    });
-    // Cleanup
-    return () => {
-      console.log('[SSE] Déconnexion');
-      es.close();
-      eventSourceRef.current = null;
-    };
-  }, [articleId, apiBase, checkIfLiked]);
-  // Toggle like
+  // Toggle like via HTTP
   const toggleLike = useCallback(async () => {
+    if (!articleId || !userId) return;
     try {
       setLoading(true);
+      log('🔄 Toggle like...', 'info');
       
       const response = await fetch(`${apiBase}/appreciations/${articleId}/toggle`, {
         method: 'POST',
@@ -99,24 +55,117 @@ export const useLikesSSE = (
       const data = await response.json();
       
       if (data.success) {
-        console.log('[Toggle] Action:', data.action);
-        // Le SSE mettra à jour automatiquement l'état
+        log(`✅ Like ${data.action}`, 'success');
+        // Le WebSocket va broadcaster automatiquement
       } else {
-        setError(data.message || 'Erreur lors du toggle');
+        throw new Error(data.message || 'Erreur toggle like');
       }
     } catch (err) {
-      console.error('[Toggle] Erreur:', err);
-      setError('Erreur réseau');
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      log(`❌ Erreur: ${message}`, 'error');
+      setError(message);
     } finally {
       setLoading(false);
     }
-  }, [apiBase, articleId, userId]);
+  }, [articleId, userId, apiBase, log]);
+  // Connexion WebSocket
+  const connectWebSocket = useCallback(() => {
+    if (!articleId) return;
+    const wsUrl = apiBase.replace(/^https?:\/\//, 'wss://');
+    const url = `${wsUrl}/appreciations/${articleId}/ws`;
+    
+    log(`🔌 Connexion WebSocket: ${url}`, 'info');
+    try {
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
+      ws.onopen = () => {
+        log('✅ WebSocket connecté', 'success');
+        setConnected(true);
+        setError(null);
+        reconnectAttempts.current = 0;
+      };
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          switch (data.type) {
+            case 'connected':
+              log(`Connecté - ${data.count} likes`, 'success');
+              setCount(data.count || 0);
+              setAppreciations(data.appreciations || []);
+              setLiked(checkIfLiked(data.appreciations || []));
+              break;
+              
+            case 'like_added':
+              log('❤️ Like ajouté', 'success');
+              setCount(data.count || 0);
+              setAppreciations(data.appreciations || []);
+              setLiked(checkIfLiked(data.appreciations || []));
+              break;
+              
+            case 'like_removed':
+              log('💔 Like supprimé', 'info');
+              setCount(data.count || 0);
+              setAppreciations(data.appreciations || []);
+              setLiked(checkIfLiked(data.appreciations || []));
+              break;
+              
+            case 'update':
+              setCount(data.count || 0);
+              setAppreciations(data.appreciations || []);
+              setLiked(checkIfLiked(data.appreciations || []));
+              break;
+          }
+        } catch (err) {
+          log('Erreur parsing message', 'error');
+        }
+      };
+      ws.onerror = () => {
+        log('❌ Erreur WebSocket', 'error');
+        setConnected(false);
+        setError('Erreur de connexion');
+      };
+      ws.onclose = () => {
+        log('🔌 WebSocket fermé', 'info');
+        setConnected(false);
+        wsRef.current = null;
+        
+        // Reconnexion automatique
+        if (reconnectAttempts.current < maxReconnectAttempts) {
+          reconnectAttempts.current++;
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 10000);
+          log(`Reconnexion dans ${delay/1000}s`, 'info');
+          
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connectWebSocket();
+          }, delay);
+        }
+      };
+    } catch (err) {
+      log(`Erreur WebSocket: ${err}`, 'error');
+      setError('Erreur WebSocket');
+    }
+  }, [articleId, apiBase, log, checkIfLiked]);
+  // Connexion au montage
+  useEffect(() => {
+    connectWebSocket();
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
+  }, [connectWebSocket]);
   return {
     count,
     liked,
+    appreciations,
     loading,
     error,
     toggleLike,
-    appreciations,
+    connected,
   };
 };

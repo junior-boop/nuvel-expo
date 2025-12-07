@@ -1,7 +1,7 @@
 // components/Commentaire.tsx
 import { convert } from "@/constants/convert";
 import { RiMessageLine } from "@/constants/icons";
-import { useCommentsSSE } from "@/lib/useComments";
+import { useCommentsWebSocket } from "@/lib/useComments";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -33,7 +33,7 @@ export default function Commentaire() {
         postComment,
         loadComments,
         connected,
-    } = useCommentsSSE(note.id);
+    } = useCommentsWebSocket(note.id);
     // Récupérer le nom du créateur
     const creatorName = `${note.user?.name || ''} ${note.user?.first_name || ''}`.trim();
     // Charger les commentaires quand le bottom sheet s'ouvre

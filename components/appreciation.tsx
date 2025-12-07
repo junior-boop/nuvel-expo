@@ -1,7 +1,7 @@
 // components/LikeButton.tsx
 import { convert } from '@/constants/convert';
 import { RiOpenArmFill, RiOpenArmLine } from '@/constants/icons';
-import { useLikesSSE } from '@/lib/useLikes';
+import { useAppreciationsWebSocket } from '@/lib/useLikes';
 import React from 'react';
 import {
     ActivityIndicator,
@@ -20,7 +20,7 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
     userId,
     apiBase = 'http://localhost:8787',
 }) => {
-    const { count, liked, loading, error, toggleLike } = useLikesSSE(
+    const { count, liked, loading, error, toggleLike } = useAppreciationsWebSocket(
         articleId,
         userId,
         apiBase
