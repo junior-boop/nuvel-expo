@@ -1,19 +1,19 @@
 import { LikeButton } from "@/components/appreciation";
 import Commentaire from "@/components/commentaire";
+import CommentaireItem from "@/components/commentaireItem";
 import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
 import { w } from "@/constants/Colors";
 import { convert } from "@/constants/convert";
-import { FluentArrowCircleUp20Filled, FluentSubtractCircle12Regular, IcBaselineArrowBack, RiDownload2Line, RiSendPlaneLine, RiShareForwardLine } from "@/constants/icons";
+import { IcBaselineArrowBack, RiDownload2Line, RiSendPlaneLine, RiShareForwardLine } from "@/constants/icons";
 import { Comments } from "@/Database/db";
 import ReaderHtml from "@/editor/readerhtml";
 import { useArticle } from "@/lib/useArticles";
 import { useCommentsWebSocket } from "@/lib/useComments";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { router, useLocalSearchParams } from "expo-router";
-import moment from "moment";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 
 export default function ReaderPage() {
@@ -43,6 +43,9 @@ export default function ReaderPage() {
                     <TouchableOpacity onPress={() => { router.back() }}>
                         <IcBaselineArrowBack width={24} height={24} color={'black'} />
                     </TouchableOpacity>
+                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(5) }}>
+                        <RiDownload2Line width={24} height={24} color={'#777'} />
+                    </TouchableOpacity>
                 </View>
                 <Article id={note.id} />
                 <View style={{ height: 52, width: w, backgroundColor: 'white', elevation: convert(12), justifyContent: 'center' }}>
@@ -51,15 +54,16 @@ export default function ReaderPage() {
                         <Commentaire onPress={() => setCommentOpen(true)} />
                         <TouchableOpacity style={styles.btn_appreciation}>
                             <RiShareForwardLine width={24} height={24} color={'#777'} />
-                            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>12</Text>
+                            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>Share</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.btn_appreciation}>
+                        {/* <TouchableOpacity style={styles.btn_appreciation}>
                             <RiDownload2Line width={24} height={24} color={'#777'} />
-                        </TouchableOpacity>
+                            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>Save</Text>
+                        </TouchableOpacity> */}
                     </View>
                 </View>
                 {
-                    commentOpen && (<SheetComments onClose={() => setCommentOpen(false)} id={note.id} creatorName={creatorName} />)
+                    commentOpen && (<SheetComments onClose={() => setCommentOpen(false)} articleId={note.id} creatorName={creatorName} userId={note.user.id} />)
                 }
             </GestureHandlerRootView>
         </PageLayout_3>
@@ -83,18 +87,30 @@ const Article = ({ id }: { id: string }) => {
     )
 }
 
-const SheetComments = ({ onClose, id, creatorName, commentCount }: { onClose: () => void, id: string, creatorName: string, commentCount?: number }) => {
+export interface CommentsProps {
+    id: string;
+    articleId: string;
+    creator: string;
+    content: string;
+    notes: number;
+    upvotes: string; // JSON array of userids
+    signals: string; // JSON array of userids
+    created: string;
+    modified: string;
+}
+
+const SheetComments = ({ onClose, articleId, creatorName, commentCount, userId }: { onClose: () => void, articleId: string, creatorName: string, commentCount?: number, userId: string }) => {
     const sheetRef = useRef<BottomSheet>(null);
     const snapPoints = useMemo(() => ["100%"], []);
     const [commentValue, setCommentValue] = useState<String | null>(null)
-
+    const [listComments, setListComments] = useState<CommentsProps[]>([])
     const {
         comments,
         count,
         loading,
         postComment,
         loadComments,
-    } = useCommentsWebSocket(id);
+    } = useCommentsWebSocket(articleId);
 
     // Fonction pour envoyer un commentaire
     const handlePostComment = useCallback(async () => {
@@ -104,8 +120,13 @@ const SheetComments = ({ onClose, id, creatorName, commentCount }: { onClose: ()
 
         if (success) {
             setCommentValue("");
+            loadComments();
         }
     }, [commentValue, postComment, creatorName]);
+
+    useEffect(() => {
+        setListComments(comments)
+    }, [comments]);
 
     useEffect(() => {
         loadComments();
@@ -133,29 +154,7 @@ const SheetComments = ({ onClose, id, creatorName, commentCount }: { onClose: ()
                     <View style={{ gap: convert(24), paddingVertical: convert(16) }}>
                         {
                             comments.map((comment, index) => (
-                                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: convert(16), paddingHorizontal: convert(16), }} key={index}>
-                                    <View style={{ width: convert(42), height: convert(42), borderRadius: convert(21), overflow: 'hidden', backgroundColor: '#777' }}>
-                                        {/* <Image style={{ width: '100%', height: '100%' }} /> */}
-                                    </View>
-                                    <View>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: convert(5) }}>
-                                            <Text style={{ fontSize: convert(16), fontWeight: 'bold', color: '#252525ff' }}>{comment.creator}</Text>
-                                            <Text style={{ fontSize: convert(14), fontStyle: "italic", color: '#252525ff' }}>• {moment(comment.created).fromNow()}</Text>
-                                        </View>
-                                        <Text style={{ fontSize: convert(16), color: '#202020ff', width: w * 0.7 }}>{comment.content}</Text>
-                                        <View style={{ marginTop: convert(8), flexDirection: 'row', alignItems: 'center', gap: convert(24) }}>
-                                            <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: convert(5) }}>
-                                                <FluentArrowCircleUp20Filled width={24} height={24} color={'#777'} />
-                                                <Text style={{ fontSize: convert(16), color: '#777', fontWeight: 'bold' }}>{comment.notes}</Text>
-                                            </Pressable>
-                                            <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: convert(5) }}>
-                                                <FluentSubtractCircle12Regular width={20} height={20} color={'#777'} />
-                                                <Text style={{ fontSize: convert(16), color: '#777', fontWeight: 'bold' }}>Signal</Text>
-                                            </Pressable>
-                                        </View>
-                                    </View>
-
-                                </View>
+                                <CommentaireItem articleId={articleId} comment={comment} index={index} userId={userId} key={index} />
                             ))
                         }
                     </View>

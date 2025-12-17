@@ -18,13 +18,14 @@ export type User = {
   first_name: string;
   email: string;
   church_status: "Pastor" | "Elder" | "Deacon" | "Leader" | "Member";
-  domination: string;
   biography: string;
   photo: string;
+  country: string;
+  association : string | null; 
   created: Date | string;
   modified: Date | string;
-  lastlogin: Date | string;
-  lastlogout: Date | string;
+  lastlogin: Date | string | null;
+  lastlogout: Date | string | null;
 };
 
 export type Groups = {
@@ -101,6 +102,7 @@ export interface Articles {
   appreciation: string;
   createdAt: string;
   updatedAt: string;
+  user : User
 }
 
 export interface BibleMetadata {

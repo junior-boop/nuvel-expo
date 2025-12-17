@@ -1,9 +1,7 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
+
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -25,28 +23,20 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 
+
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
-  });
+  // const { loading } = useAuthDB();
 
-
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
+  // if (loading) {
+  //   return (
+  //     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+  //       <View style={HeaderStyles.container}>
+  //         <Image source={require("../assets/images/Nuvel.png")} style={HeaderStyles.image} />
+  //       </View>
+  //       <ActivityIndicator size="large" />
+  //     </View>
+  //   )
+  // }
   return (
     <SafeAreaProvider>
       <RootLayoutNav />
@@ -55,20 +45,19 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-
   const frame = useSafeAreaInsets()
 
   return (
     <ThemeProvider value={DefaultTheme}>
       <DatabaseProvider>
-        <Stack>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="loginzone" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
           <Stack.Screen name='noteeditor' options={{ headerShown: true }} />
           <Stack.Screen name='groupeitems' options={{ headerShown: true, headerShadowVisible: false, animation: 'fade_from_bottom', headerTitle: '' }} />
           <Stack.Screen name='searchnotes' options={{ headerShown: true, headerShadowVisible: false, animation: 'fade_from_bottom', headerTitle: '' }} />
-          <Stack.Screen name="login" options={{ headerShown: false, contentStyle: { backgroundColor: "#fff" } }} />
-          <Stack.Screen name="profils" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
+          <Stack.Screen name="profils" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "Profils information", contentStyle: { backgroundColor: "#fff" } }} />
           <Stack.Screen name="biblepage" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
           <Stack.Screen name="newarticle" options={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: "#fff" } }} />
           <Stack.Screen name="reader" options={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: "#fff" } }} />

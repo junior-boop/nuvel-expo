@@ -2,7 +2,7 @@
 import { convert } from '@/constants/convert';
 import { RiOpenArmFill, RiOpenArmLine } from '@/constants/icons';
 import { useAppreciationsWebSocket } from '@/lib/useLikes';
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
     ActivityIndicator,
     StyleSheet,
@@ -25,11 +25,16 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
         userId,
         apiBase
     );
+
+    const handleToggleLike = useCallback(() => {
+        toggleLike();
+
+    }, [toggleLike]);
     return (
         <>
             <TouchableOpacity
                 style={styles.btn_appreciation}
-                onPress={toggleLike}
+                onPress={handleToggleLike}
                 disabled={loading}
             >
                 {loading ? (

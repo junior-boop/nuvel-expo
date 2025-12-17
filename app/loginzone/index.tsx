@@ -3,68 +3,20 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, TextInpu
 import { Text, View } from '@/components/Themed';
 import { w } from '@/constants/Colors';
 import { convert } from '@/constants/convert';
-import { User } from '@/Database/db';
 
-import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 
-import { server_url } from '@/constants/server_url';
-import { useDatabase } from '@/context/database.context';
+import useLogin from '@/lib/useLogin';
 
 export default function ModalScreen() {
     const [name, setName] = useState('')
     const [first_name, setFirstName] = useState('')
     const [email, setEmail] = useState('')
-    const [isloading, setIsloading] = useState(false)
+    const { handleUser, loading } = useLogin({ name, first_name, email })
 
-    const { adduser } = useDatabase()
 
-    const getuserinfo = useCallback(async (data: Partial<User>) => {
-        setIsloading(true)
-        const response = await fetch(`${server_url}/users/signin`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        });
-        const result = await response.json() as { data: User, status: string };
-        setIsloading(false)
-        return await adduser(result.data)
-    }, [])
 
-    const handleUser = async () => {
-        const user = await getuserinfo({ name, first_name, email })
-        setName('')
-        setEmail('')
-        setFirstName('')
-
-        console.log(user)
-
-        if (user?.photo === null || user?.biography === null) {
-            router.replace({
-                pathname: "/usersinfos",
-                params: {
-                    id: user?.id,
-                    name: user?.name,
-                    first_name: user?.first_name,
-                    email: user?.email
-                }
-            })
-        } else {
-            router.replace({
-                pathname: "/(tabs)",
-                params: {
-                    id: user?.id,
-                    name: user?.name,
-                    first_name: user?.first_name,
-                    email: user?.email
-                }
-            })
-        }
-
-    }
     return (
 
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
@@ -82,9 +34,9 @@ export default function ModalScreen() {
                         <TextInput style={{ paddingHorizontal: convert(12), paddingVertical: convert(12), fontSize: convert(18), fontWeight: "700", color: '#444', borderWidth: 1, borderColor: "#ccc" }} placeholder='Type your email address' placeholderTextColor={"#ccc"} inputMode='email' onChangeText={(e) => setEmail(e)} />
                     </View>
                     <View>
-                        <TouchableOpacity style={{ backgroundColor: "#0083ff", paddingHorizontal: convert(18), paddingVertical: convert(12), alignItems: 'center', flexDirection: 'row', gap: convert(8), justifyContent: 'center' }} onPress={() => router.replace("/_sitemap")} disabled={isloading} >
+                        <TouchableOpacity style={{ backgroundColor: "#0083ff", paddingHorizontal: convert(18), paddingVertical: convert(12), alignItems: 'center', flexDirection: 'row', gap: convert(8), justifyContent: 'center' }} onPress={handleUser} disabled={loading} >
                             <Text style={{ fontSize: convert(18), fontWeight: "700", color: '#fff' }}>Connect</Text>
-                            {isloading && <ActivityIndicator size="small" color="#fff" />}
+                            {loading && <ActivityIndicator size="small" color="#fff" />}
                         </TouchableOpacity>
                     </View>
                 </View>

@@ -39,11 +39,12 @@ const ReaderHtml = forwardRef(({ note }: { note: Notes, }, ref) => {
     }
 
     useEffect(() => {
-        console.log("content ", content)
         if (content) {
             document.querySelector('h1')?.remove()
             const text = document.body.innerText
             setReadTime(tempslecture(text))
+
+            console.log(note.user)
         }
     }, [])
 
@@ -64,7 +65,7 @@ const ReaderHtml = forwardRef(({ note }: { note: Notes, }, ref) => {
                     <p style={{ fontSize: "1.20rem", color: "#444", fontStyle: "italic" }}>{note.description}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ backgroundColor: '#333', width: '42px', aspectRatio: 1, borderRadius: 21, overflow: 'hidden' }}>
-                            <img src={`https://${note.user.imageurl}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={`https://${note.user.photo}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                         <div>
                             <span style={{ fontSize: "1.15rem", color: "#444", display: 'block', marginBottom: 2, fontWeight: 'bold' }}>{note.user.name} {note.user.first_name}</span>

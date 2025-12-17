@@ -37,6 +37,7 @@ interface DatabaseContextType {
     error: DatabaseError | null;
     addNote: (noteData: Partial<NotesType>) => Promise<NotesType | undefined>;
     adduser: (data: UserType) => Promise<UserType | undefined>
+    updatedUser: (data: UserType) => Promise<UserType | undefined>
     deletedUser: (id: string) => Promise<boolean | null>;
     updateNote: (noteData: Partial<NotesType>) => Promise<void>;
     publishNote: (noteData: { id: string, publishId: string, version: number }) => Promise<void>;
@@ -376,6 +377,19 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [loadInitialData])
 
+    const updatedUser = useCallback(async (data: UserType) => {
+        clearError();
+        try {
+            const result = await User.updated(data);
+            if (result) loadInitialData()
+
+            return result;
+        }
+        catch (error) {
+            handleError(error, 'adding note');
+        }
+    }, [loadInitialData])
+
     const deletedUser = useCallback(async (id: string) => {
         clearError();
         try {
@@ -451,6 +465,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         error,
         addNote,
         adduser,
+        updatedUser,
         deletedUser,
         updateNote,
         publishNote,
@@ -476,6 +491,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         error,
         addNote,
         adduser,
+        updatedUser,
         deletedUser,
         updateNote,
         publishNote,

@@ -1,0 +1,1 @@
+export const server_url = "https://nuvelserver.godigital.workers.dev"

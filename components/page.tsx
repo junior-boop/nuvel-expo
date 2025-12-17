@@ -78,7 +78,7 @@ export function PageLayout_2({ children, addnote = true }: { children: React.Rea
 }
 
 export function PageLayout_3({ children, addnote = true }: { children: React.ReactNode, addnote?: boolean }) {
-    const navigation = useNavigation()
+
     const [data, setData] = useState<{
         insets: EdgeInsets;
         frame: Rect;

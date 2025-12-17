@@ -1,8 +1,10 @@
-import { ActivityIndicator, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { Text, View } from '@/components/Themed';
 import { convert } from '@/constants/convert';
+import { FluentImageAdd32Regular } from '@/constants/icons';
 import { useDatabase } from '@/context/database.context';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
 
@@ -11,6 +13,8 @@ export default function Profils() {
     const { usersQuery, session, deletedUser } = useDatabase()
     const userinfo = usersQuery?.findById(session?.iduser as string)
     const [isLoading, setIsLoading] = useState(false)
+    const [image, setImage] = useState<string | null>(null);
+    const [file, setFile] = useState<{ name: string, mimeType: string, uri: string } | null>(null)
 
 
 
@@ -27,44 +31,78 @@ export default function Profils() {
         setIsLoading(false)
     }
 
+    const pickImage = async () => {
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (!permissionResult.granted) {
+            Alert.alert('Permission required', 'Permission to access the media library is required.');
+            return;
+        }
+
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+            base64: true
+        });
+
+
+        if (!result.canceled) {
+            setFile({
+                name: result.assets[0].fileName as string,
+                mimeType: result.assets[0].mimeType as string,
+                uri: result.assets[0].uri as string
+            })
+            const imagestring = `data:${result.assets[0].mimeType};base64,${result.assets[0].base64}`;
+            setImage(imagestring);
+        }
+    };
+
     return (
         <ScrollView style={styles.container} contentContainerStyle={{ padding: convert(16) }} >
             <View style={{ flexDirection: 'row', alignItems: "stretch", gap: convert(14), justifyContent: 'center' }}>
-                <View>
-                    <Image
-                        source={userinfo?.photo ? { uri: userinfo?.photo } : require("../assets/images/avatar.png")}
-                        style={{ width: convert(100), height: convert(100), borderRadius: convert(60), borderWidth: 1, borderColor: '#eee' }}
-                    />
-                </View>
-                <View style={{ justifyContent: 'flex-end', paddingBottom: convert(10) }}>
-                    <Text style={{ fontSize: convert(24), fontWeight: 'bold', width: convert(180) }}>{userinfo?.name} {userinfo?.first_name}</Text>
-                    <Text style={{ fontSize: convert(18), fontWeight: 'bold', color: '#777', width: convert(180) }}>{userinfo?.church_status} - {userinfo?.domination} - {userinfo?.email}</Text>
-                </View>
+                <TouchableOpacity style={{ width: convert(150), height: convert(150), position: 'relative', }} onPress={pickImage}>
+                    <View style={{ width: convert(150), height: convert(150), borderRadius: convert(150), overflow: 'hidden' }}>
+                        {
+                            image
+                                ? <Image
+                                    style={{ width: convert(150), height: convert(150) }}
+                                    source={{ uri: image }} />
+                                : <Image
+                                    style={{ width: convert(150), height: convert(150) }}
+                                    source={require('@/assets/images/avatar.png')} />
+                        }
+                    </View>
+                    <View
+                        style={{ position: 'absolute', right: convert(0), bottom: convert(0), backgroundColor: '#048effff', borderRadius: convert(24), height: convert(48), width: convert(48), justifyContent: 'center', alignItems: 'center' }}>
+                        <FluentImageAdd32Regular width={24} height={24} color={'#fff'} />
+                    </View>
+                </TouchableOpacity>
             </View>
             <View style={{ marginTop: convert(32), paddingHorizontal: convert(8) }}>
-                <Text style={{ ...styles.title, marginBottom: convert(16) }}>Profils information</Text>
                 <View style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee' }}>
-                    <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>First Name</Text>
+                    <Text style={styles.entete}>First Name</Text>
                     <Text style={{ fontSize: convert(16) }}>{userinfo?.name}</Text>
                 </View>
                 <View style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee' }}>
-                    <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>Last Name</Text>
+                    <Text style={styles.entete}>Last Name</Text>
                     <Text style={{ fontSize: convert(16) }}>{userinfo?.first_name}</Text>
                 </View>
                 <View style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee' }}>
-                    <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>Email adress</Text>
+                    <Text style={styles.entete}>Email adress</Text>
                     <Text style={{ fontSize: convert(16) }}>{userinfo?.email}</Text>
                 </View>
                 <View style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee' }}>
-                    <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>Chruch Status</Text>
+                    <Text style={styles.entete}>Chruch Status</Text>
                     <Text style={{ fontSize: convert(16) }}>{userinfo?.church_status}</Text>
                 </View>
                 <View style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee' }}>
-                    <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>Domination</Text>
-                    <Text style={{ fontSize: convert(16) }}>{userinfo?.domination}</Text>
+                    <Text style={styles.entete}>Country</Text>
+                    <Text style={{ fontSize: convert(16) }}>{userinfo?.country}</Text>
                 </View>
                 <View style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee' }}>
-                    <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>Biography</Text>
+                    <Text style={styles.entete}>Biography</Text>
                     <Text style={{ fontSize: convert(16) }}>{userinfo?.biography}</Text>
                 </View>
 
@@ -84,9 +122,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1
     },
-    title: {
-        fontSize: 20,
+    entete: {
+        fontSize: convert(14),
         fontWeight: 'bold',
+        color: '#000000ff',
     },
     separator: {
         marginVertical: 30,
