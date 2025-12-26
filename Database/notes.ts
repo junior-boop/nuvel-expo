@@ -94,6 +94,13 @@ export const deleted = async (id: string) => {
   return result;
 };
 
+export const deletedall = async () => {
+ const allNotes = await getall();
+  for (const note of allNotes) {
+    await deleted(note.id);
+  }
+};
+
 export const setpinned = async (data: NotesType) => {
   const items = Notes;
   return await items.update(data.id as string, {

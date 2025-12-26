@@ -6,6 +6,7 @@ import { Text, View } from "@/components/Themed";
 import { w } from "@/constants/Colors";
 import { convert } from "@/constants/convert";
 import { IcBaselineArrowBack, RiDownload2Line, RiSendPlaneLine, RiShareForwardLine } from "@/constants/icons";
+import { useDatabase } from "@/context/database.context";
 import { Comments } from "@/Database/db";
 import ReaderHtml from "@/editor/readerhtml";
 import { useArticle } from "@/lib/useArticles";
@@ -25,8 +26,10 @@ export default function ReaderPage() {
 
     const sheetRef = useRef<BottomSheet>(null);
     const snapPoints = useMemo(() => ["100%"], []);
+    const { usersQuery, session } = useDatabase()
+    const userinfo = usersQuery?.findById(session?.iduser as string)
 
-    const creatorName = `${note.user?.name || ''} ${note.user?.first_name || ''}`.trim();
+    const creatorName = JSON.stringify(userinfo);
 
     // () => { setCommentOpen(false); Keyboard.dismiss() }
 

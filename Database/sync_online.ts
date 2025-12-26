@@ -38,13 +38,24 @@ const senddata = async (table_name : string , id : string) => {
   const data = table_name === "notes" ? await Notes.get(id)
   : table_name === "groups" ? await Groups.get(id) : null
 
-  await fetch(serveur + "/" + table_name + "/" + id, {
+  console.log(table_name , id)
+
+  try {
+    const req = await fetch(serveur + "/" + table_name + "/" + id, {
     method : "POST",
     headers : {
       "Content-type" : "application/json"
     },
     body : JSON.stringify(data)
   })
+  const res = await req.json()
+  console.log(res)
+  } catch (error) {
+    console.log(error)
+  } finally {
+    console.log("updated done!")
+  } 
+
 } 
 
 const deletedata = async (table_name : string , id : string) => {
@@ -54,7 +65,7 @@ const deletedata = async (table_name : string , id : string) => {
       "Content-type" : "application/json"
     }
   })
-}
+} 
 
 const getOldRecords = (rows : Sync.Sync_Event[] ) => {
   // D'abord, trouver les derniers pour chaque clé
@@ -119,7 +130,6 @@ export const Sync_to_serveur = async () => {
 
   deleteSyncData()
   const sync_event = await Sync.getAll()
-
 
   if(check.status === 200) {
     console.log("connecté", result)

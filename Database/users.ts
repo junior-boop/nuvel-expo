@@ -11,8 +11,8 @@ const Users = db.createModel<UserType>("users", {
   church_status: "TEXT NOT NULL DEFAULT Member",
   email: "TEXT NOT NULL UNIQUE",
   photo: "TEXT NULL",
-  lastlogin: "TEXT",
-  lastlogout: "TEXT",
+  lastlogin: "TEXT NULL",
+  lastlogout: "TEXT NULL",
   created: "DATETIME DEFAULT CURRENT_TIMESTAMP",
   modified: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
 });

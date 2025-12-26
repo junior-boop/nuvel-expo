@@ -31,7 +31,7 @@ export default function useTakeUserInfos() {
     const [country, setCountry] = useState<{ id: string, name: string, code_2: string, code_3: string, phoneCode: string } | null>(null)
     const [churchrule, setChurchrule] = useState<string | null>(null)
 
-    const { adduser } = useDatabase()
+    const { adduser, updatedUser } = useDatabase()
 
     /**
      * Sauvegarde les informations utilisateur (serveur + DB locale)
@@ -90,7 +90,7 @@ export default function useTakeUserInfos() {
             }
 
             // 4. Sauvegarder en base de données locale
-            const localUser = await adduser(userData);
+            const localUser = await updatedUser(userData);
 
             if (!localUser) {
                 setError('Échec de la sauvegarde locale');

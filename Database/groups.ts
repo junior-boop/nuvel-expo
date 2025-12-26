@@ -51,3 +51,10 @@ export const deleted = async (id: string) => {
 
   return await items.delete(id);
 };
+
+export const deletedall = async () => {
+  const allGroups = await getall();
+  for (const group of allGroups) {
+    await deleted(group.id);
+  }
+};

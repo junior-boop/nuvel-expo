@@ -3,18 +3,27 @@ import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, TouchableOpaci
 import { Text, View } from '@/components/Themed';
 import { convert } from '@/constants/convert';
 import { FluentImageAdd32Regular } from '@/constants/icons';
+import { server_url } from '@/constants/server_url';
 import { useDatabase } from '@/context/database.context';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
+interface Country {
+    id: string;
+    name: string;
+    code_2: string;
+    code_3: string;
+    phoneCode: string;
+}
 
 export default function Profils() {
-    const { usersQuery, session, deletedUser } = useDatabase()
+    const { usersQuery, session, deletedUser, clearAllUserData } = useDatabase()
     const userinfo = usersQuery?.findById(session?.iduser as string)
     const [isLoading, setIsLoading] = useState(false)
-    const [image, setImage] = useState<string | null>(null);
+    const [image, setImage] = useState<string | null>(userinfo?.photo !== null ? userinfo?.photo : null);
     const [file, setFile] = useState<{ name: string, mimeType: string, uri: string } | null>(null)
+    const [country, setCountry] = useState<Country | null>(null)
 
 
 
@@ -22,13 +31,22 @@ export default function Profils() {
         setIsLoading(true)
         setTimeout(async () => {
             const result = await deletedUser(session?.iduser as string)
-            if (result) {
+            const clear = await clearAllUserData()
+            if (result && clear) {
                 router.replace({
-                    pathname: '/login'
+                    pathname: '/loginzone'
                 })
             }
         }, 2000)
         setIsLoading(false)
+    }
+
+    const revealCountry = async () => {
+        const req = await fetch(`${server_url}/countries/all-country`)
+        const res = await req.json()
+        const country = res.data.filter((item: any) => item.id === userinfo?.country)
+
+        setCountry(country[0] as Country)
     }
 
     const pickImage = async () => {
@@ -59,6 +77,10 @@ export default function Profils() {
         }
     };
 
+    useEffect(() => {
+        revealCountry()
+    }, [])
+
     return (
         <ScrollView style={styles.container} contentContainerStyle={{ padding: convert(16) }} >
             <View style={{ flexDirection: 'row', alignItems: "stretch", gap: convert(14), justifyContent: 'center' }}>
@@ -68,7 +90,7 @@ export default function Profils() {
                             image
                                 ? <Image
                                     style={{ width: convert(150), height: convert(150) }}
-                                    source={{ uri: image }} />
+                                    source={{ uri: `https://${image}` }} />
                                 : <Image
                                     style={{ width: convert(150), height: convert(150) }}
                                     source={require('@/assets/images/avatar.png')} />
@@ -99,7 +121,7 @@ export default function Profils() {
                 </View>
                 <View style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee' }}>
                     <Text style={styles.entete}>Country</Text>
-                    <Text style={{ fontSize: convert(16) }}>{userinfo?.country}</Text>
+                    <Text style={{ fontSize: convert(16) }}>{country?.name}, {country?.code_2}</Text>
                 </View>
                 <View style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee' }}>
                     <Text style={styles.entete}>Biography</Text>

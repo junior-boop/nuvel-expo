@@ -17,6 +17,7 @@ import React, {
     useMemo,
     useState
 } from 'react';
+import { Alert } from 'react-native';
 import type { AiHistoryType, BibleMetadata as BibleMetadataType, Groups as GroupsType, Notes as NotesType, Session as SessionType, User as UserType } from '../Database/db';
 
 // Définition d'un type pour les erreurs de base de données
@@ -29,7 +30,9 @@ type DatabaseError = {
 // Interface améliorée avec gestion d'erreurs
 interface DatabaseContextType {
     notesQuery: QueryForTable<NotesType> | null;
+    setNotes: (notes: QueryForTable<NotesType>) => void;
     groupsQuery: QueryForTable<GroupsType> | null;
+    setGroups: (groups: QueryForTable<GroupsType>) => void;
     session: SessionType | null;
     usersQuery: QueryForTable<UserType> | null;
     biblemetadatState: QueryForTable<BibleMetadataType> | null;
@@ -42,6 +45,7 @@ interface DatabaseContextType {
     updateNote: (noteData: Partial<NotesType>) => Promise<void>;
     publishNote: (noteData: { id: string, publishId: string, version: number }) => Promise<void>;
     deleteNote: (id: string) => Promise<void>;
+    clearAllUserData: () => Promise<boolean>;
     toggleNotePinned: (note: NotesType) => Promise<void>;
     toggleNoteArchived: (note: NotesType) => Promise<void>;
     addNotetoGroup: (data: { id: string, grouped: string }) => Promise<NotesType>;
@@ -247,6 +251,45 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             handleError(error, 'deleting note');
         }
     }, [handleError, clearError, loadInitialData]);
+
+    const clearAllUserData = useCallback(async (): Promise<boolean> => {
+        try {
+            // 1. Afficher une confirmation
+            Alert.alert("Are you sure?", "This operation will delete all your data in your device", [
+                {
+                    text: "Cancel",
+                    onPress: () => console.log("Cancel"),
+                    style: "cancel",
+                },
+                {
+                    text: "Delete",
+                    onPress: async () => {
+                        // 2. Supprimer toutes les notes
+                        await Notes.deletedall()
+
+                        // 3. Supprimer tous les groupes
+                        await Groups.deletedall()
+
+                        // 4. Supprimer les sync events (optionnel)
+                        await Sync.deletedall()
+
+                        // 5. Rafraîchir les états
+                        setNotes(new QueryForTable([]))
+                        setGroups(new QueryForTable([]))
+
+                        // 6. Log success
+                        console.log('[Database] ✅ Toutes les données utilisateur supprimées')
+                    }
+                }
+            ])
+
+
+            return true
+        } catch (error) {
+            console.error('[Database] ❌ Erreur lors de la suppression:', error)
+            return false
+        }
+    }, []);
 
     // Modifier toggleNotePinned
     const toggleNotePinned = useCallback(async (note: NotesType) => {
@@ -457,7 +500,9 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     // Optimisation avec useMemo pour la valeur du contexte
     const contextValue = useMemo(() => ({
         notesQuery,
+        setNotes,
         groupsQuery,
+        setGroups,
         usersQuery,
         biblemetadatState,
         session,
@@ -470,6 +515,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         updateNote,
         publishNote,
         deleteNote,
+        clearAllUserData,
         toggleNotePinned,
         toggleNoteArchived,
         addNotetoGroup,
@@ -483,7 +529,9 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         setAiHistory
     }), [
         notesQuery,
+        setNotes,
         groupsQuery,
+        setGroups,
         usersQuery,
         biblemetadatState,
         session,
@@ -496,6 +544,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         updateNote,
         publishNote,
         deleteNote,
+        clearAllUserData,
         toggleNotePinned,
         toggleNoteArchived,
         addNotetoGroup,

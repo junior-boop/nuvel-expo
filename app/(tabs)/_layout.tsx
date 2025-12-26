@@ -1,6 +1,6 @@
 import { useColorScheme } from '@/components/useColorScheme';
 import { Redirect, Tabs } from 'expo-router';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
@@ -12,15 +12,13 @@ import { useAuthDB } from '@/lib/useAuthDB';
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const frame = useSafeAreaInsets()
-  const { isAuthenticated, checkSession } = useAuthDB();
+  const { isAuthenticated, loading } = useAuthDB();
 
-  if (!isAuthenticated) {
+  console.log(isAuthenticated, loading)
+  // Rediriger vers login si non authentifié
+  if (!loading && !isAuthenticated) {
     return <Redirect href="/loginzone" />
   }
-
-  useEffect(() => {
-    checkSession();
-  }, []);
 
   return (
     <Tabs

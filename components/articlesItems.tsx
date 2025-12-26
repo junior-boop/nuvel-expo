@@ -1,12 +1,14 @@
 import { w } from "@/constants/Colors";
 import { convert } from "@/constants/convert";
 import { Articles } from "@/Database/db";
+import { useCommentsWebSocket } from "@/lib/useComments";
 import { router } from "expo-router";
 import moment from "moment";
 import { Image, Pressable } from "react-native";
 import { Text, View } from "./Themed";
 
 export default function ArticlesItems({ article }: { article: Articles }) {
+    const { count, loading, loadComments, connected } = useCommentsWebSocket(article.id as string);
     const handleOpen = async () => {
         router.navigate({
             pathname: '/reader',
@@ -26,11 +28,11 @@ export default function ArticlesItems({ article }: { article: Articles }) {
                     <View style={{ width: convert(24), height: convert(24), borderRadius: convert(12), overflow: 'hidden', borderColor: "#e2e2e2ff", borderWidth: 1, backgroundColor: "#c7c7c7ff" }}>
                         <Image source={{ uri: `https://${article.user.photo}` }} style={{ width: convert(24), height: convert(24) }} />
                     </View>
-                    <Text style={{ fontSize: convert(16), color: "#444" }}>{article.user.name} {article.user.first_name}</Text>
+                    <Text style={{ fontSize: convert(16), color: "#444" }}>{count > 9 ? count : `0${count}`} comments</Text>
                     <Text style={{ fontSize: convert(16), color: "#444" }}>• {moment(article.createdAt).fromNow()}</Text>
                 </View>
             </View>
-            <View style={{ borderWidth: 1, borderColor: "#e2e2e2ff", borderRadius: convert(0), overflow: 'hidden' }}>
+            <View style={{ borderWidth: 1, borderColor: "#e2e2e2ff", borderRadius: convert(0), overflow: 'hidden', marginTop: convert(8) }}>
                 <Image source={{ uri: `https://${article.imageurl}` }} style={{ width: 80, height: 80 }} />
             </View>
 

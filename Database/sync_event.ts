@@ -58,3 +58,11 @@ export async function updated(id: string) {
 export async function deleted(id: string) {
   return await sync_event.deleteWhere({ id: id });
 }
+
+
+export const deletedall = async () => {
+  const allSyncEvents = await getAll();
+  for (const syncEvent of allSyncEvents) {
+    await deleted(syncEvent.id);
+  }
+};

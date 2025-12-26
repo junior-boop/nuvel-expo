@@ -39,6 +39,9 @@ export default function RootLayout() {
   // }
   return (
     <SafeAreaProvider>
+      {/* <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>je suis dans la joie</Text>
+      </View> */}
       <RootLayoutNav />
     </SafeAreaProvider>
   );
@@ -51,8 +54,8 @@ function RootLayoutNav() {
     <ThemeProvider value={DefaultTheme}>
       <DatabaseProvider>
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="loginzone" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="loginzone" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
           <Stack.Screen name='noteeditor' options={{ headerShown: true }} />
           <Stack.Screen name='groupeitems' options={{ headerShown: true, headerShadowVisible: false, animation: 'fade_from_bottom', headerTitle: '' }} />

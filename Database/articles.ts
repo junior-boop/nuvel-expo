@@ -9,6 +9,8 @@ const Articles = db.createModel<ArticlesType>("articles", {
   description: "TEXT NOT NULL",
   title: "TEXT NOT NULL",
   topic: "TEXT",
+  body: "TEXT NOT NULL",
+  user : "TEXT NOT NULL",
   appreciation: "TEXT NOT NULL UNIQUE",
   createdAt: "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
   updatedAt: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
@@ -27,6 +29,8 @@ export const created = async (data: ArticlesType) => {
     description: data.description,
     title: data.title,
     topic: data.topic,
+    body: data.body,
+    user: data.user,
     appreciation: data.appreciation,
     createdAt: data.createdAt,
     updatedAt: data.updatedAt,
@@ -47,4 +51,11 @@ export const get = async (id: string) => {
 
 export const deleted = async (id: string) => {
   return await Articles.delete(id);
+};
+
+export const deletedall = async () => {
+  const allArticles = await getall();
+  for (const article of allArticles) {
+    await deleted(article.id as string);
+  }
 };

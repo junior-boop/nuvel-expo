@@ -1,8 +1,7 @@
 import { User as UserType } from '@/Database/db';
 import * as Session from '@/Database/session';
 import * as Users from '@/Database/users';
-import { router } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseAuthDBResult {
     user: UserType | null;
@@ -24,7 +23,6 @@ interface UseAuthDBResult {
  * - Récupère les informations complètes de l'utilisateur depuis la DB
  * - Permet de créer/supprimer une session
  * - Synchronise session et table users
- * - Redirige automatiquement selon le profil utilisateur
  * 
  * @example
  * const { user, isAuthenticated, login, logout } = useAuthDB();
@@ -34,60 +32,45 @@ export const useAuthDB = (): UseAuthDBResult => {
     const [session, setSession] = useState<any | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-
-    /**
-     * Redirige l'utilisateur selon son profil
-     */
-    const handleUserRedirection = useCallback((userData: UserType) => {
-        const params = {
-            id: userData.id,
-            name: userData.name,
-            first_name: userData.first_name,
-            email: userData.email
-        };
-
-        
-        if (userData.photo === null || userData.biography === null) {
-            router.replace({
-                pathname: "/loginzone/usersinfos",
-                params
-            });
-        } else {
-            
-            router.replace({
-                pathname: "/(tabs)",
-                params
-            });
-        }
-    }, []);
+    
+    // Utiliser useRef pour éviter les appels multiples
+    const isCheckingRef = useRef(false);
 
     /**
      * Vérifie s'il existe une session active et charge l'utilisateur
      */
     const checkSession = useCallback(async () => {
+        // Éviter les appels simultanés
+        if (isCheckingRef.current) {
+            console.log('[AuthDB] ⏭️ Vérification déjà en cours, skip');
+            return;
+        }
+
         try {
+            isCheckingRef.current = true;
             setLoading(true);
             setError(null);
+
+            console.log('[AuthDB] 🔍 Vérification de la session...');
 
             // 1. Vérifier s'il y a une session
             const currentSession = await Session.get();
 
             if (!currentSession) {
-                console.log('[AuthDB] Aucune session active');
+                console.log('[AuthDB] ❌ Aucune session active');
                 setUser(null);
                 setSession(null);
                 return;
             }
 
-            console.log('[AuthDB] Session trouvée:', currentSession.iduser);
+            console.log('[AuthDB] ✅ Session trouvée:', currentSession.iduser);
             setSession(currentSession);
 
             // 2. Récupérer les informations complètes de l'utilisateur
             const userData = await Users.get(currentSession.iduser);
 
             if (!userData) {
-                console.warn('[AuthDB] Utilisateur non trouvé pour la session');
+                console.warn('[AuthDB] ⚠️ Utilisateur non trouvé pour la session');
                 // Session invalide, la supprimer
                 await Session.deleted();
                 setSession(null);
@@ -98,17 +81,15 @@ export const useAuthDB = (): UseAuthDBResult => {
             console.log('[AuthDB] ✅ Utilisateur chargé:', userData.email);
             setUser(userData);
 
-            // 3. Rediriger l'utilisateur selon son profil
-            handleUserRedirection(userData);
-
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Erreur inconnue';
             setError(message);
             console.error('[AuthDB] ❌ Erreur lors de la vérification:', err);
         } finally {
             setLoading(false);
+            isCheckingRef.current = false;
         }
-    }, []);
+    }, []); // Pas de dépendances = fonction stable
 
     /**
      * Connecte un utilisateur (crée une session et enregistre l'utilisateur)
@@ -118,7 +99,7 @@ export const useAuthDB = (): UseAuthDBResult => {
             setLoading(true);
             setError(null);
 
-            console.log('[AuthDB] Connexion...', userData.email);
+            console.log('[AuthDB] 🔐 Connexion...', userData.email);
 
             // 1. Créer/mettre à jour l'utilisateur dans la table users
             const savedUser = await Users.created(userData);
@@ -137,13 +118,8 @@ export const useAuthDB = (): UseAuthDBResult => {
             // 3. Mettre à jour le state
             setUser(savedUser);
             setSession(newSession);
-            setIsAuthenticated(true);
 
-            console.log('1 [AuthDB] ✅ Connexion réussie');
-
-            // 4. Rediriger l'utilisateur selon son profil
-            handleUserRedirection(savedUser);
-
+            console.log('[AuthDB] ✅ Connexion réussie');
             return true;
 
         } catch (err) {
@@ -154,7 +130,7 @@ export const useAuthDB = (): UseAuthDBResult => {
         } finally {
             setLoading(false);
         }
-    }, [handleUserRedirection]);
+    }, []);
 
     /**
      * Déconnecte l'utilisateur (supprime la session)
@@ -172,7 +148,6 @@ export const useAuthDB = (): UseAuthDBResult => {
                 console.log('[AuthDB] ✅ Déconnexion réussie');
                 return true;
             }
-            setIsAuthenticated(false);
 
             return false;
 
@@ -194,7 +169,7 @@ export const useAuthDB = (): UseAuthDBResult => {
         }
 
         try {
-            console.log('[AuthDB] Rafraîchissement des données utilisateur...');
+            console.log('[AuthDB] 🔄 Rafraîchissement des données utilisateur...');
 
             const userData = await Users.get(session.iduser);
 
@@ -212,18 +187,22 @@ export const useAuthDB = (): UseAuthDBResult => {
     }, [session, logout]);
 
     /**
-     * Vérifier la session au montage du composant
+     * Vérifier la session au montage du composant UNE SEULE FOIS
      */
-    // useEffect(() => {
-    //     checkSession();
-    // }, []);
+    useEffect(() => {
+        console.log('[AuthDB] 🚀 Hook monté, vérification de la session...');
+        checkSession();
+        
+        // Ne pas ajouter checkSession aux dépendances pour éviter les boucles infinies
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // ✅ Tableau vide = exécuté une seule fois au montage
 
     return {
         user,
         session,
         loading,
         error,
-        isAuthenticated,
+        isAuthenticated: !!user && !!session,
         login,
         logout,
         refreshUser,

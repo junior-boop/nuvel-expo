@@ -4,7 +4,7 @@ import type { Notes as NotesType } from "@/Database/db";
 import { MaterialIcons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import { Text, View } from "../Themed";
 import NoteLongPress_Btn from './btn_noteLongPress';
@@ -74,10 +74,6 @@ export default function NoteItems({ note }: { note: NotesType }) {
         await toggleNotePinned({ ...note, pinned: note.pinned === 0 ? 1 : 0 })
         setLongSelection(false)
     }
-
-    useEffect(() => {
-        console.log(Blocks_talks !== null && Blocks_talks !== undefined && Blocks_talks[0].content[0].attrs.checked)
-    }, [data])
 
     return (
         <View style={{

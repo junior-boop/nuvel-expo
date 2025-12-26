@@ -37,7 +37,7 @@ export default function TabTwoScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "space-between", gap: convert(6) }}>
             <Image
               style={{ width: convert(32), height: convert(32), borderRadius: convert(16), borderWidth: 1, borderColor: '#eee' }}
-              source={userinfo?.photo ? { uri: userinfo?.photo } : require("../../assets/images/avatar.png")} />
+              source={userinfo?.photo ? { uri: `https://${userinfo?.photo}` } : require("../../assets/images/avatar.png")} />
             <View style={{ width: convert(20), height: convert(20) }}>
               <FluentChevronRight32Regular width={convert(20)} height={convert(20)} />
             </View>

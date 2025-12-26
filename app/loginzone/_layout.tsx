@@ -9,6 +9,7 @@ export default function LoginLayout() {
             <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="index" />
                 <Stack.Screen name="usersinfos" />
+                <Stack.Screen name="sync_note_group" />
             </Stack>
             <View style={{ height: frame.bottom }} />
         </>
