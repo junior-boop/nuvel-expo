@@ -2,7 +2,7 @@
   "expo": {
     "name": "nuvel-expo",
     "slug": "nuvel-expo",
-    "version": "0.0.5",
+    "version": "0.4.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "nuvelexpo",
@@ -55,7 +55,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/fc80379a-5a7c-42b8-bf65-bb5096679e67",
-      "checkAutomatically": "ON_LOAD",
+      "checkAutomatically": "ON_ERROR_RECOVERY",
       "fallbackToCacheTimeout": 0,
       "enabled": true
     }

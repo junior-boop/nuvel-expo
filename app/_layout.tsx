@@ -7,6 +7,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 
 import { View } from '@/components/Themed';
 import { DatabaseProvider } from '@/context/database.context';
+import { useCallback, useEffect } from 'react';
 
 
 export {
@@ -25,6 +26,17 @@ SplashScreen.preventAutoHideAsync();
 
 
 export default function RootLayout() {
+  const prepare = useCallback(async () => {
+    try {
+      await SplashScreen.hideAsync();
+    } catch (e) {
+      console.warn(e);
+    }
+  }, []);
+
+  useEffect(() => {
+    prepare();
+  }, []);
   // const { loading } = useAuthDB();
 
   // if (loading) {
