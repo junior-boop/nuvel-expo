@@ -47,9 +47,13 @@ const senddata = async (table_name : string , id : string) => {
       "Content-type" : "application/json"
     },
     body : JSON.stringify(data)
+
+   
   })
-  const res = await req.json()
-  console.log(res)
+   if(table_name === 'groups'){
+      console.log("groups : ", await req.text())
+    }
+  await req.text()
   } catch (error) {
     console.log(error)
   } finally {
@@ -132,7 +136,6 @@ export const Sync_to_serveur = async () => {
   const sync_event = await Sync.getAll()
 
   if(check.status === 200) {
-    console.log("connecté", result)
     if(result.data.length > 0) {
       for(let note of sync_event) {
         if(note.table_name === "notes"){

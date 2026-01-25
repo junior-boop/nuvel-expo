@@ -32,8 +32,8 @@ export default function TabTwoScreen() {
             <Stack.Screen options={{ headerShown: false }} />
             <HeaderPage />
             <View style={styles.container}>
-                <View style={{ backgroundColor: '#efefef', paddingHorizontal: 11, borderBottomWidth: 1, borderColor: "#eee", height: 50, flexDirection: 'row', alignItems: 'center' }}>
-                    <TextInput value={value} onChangeText={onChangeText} placeholderTextColor={"#999"} placeholder="Ajouter un groupe" style={{ color: "#333", fontSize: 16, flex: 1, fontWeight: "bold" }} />
+                <View style={{ backgroundColor: '#f6f9ffff', paddingHorizontal: 11, borderBottomWidth: 1, borderColor: "#eff2fdff", height: 50, flexDirection: 'row', alignItems: 'center' }}>
+                    <TextInput value={value} onChangeText={onChangeText} placeholderTextColor={"#8fa0acff"} placeholder="Ajouter un groupe" style={{ color: "#333", fontSize: 16, flex: 1, fontWeight: "bold" }} />
                     <TouchableOpacity style={{ padding: 8 }} onPress={handleNewGroup}>
                         <MaterialIcons name="add" size={28} color="#007AFF" />
                     </TouchableOpacity>

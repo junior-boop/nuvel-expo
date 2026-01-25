@@ -165,12 +165,14 @@ export interface Appreciations {
 
 export interface SyncEvent {
   id: string;
-  userid: string;
-  deviceid: string;
-  noteid: string;
-  action: string;
-  timestamp: string;
-  synced: boolean;
+  userId: string;
+  deviceId: string;
+  entityType: 'note' | 'group';
+  entityId: string;
+  action: 'created' | 'updated' | 'deleted';
+  timestamp: string; // ISO timestamp
+  synced: number; // 0 = pas sync, 1 = syncé
+  created: string;
 }
 
 export interface Devices {

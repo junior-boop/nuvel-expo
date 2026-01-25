@@ -44,9 +44,9 @@ export default function TabTwoScreen() {
         <View style={{ flex: 1 }}>
             <Stack.Screen options={{ headerShown: false }} />
             <HeaderPage />
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: convert(72), paddingTop: convert(16) }}>
-                <Pressable style={{ paddingHorizontal: convert(16), marginBottom: convert(16) }} onPress={() => router.push('/searchnotes')}>
-                    <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: convert(16), paddingVertical: convert(12), backgroundColor: "#d3e3f1ff", borderRadius: convert(24) }}>
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: convert(72) }}>
+                <Pressable style={{ marginBottom: convert(16) }} onPress={() => router.push('/searchnotes')}>
+                    <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: convert(16), paddingVertical: convert(12), backgroundColor: "#f6f9ffff", height: 50, borderBottomWidth: 1, borderColor: "#eff2fdff" }}>
                         <FluentSearch32Filled width={20} height={20} color={"black"} />
                         <Text style={{ fontSize: convert(16), fontWeight: "bold", marginLeft: convert(8) }}>Search a note </Text>
                     </View>
@@ -60,7 +60,7 @@ export default function TabTwoScreen() {
                     <FluentNoteAdd28Regular width={28} height={28} color={"white"} />
                 </TouchableOpacity>
             </View>
-        </View>
+        </View >
     );
 }
 

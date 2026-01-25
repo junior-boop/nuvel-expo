@@ -10,8 +10,8 @@ const Articles = db.createModel<ArticlesType>("articles", {
   title: "TEXT NOT NULL",
   topic: "TEXT",
   body: "TEXT NOT NULL",
-  user : "TEXT NOT NULL",
-  appreciation: "TEXT NOT NULL UNIQUE",
+  user: "TEXT NOT NULL",
+  appreciation: "TEXT NOT NULL",
   createdAt: "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
   updatedAt: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
 });

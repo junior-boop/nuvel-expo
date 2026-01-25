@@ -4,7 +4,7 @@ import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
-import { FluentBookmark32Filled, FluentBookmark32Regular, FluentDocumentFolder32Filled, FluentDocumentFolder32Regular, FluentHome32Filled, FluentHome32Regular, FluentSearch32Filled, FluentSettings32Filled, FluentSettings32Regular } from '@/constants/icons';
+import { FluentAlert32Filled, FluentAlert32Regular, FluentBookmark32Filled, FluentBookmark32Regular, FluentDocumentFolder32Filled, FluentDocumentFolder32Regular, FluentHome32Filled, FluentHome32Regular, FluentSettings32Filled, FluentSettings32Regular } from '@/constants/icons';
 import { useAuthDB } from '@/lib/useAuthDB';
 
 
@@ -22,6 +22,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
+
       screenOptions={{
         // tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         // Disable the static render of the header on web
@@ -66,7 +67,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="search"
         options={{
-          tabBarIcon: ({ color, focused, size }) => <FluentSearch32Filled width={size} height={size} color={color} />,
+          tabBarIcon: ({ color, focused, size }) => (focused ? <FluentAlert32Filled width={size} height={size} color={color} /> : <FluentAlert32Regular width={size} height={size} color={color} />),
+
         }}
       />
       <Tabs.Screen

@@ -5,9 +5,9 @@ import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
 import { w } from "@/constants/Colors";
 import { convert } from "@/constants/convert";
-import { IcBaselineArrowBack, RiDownload2Line, RiSendPlaneLine, RiShareForwardLine } from "@/constants/icons";
+import { IcBaselineArrowBack, RiBookmark3Fill, RiBookmark3Line, RiSendPlaneLine, RiShareForwardLine } from "@/constants/icons";
 import { useDatabase } from "@/context/database.context";
-import { Comments } from "@/Database/db";
+import { Articles, Comments } from "@/Database/db";
 import ReaderHtml from "@/editor/readerhtml";
 import { useArticle } from "@/lib/useArticles";
 import { useCommentsWebSocket } from "@/lib/useComments";
@@ -19,21 +19,33 @@ import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler
 
 export default function ReaderPage() {
     const { article } = useLocalSearchParams()
-    const [articles, setArticles] = useState({})
     const [commentOpen, setCommentOpen] = useState(false)
     const [request, setRequest] = useState<{ articlesId: string, comments: Comments[], count: number } | null>(null)
     const note = JSON.parse(article as string)
+    const [bookmark, setBookmark] = useState(false)
 
     const sheetRef = useRef<BottomSheet>(null);
     const snapPoints = useMemo(() => ["100%"], []);
-    const { usersQuery, session } = useDatabase()
+    const { usersQuery, session, addArticle, articlesQuery } = useDatabase()
     const userinfo = usersQuery?.findById(session?.iduser as string)
 
     const creatorName = JSON.stringify(userinfo);
+    const articleToSave = useArticle(note.id).article
 
-    // () => { setCommentOpen(false); Keyboard.dismiss() }
+    const handleBookmark = () => {
+        if (!session) return;
+        addArticle(articleToSave as Articles)
+        setBookmark(true)
+    }
 
-
+    useEffect(() => {
+        const bookmark = articlesQuery?.findById(note.id);
+        if (bookmark) {
+            setBookmark(true)
+        } else {
+            setBookmark(false)
+        }
+    }, [articlesQuery])
 
     return (
         <PageLayout_3>
@@ -46,8 +58,10 @@ export default function ReaderPage() {
                     <TouchableOpacity onPress={() => { router.back() }}>
                         <IcBaselineArrowBack width={24} height={24} color={'black'} />
                     </TouchableOpacity>
-                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(5) }}>
-                        <RiDownload2Line width={24} height={24} color={'#777'} />
+                    <TouchableOpacity onPress={handleBookmark} style={{ flexDirection: 'row', alignItems: 'center', gap: convert(5) }} disabled={bookmark}>
+                        {
+                            bookmark ? <RiBookmark3Fill width={24} height={24} color={'#c5c5c5ff'} /> : <RiBookmark3Line width={24} height={24} color={'black'} />
+                        }
                     </TouchableOpacity>
                 </View>
                 <Article id={note.id} />
@@ -75,15 +89,20 @@ export default function ReaderPage() {
 
 
 const Article = ({ id }: { id: string }) => {
+    const { articlesQuery } = useDatabase()
+    const a = articlesQuery?.findById(id)
+    const articleWhichSaved = a === undefined ? undefined : { ...a, user: JSON.parse(a.user as string) }
     const { article, loading, error, refresh } = useArticle(id);
+
+
     return (
         <>
             {
-                !article?.body
-                    ? <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                loading
+                    ? (<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                         <ActivityIndicator size={'large'} color={"black"} />
-                    </View>
-                    : <ReaderHtml note={article} />
+                    </View>)
+                    : <ReaderHtml note={articleWhichSaved || article} />
 
             }
         </>

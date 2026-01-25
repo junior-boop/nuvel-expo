@@ -44,7 +44,7 @@ const ReaderHtml = forwardRef(({ note }: { note: Notes, }, ref) => {
             const text = document.body.innerText
             setReadTime(tempslecture(text))
 
-            console.log(note.user)
+            console.log('note.user', note.user.name)
         }
     }, [])
 

@@ -50,9 +50,10 @@ export default function NoteEditor() {
 
     const history_ai = new QueryForTable<AiHistoryType>()
     const Note = notesQuery?.findById(data.id as string) as Notes
+    const userId = data.userid
 
     const handleUpdate = async (data: Partial<Notes>) => {
-        await updateNote(data)
+        await updateNote({ ...data, userId: userId as string })
         set_note_data(data)
         const ws_vs = htmlToWhatsApp(data.html as string)
         const _ = JSON.parse(data.body as string)
@@ -89,7 +90,7 @@ export default function NoteEditor() {
     }
 
     const handleBack = async () => {
-        await updateNote(note_data as Notes)
+        await updateNote({ ...note_data, userId: userId as string })
         router.back()
     }
 

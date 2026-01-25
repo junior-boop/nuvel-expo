@@ -57,7 +57,11 @@ export default function NoteItems({ note }: { note: NotesType }) {
         if (t.length === 0) {
             return null
         } else {
-            return t[0].content[0].text
+            if (t[0].content !== undefined) {
+                return t[0].content[0].text
+            } else {
+                return null
+            }
         }
     }
 
@@ -121,11 +125,11 @@ export default function NoteItems({ note }: { note: NotesType }) {
                     setLongSelection(true)
                 }}
             >
-                <View style={{ paddingHorizontal: convert(14) }}>
-                    <Text style={styles.titre}>{block_titre()}</Text>
+                <View style={{ paddingHorizontal: convert(14), paddingTop: block_titre() === null ? convert(12) : convert(0) }}>
+                    {block_titre() !== null && <Text style={styles.titre}>{block_titre()}</Text>}
                     <View style={styles.View_2}>
                         {data !== null && <Text style={styles.texte} >{block_text()}</Text>}
-                        {data === null && <Text style={{ color: '#999' }}>{valuetext}</Text>}
+                        {/* {data === null && <Text style={{ color: '#999' }}>{valuetext}</Text>} */}
                     </View>
 
                 </View>

@@ -1,36 +1,45 @@
 import db from ".";
+import { SyncEvent } from "./db";
 import { generateUUID as uuidv4 } from "./uuid";
 
-export interface Sync_Event {
-  id: string;
-  action: "CREATE" | "UPDATE" | "DELETE";
-  elementid: string;
-  timestamp: Date | string;
-  table_name: string;
-  need_sync: boolean;
-}
-
-const sync_event = db.createModel<Sync_Event>("sync_event", {
+const sync_event = db.createModel<SyncEvent>("sync_event", {
   id: "TEXT PRIMARY KEY NOT NULL",
+  userId: "TEXT NOT NULL",
+  deviceId: "TEXT NULL",
+  entityType: "TEXT NULL",
+  entityId: "TEXT NULL",
   action: "TEXT NOT NULL",
-  elementid: "TEXT NOT NULL",
-  need_sync: "BOOLEAN DEFAULT 0",
-  table_name: "TEXT NOT NULL",
-  timestamp: "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+  timestamp: "TEXT NOT NULL",
+  synced: "INTEGER",
+  created: "DATETIME DEFAULT CURRENT_TIMESTAMP",
 });
 
+/**
+ * Créer la table sync_event avec le nouveau schéma
+ * 
+ * ⚠️ IMPORTANT: Si vous obtenez l'erreur "no such column: synced",
+ * vous devez nettoyer les données de l'application :
+ * - Sur Android : Paramètres > Apps > [Votre App] > Stockage > Effacer les données
+ * - Sur iOS : Désinstaller et réinstaller l'app
+ * 
+ * Cela supprimera l'ancienne table et créera la nouvelle avec le bon schéma.
+ */
 export const createEvent = async () => {
   await sync_event.createTable();
+  console.log("[SyncEvent] ✅ Table sync_event créée/initialisée");
 };
 
-export async function Set(data: Partial<Sync_Event>) {
+export async function Set(data: Partial<SyncEvent>) {
   const result = await sync_event.create({
-    id: uuidv4(),
-    action: data.action || "CREATE",
-    elementid: data.elementid,
-    need_sync: data.need_sync,
-    table_name: data.table_name,
-    timestamp: new Date().toISOString(),
+    id: data.id || uuidv4(),
+    userId: data.userId!,
+    deviceId: data.deviceId!,
+    entityType: data.entityType!,
+    entityId: data.entityId!,
+    action: data.action!,
+    timestamp: data.timestamp || new Date().toISOString(),
+    synced: data.synced ?? 0,
+    created: new Date().toISOString(),
   });
 
   return result;
@@ -44,21 +53,30 @@ export async function getAll() {
   return await sync_event.findAll({
     orderBy: { column: "timestamp", direction: "DESC" },
     where: {
-      need_sync: true,
+      synced: 0,
     },
   });
 }
 
-export async function updated(id: string) {
+export async function getAllByUser(userId: string) {
+  return await sync_event.findAll({
+    orderBy: { column: "timestamp", direction: "DESC" },
+    where: {
+      userId: userId,
+      synced: 0,
+    },
+  });
+}
+
+export async function markAsSynced(id: string) {
   return await sync_event.update(id, {
-    need_sync: false,
+    synced: 1,
   });
 }
 
 export async function deleted(id: string) {
   return await sync_event.deleteWhere({ id: id });
 }
-
 
 export const deletedall = async () => {
   const allSyncEvents = await getAll();

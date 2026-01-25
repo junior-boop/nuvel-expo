@@ -14,6 +14,7 @@ import { ScrollView, TextInput, TouchableOpacity } from "react-native";
 import { NewNoteButton } from "./styles/cards";
 
 export default function GroupeItemps() {
+
     const { id } = useLocalSearchParams()
     const [group, setGroup] = useState<Partial<Groups> | null>(null)
     const [editTrue, setEditTrue] = useState(false)
@@ -21,13 +22,17 @@ export default function GroupeItemps() {
     const navigation = useNavigation()
 
     // utilisation du contexte
-    const { groupsQuery, deletedGroup, updatedGroup, addNote, notesQuery } = useDatabase()
+    const { groupsQuery, deletedGroup, updatedGroup, addNote, notesQuery, session } = useDatabase()
 
     const getgroupe = () => {
         const items = groupsQuery?.findById(id as string)
         setGroup(items as Groups)
         if (items) onChangeText(items.name)
     }
+
+    useEffect(() => {
+        console.log(session)
+    }, [id])
 
 
     const handleEdit = async (text: string) => {
@@ -54,7 +59,7 @@ export default function GroupeItemps() {
             pinned: false,
             archived: false,
             grouped: id as string,
-            creator: "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+            creator: session?.iduser
         })
 
         if (result) {

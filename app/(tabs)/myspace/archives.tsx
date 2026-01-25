@@ -1,7 +1,8 @@
 import { StyleSheet } from 'react-native';
 
 import HeaderPage from '@/components/headerpage';
-import { Text, View } from '@/components/Themed';
+import AllNotesArchived from '@/components/notes/allnotesarchived';
+import { View } from '@/components/Themed';
 import { Stack } from 'expo-router';
 
 export default function TabTwoScreen() {
@@ -9,11 +10,8 @@ export default function TabTwoScreen() {
         <View style={{ flex: 1 }}>
             <Stack.Screen options={{ headerShown: false }} />
             <HeaderPage />
-            <View style={styles.container}>
-                <Text style={styles.title}>Tab Two</Text>
-                <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-                <Text>archives</Text>
-            </View>
+            <AllNotesArchived />
+
         </View>
     );
 }

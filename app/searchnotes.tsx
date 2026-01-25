@@ -52,6 +52,7 @@ export default function SearchNotes() {
                 <View>
                     {search !== null && <Column data={search as Notes[]} />}
                 </View>
+                <View style={{ height: convert(72) }}></View>
             </ScrollView>
         </PageLayout_3>
     )

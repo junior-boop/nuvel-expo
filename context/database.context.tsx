@@ -1,5 +1,7 @@
 import { QueryForTable } from '@/constants/Queryuilder';
+import db from '@/Database';
 import * as AiStore from '@/Database/ai';
+import * as Articles from '@/Database/articles';
 import * as BibleMetadata from "@/Database/bible.metadata";
 import * as Groups from '@/Database/groups';
 import * as Notes from '@/Database/notes';
@@ -8,6 +10,7 @@ import * as Sync from '@/Database/sync_event';
 import { first_sync, Sync_to_serveur } from '@/Database/sync_online';
 import * as User from '@/Database/users';
 import { generateUUID as uuidv4 } from '@/Database/uuid';
+import { useSQLiteDevTools } from 'expo-sqlite-devtools';
 import React, {
     createContext,
     ReactNode,
@@ -18,7 +21,7 @@ import React, {
     useState
 } from 'react';
 import { Alert } from 'react-native';
-import type { AiHistoryType, BibleMetadata as BibleMetadataType, Groups as GroupsType, Notes as NotesType, Session as SessionType, User as UserType } from '../Database/db';
+import type { AiHistoryType, Articles as ArticlesType, BibleMetadata as BibleMetadataType, Groups as GroupsType, Notes as NotesType, Session as SessionType, SyncEvent, User as UserType } from '../Database/db';
 
 // Définition d'un type pour les erreurs de base de données
 type DatabaseError = {
@@ -36,6 +39,7 @@ interface DatabaseContextType {
     session: SessionType | null;
     usersQuery: QueryForTable<UserType> | null;
     biblemetadatState: QueryForTable<BibleMetadataType> | null;
+    articlesQuery: QueryForTable<ArticlesType> | null;
     isLoading: boolean;
     error: DatabaseError | null;
     addNote: (noteData: Partial<NotesType>) => Promise<NotesType | undefined>;
@@ -60,17 +64,22 @@ interface DatabaseContextType {
         iduser: string,
         role: string,
         content: string,
-    }) => AiHistoryType[]
+    }) => AiHistoryType[],
+    addArticle: (data: ArticlesType) => Promise<ArticlesType | undefined>,
+    getallArticle: () => ArticlesType[],
+    deletedArticle: (id: string) => Promise<void>,
 }
 
 const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined);
 
 export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
+    useSQLiteDevTools(db)
     const [notesQuery, setNotes] = useState<QueryForTable<NotesType> | null>(null);
     const [groupsQuery, setGroups] = useState<QueryForTable<GroupsType> | null>(null);
     const [usersQuery, setUsers] = useState<QueryForTable<UserType> | null>(null);
     const [session, setSession] = useState<SessionType | null>(null);
     const [biblemetadatState, setBibleMetadataState] = useState<QueryForTable<BibleMetadataType> | null>(null);
+    const [articlesQuery, setArticles] = useState<QueryForTable<ArticlesType> | null>(null);
 
 
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -117,31 +126,47 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         await BibleMetadata.createTable()
         await AiStore.createTable()
         await Sync.createEvent()
+        await Articles.createTable()
+
+        // Créer la table sync_metadata pour stocker device_id et last_sync
+        try {
+            const { createTable } = await import('@/Database/sync_metadata');
+            await createTable();
+            console.log('[Database] ✅ sync_metadata table initialized');
+        } catch (error) {
+            console.log('[Database] sync_metadata table creation skipped:', error);
+        }
 
         await syncToServer()
         clearError();
         try {
-            const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, Sync_EventResult] = await Promise.all([
+            const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, Sync_EventResult, articlesResult] = await Promise.all([
                 Notes.getall(),
                 Groups.getall(),
                 Session.get(),
                 User.getAll(),
                 BibleMetadata.getall(),
-                Sync.getAll()
+                Sync.getAll(),
+                Articles.getall()
             ]);
             const notesArray = new QueryForTable<NotesType>(notesResult || []);
             const groupArray = new QueryForTable<GroupsType>(groupesResult || []);
             const userArray = new QueryForTable<UserType>(userResult || []);
             const bibleMetadataArray = new QueryForTable<BibleMetadataType>(bibleMetadataResult || []);
+            const articlesArray = new QueryForTable<ArticlesType>(articlesResult || []);
 
             console.log("Note length:", notesResult.length)
             console.log("Sync_event :", Sync_EventResult.length)
+            console.log("Articles :", articlesResult.length)
+
+            console.log("Articles :", articlesResult)
 
             setUsers(userArray);
             setGroups(groupArray);
             setNotes(notesArray);
             setSession(sessionResult || null);
             setBibleMetadataState(bibleMetadataArray)
+            setArticles(articlesArray)
         } catch (error) {
             handleError(error, 'initial data loading');
         } finally {
@@ -180,11 +205,13 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             }
             setNotes(new QueryForTable(notesQuery?.add(objdata)))
 
-            const objet: Partial<Sync.Sync_Event> = {
-                elementid: objdata.id,
-                action: "CREATE",
-                need_sync: true,
-                table_name: "notes",
+            const objet: Partial<SyncEvent> = {
+                userId: noteData.creator,
+                entityId: noteData.id,
+                entityType: "note",
+                deviceId: null,
+                action: "created",
+                synced: 1,
             }
             const sync = await Sync.Set(objet)
             console.log(`Sync_event ${objdata.id}`, sync)
@@ -196,15 +223,18 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [loadInitialData]);
 
-    const updateNote = useCallback(async (noteData: { id: string, body: string, version: number, html: string }) => {
+    const updateNote = useCallback(async (noteData: { id: string, body: string, version: number, html: string, userId: string }) => {
         clearError();
         try {
+            console.log("noteData", noteData)
             const result = await Notes.update(noteData);
-            const objet: Partial<Sync.Sync_Event> = {
-                elementid: noteData.id,
-                action: "UPDATE",
-                need_sync: true,
-                table_name: "notes",
+            const objet: Partial<SyncEvent> = {
+                userId: noteData.userId,
+                entityId: noteData.id,
+                entityType: "note",
+                deviceId: null,
+                action: "updated",
+                synced: 1,
             }
             const sync = await Sync.Set(objet)
             console.log(`Sync_event updated ${noteData.id}`, sync)
@@ -214,15 +244,17 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [loadInitialData]);
 
-    const publishNote = useCallback(async (noteData: { id: string, publishId: string, version: number }) => {
+    const publishNote = useCallback(async (noteData: { id: string, body: string, version: number, html: string, userId: string }) => {
         clearError();
         try {
             const result = await Notes.publish(noteData);
-            const objet: Partial<Sync.Sync_Event> = {
-                elementid: noteData.id,
-                action: "UPDATE",
-                need_sync: true,
-                table_name: "notes",
+            const objet: Partial<SyncEvent> = {
+                userId: noteData.userId,
+                entityId: noteData.id,
+                entityType: "note",
+                deviceId: null,
+                action: "updated",
+                synced: 1,
             }
             const sync = await Sync.Set(objet)
             console.log(`Sync_event updated ${noteData.id}`, sync)
@@ -233,19 +265,21 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     }, [loadInitialData]);
 
     // Modifier deleteNote
-    const deleteNote = useCallback(async (id: string) => {
+    const deleteNote = useCallback(async (noteData: { id: string, body: string, version: number, html: string, userId: string }) => {
         clearError();
         try {
-            const result = await Notes.deleted(id);
-            const objet: Partial<Sync.Sync_Event> = {
-                elementid: id,
-                action: "DELETE",
-                need_sync: true,
-                table_name: "notes",
+            const result = await Notes.deleted(noteData.id);
+            const objet: Partial<SyncEvent> = {
+                userId: noteData.userId,
+                entityId: noteData.id,
+                entityType: "note",
+                deviceId: null,
+                action: "deleted",
+                synced: 1,
             }
             const sync = await Sync.Set(objet)
-            console.log(`Sync_event deleted ${id}`, sync)
-            setNotes(new QueryForTable(notesQuery?.delete(id)))
+            console.log(`Sync_event deleted ${noteData.id}`, sync)
+            setNotes(new QueryForTable(notesQuery?.delete(noteData.id)))
             if (result) loadInitialData();
         } catch (error) {
             handleError(error, 'deleting note');
@@ -296,11 +330,13 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         try {
             const updatedNote = { ...note, pinned: note.pinned };
             const result = await Notes.setpinned(updatedNote);
-            const objet: Partial<Sync.Sync_Event> = {
-                elementid: note.id,
-                action: "UPDATE",
-                need_sync: true,
-                table_name: "notes",
+            const objet: Partial<SyncEvent> = {
+                userId: note.creator,
+                entityId: note.id,
+                entityType: "note",
+                deviceId: null,
+                action: "updated",
+                synced: 1,
             }
             const sync = await Sync.Set(objet)
             console.log(`Sync_event updated ${note.id}`, sync)
@@ -317,11 +353,13 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         try {
             const updatedNote = { ...note, archived: note.archived };
             const result = await Notes.update(updatedNote);
-            const objet: Partial<Sync.Sync_Event> = {
-                elementid: note.id,
-                action: "UPDATE",
-                need_sync: true,
-                table_name: "notes",
+            const objet: Partial<SyncEvent> = {
+                userId: note.creator,
+                entityId: note.id,
+                entityType: "note",
+                deviceId: null,
+                action: "updated",
+                synced: 1,
             }
             const sync = await Sync.Set(objet)
             console.log(`Sync_event updated ${note.id}`, sync)
@@ -335,11 +373,13 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         try {
             const result = await Notes.addtogroup(data);
             if (result) loadInitialData();
-            const objet: Partial<Sync.Sync_Event> = {
-                elementid: result?.id,
-                action: "UPDATE",
-                need_sync: true,
-                table_name: "notes",
+            const objet: Partial<SyncEvent> = {
+                userId: data.creator,
+                entityId: result?.id,
+                entityType: "note",
+                deviceId: null,
+                action: "updated",
+                synced: 1,
             }
             const sync = await Sync.Set(objet)
             console.log(`Sync_event updated ${result?.id}`, sync)
@@ -353,11 +393,13 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await Groups.created(data);
-            const objet: Partial<Sync.Sync_Event> = {
-                elementid: result.id,
-                action: "CREATE",
-                need_sync: true,
-                table_name: "groups",
+            const objet: Partial<SyncEvent> = {
+                userId: session?.iduser,
+                entityId: result.id,
+                entityType: "group",
+                deviceId: null,
+                action: "created",
+                synced: 1,
             }
             const sync = await Sync.Set(objet)
             console.log(`Sync_event created ${result.id}`, sync)
@@ -372,11 +414,13 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await Groups.updated(data);
-            const objet: Partial<Sync.Sync_Event> = {
-                elementid: result?.id,
-                action: "UPDATE",
-                need_sync: true,
-                table_name: "groups",
+            const objet: Partial<SyncEvent> = {
+                userId: session?.iduser,
+                entityId: result?.id,
+                entityType: "group",
+                deviceId: null,
+                action: "updated",
+                synced: 1,
             }
             const sync = await Sync.Set(objet)
             console.log(`Sync_event updated ${result?.id}`, sync)
@@ -391,11 +435,13 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await Groups.deleted(id);
-            const objet: Partial<Sync.Sync_Event> = {
-                elementid: id,
-                action: "DELETE",
-                need_sync: true,
-                table_name: "groups",
+            const objet: Partial<SyncEvent> = {
+                userId: session?.iduser,
+                entityId: id,
+                entityType: "group",
+                deviceId: null,
+                action: "deleted",
+                synced: 1,
             }
             const sync = await Sync.Set(objet)
             console.log(`Sync_event deleted ${id}`, sync)
@@ -497,6 +543,40 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     }, [loadInitialData, handleError])
 
 
+    const addArticle = useCallback(async (data: ArticlesType) => {
+        clearError();
+        try {
+            const result = await Articles.created({ ...data, user: JSON.stringify(data.user) });
+
+            if (result) loadInitialData();
+            return result;
+        } catch (error) {
+            handleError(error, 'adding article');
+        }
+    }, [loadInitialData])
+
+    const getallArticle = useCallback(async () => {
+        clearError();
+        try {
+            const result = await Articles.getall();
+            if (result) loadInitialData();
+            return result;
+        } catch (error) {
+            handleError(error, 'adding article');
+        }
+    }, [loadInitialData])
+
+    const deletedArticle = useCallback(async (id: string) => {
+        clearError();
+        try {
+            const result = await Articles.deleted(id);
+            if (result) loadInitialData();
+            return result;
+        } catch (error) {
+            handleError(error, 'adding article');
+        }
+    }, [loadInitialData])
+
     // Optimisation avec useMemo pour la valeur du contexte
     const contextValue = useMemo(() => ({
         notesQuery,
@@ -526,7 +606,11 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         deletedGroup,
         clearError,
         getAiHistory,
-        setAiHistory
+        setAiHistory,
+        addArticle,
+        getallArticle,
+        deletedArticle,
+        articlesQuery
     }), [
         notesQuery,
         setNotes,
@@ -555,7 +639,11 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         deletedGroup,
         clearError,
         getAiHistory,
-        setAiHistory
+        setAiHistory,
+        addArticle,
+        getallArticle,
+        deletedArticle,
+        articlesQuery
     ]);
 
     return (
