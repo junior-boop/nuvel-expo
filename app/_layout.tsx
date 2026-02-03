@@ -8,11 +8,11 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { View } from '@/components/Themed';
 import { convert } from '@/constants/convert';
 import { DatabaseProvider } from '@/context/database.context';
+import * as localStorage from '@/Database/localstorage';
 import { useAuthDB } from '@/lib/useAuthDB';
 import { useCallback, useEffect } from 'react';
 import { ActivityIndicator, Image } from 'react-native';
 import { HeaderStyles } from './styles/cards';
-
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -30,6 +30,7 @@ SplashScreen.preventAutoHideAsync();
 
 
 export default function RootLayout() {
+  localStorage.createTable()
   const { loading } = useAuthDB();
   const prepare = useCallback(async () => {
     try {

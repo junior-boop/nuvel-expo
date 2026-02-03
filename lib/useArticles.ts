@@ -1,4 +1,5 @@
 // hooks/useArticle.ts
+import * as LocalStorage from '@/Database/localstorage';
 import { useCallback, useEffect, useState } from 'react';
 interface User {
   id: string;
@@ -28,6 +29,7 @@ interface UseArticleResult {
   error: string | null;
   refresh: () => Promise<void>;
 }
+
 export const useArticle = (
   articleId: string,
   apiBase: string = 'https://nuvelserver.godigital.workers.dev'
@@ -44,8 +46,17 @@ export const useArticle = (
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${apiBase}/articles/${articleId}`);
-      
+
+      const token = await LocalStorage.getItem("accessToken")
+      console.log("[useArticle] Token:", token);
+
+      const response = await fetch(`${apiBase}/articles/${articleId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
       if (!response.ok) {
         throw new Error(`Erreur HTTP: ${response.status}`);
       }

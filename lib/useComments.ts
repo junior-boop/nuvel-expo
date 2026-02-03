@@ -1,6 +1,7 @@
 // hooks/useCommentsWebSocket.ts - VERSION COMPLÈTE
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
+import { createdComment } from './instantdb.Comment';
 interface Comment {
   id: string;
   articleId: string;
@@ -21,7 +22,7 @@ export const useCommentsWebSocket = (
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState<boolean>(false);
-  
+
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttempts = useRef<number>(0);
@@ -39,7 +40,7 @@ export const useCommentsWebSocket = (
   }, []);
   // Mettre à jour un commentaire existant (upvotes/signals)
   const updateComment = useCallback((updatedComment: Comment) => {
-    setComments((prev) => 
+    setComments((prev) =>
       prev.map(c => c.id === updatedComment.id ? updatedComment : c)
     );
   }, []);
@@ -50,7 +51,7 @@ export const useCommentsWebSocket = (
       setLoading(true);
       const response = await fetch(`${apiBase}/comments/${articleId}`);
       const data = await response.json();
-      
+
       setComments(data.comments || []);
       setCount(data.count || 0);
       log(`✅ ${data.count} commentaires chargés`);
@@ -71,8 +72,10 @@ export const useCommentsWebSocket = (
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ creator, content }),
       });
+
+      createdComment(articleId, creator, content)
       const data = await response.json();
-      
+
       if (data.success) {
         log('✅ Commentaire envoyé');
         // Le WebSocket va broadcaster automatiquement
@@ -93,7 +96,7 @@ export const useCommentsWebSocket = (
     if (!articleId) return;
     const wsUrl = apiBase.replace(/^https?:\/\//, 'wss://');
     const url = `${wsUrl}/comments/${articleId}/ws`;
-    
+
     log(`🔌 Connexion à ${url}`);
     try {
       const ws = new WebSocket(url);
@@ -108,13 +111,13 @@ export const useCommentsWebSocket = (
         try {
           const data = JSON.parse(event.data);
           log(`📩 Message reçu: ${data.type}`);
-          
+
           switch (data.type) {
             case 'connected':
               log(`Connecté à l'article ${data.articleId}`);
               setCount(data.count || 0);
               break;
-              
+
             case 'comment_added':
               log('📩 Nouveau commentaire !');
               addComment(data.comment);
@@ -125,13 +128,13 @@ export const useCommentsWebSocket = (
               updateComment(data.comment);
               setCount(data.count || 0);
               break;
-              
+
             case 'comment_deleted':
               log('🗑️ Commentaire supprimé');
               setComments(prev => prev.filter(c => c.id !== data.commentId));
               setCount(data.count || 0);
               break;
-              
+
             case 'count_update':
               setCount(data.count || 0);
               break;
@@ -150,13 +153,13 @@ export const useCommentsWebSocket = (
         log('🔌 WebSocket fermé');
         setConnected(false);
         wsRef.current = null;
-        
+
         // Reconnexion automatique
         if (reconnectAttempts.current < 5) {
           reconnectAttempts.current++;
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 10000);
-          log(`Reconnexion dans ${delay/1000}s`);
-          
+          log(`Reconnexion dans ${delay / 1000}s`);
+
           reconnectTimeoutRef.current = setTimeout(() => {
             connectWebSocket();
           }, delay);

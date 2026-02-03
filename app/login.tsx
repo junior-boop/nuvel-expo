@@ -1,90 +1,217 @@
-import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 
 import { Text, View } from '@/components/Themed';
 import { w } from '@/constants/Colors';
 import { convert } from '@/constants/convert';
+import { server_url } from '@/constants/server_url';
 import { User } from '@/Database/db';
+import { useAuthDB } from '@/lib/useAuthDB';
 
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useState } from 'react';
 
-import { server_url } from '@/constants/server_url';
-import { useDatabase } from '@/context/database.context';
+interface SignInResponse {
+    data: User;
+    status: string;
+    accessToken?: string;
+    refreshToken?: string;
+}
 
-export default function ModalScreen() {
-    const [name, setName] = useState('')
-    const [first_name, setFirstName] = useState('')
-    const [email, setEmail] = useState('')
-    const [isloading, setIsloading] = useState(false)
+export default function LoginScreen() {
+    const [name, setName] = useState('');
+    const [first_name, setFirstName] = useState('');
+    const [email, setEmail] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const { adduser } = useDatabase()
+    // Utiliser le hook useAuthDB pour la gestion complète de l'authentification
+    const { login, loading: authLoading, error } = useAuthDB();
 
-    const getuserinfo = useCallback(async (data: Partial<User>) => {
-        setIsloading(true)
-        const response = await fetch(`${server_url}/users/signin`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        });
-        const result = await response.json() as { data: User, status: string };
-        setIsloading(false)
-        return await adduser(result.data)
-    }, [])
+    /**
+     * Appel API pour authentifier l'utilisateur
+     */
+    const authenticateUser = useCallback(async (data: Partial<User>): Promise<SignInResponse | null> => {
+        try {
+            const response = await fetch(`${server_url}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
 
-    const handleUser = async () => {
-        const user = await getuserinfo({ name, first_name, email })
-        setName('')
-        setEmail('')
-        setFirstName('')
+            if (!response.ok) {
+                throw new Error('Échec de l\'authentification');
+            }
 
-        console.log(user)
+            const result = await response.json() as SignInResponse;
+            return result;
+        } catch (err) {
+            console.error('[Login] ❌ Erreur API:', err);
+            Alert.alert('Erreur', 'Impossible de se connecter. Vérifiez votre connexion.');
+            return null;
+        }
+    }, []);
 
-        if (user?.photo === null || user?.biography === null) {
-            router.replace({
-                pathname: "/usersinfos",
-                params: {
-                    id: user?.id,
-                    name: user?.name,
-                    first_name: user?.first_name,
-                    email: user?.email
-                }
-            })
-        } else {
-            router.replace({
-                pathname: "/(tabs)",
-                params: {
-                    id: user?.id,
-                    name: user?.name,
-                    first_name: user?.first_name,
-                    email: user?.email
-                }
-            })
+    /**
+     * Gère le processus de connexion complet
+     */
+    const handleLogin = useCallback(async () => {
+        // Validation des champs
+        if (!name.trim() || !first_name.trim() || !email.trim()) {
+            Alert.alert('Champs requis', 'Veuillez remplir tous les champs');
+            return;
         }
 
-    }
-    return (
+        // Validation email basique
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            Alert.alert('Email invalide', 'Veuillez entrer une adresse email valide');
+            return;
+        }
 
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
+        setIsLoading(true);
+
+        try {
+            // 1. Authentifier l'utilisateur auprès de l'API
+            console.log('[Login] 🔐 Authentification en cours...');
+            const authResult = await authenticateUser({ name, first_name, email });
+
+            if (!authResult || !authResult.data) {
+                throw new Error('Aucune donnée utilisateur reçue');
+            }
+
+            const { data: userData, accessToken, refreshToken } = authResult;
+
+            // 2. Créer la session locale et sauvegarder les tokens
+            console.log('[Login] 💾 Sauvegarde de la session...');
+            const loginSuccess = await login(userData, {
+                accessToken,
+                refreshToken
+            });
+
+            if (!loginSuccess) {
+                throw new Error('Impossible de créer la session locale');
+            }
+
+            // 3. Réinitialiser les champs
+            setName('');
+            setFirstName('');
+            setEmail('');
+
+            console.log('[Login] ✅ Connexion réussie');
+
+            // 4. Naviguer en fonction du profil utilisateur
+            if (!userData.photo || !userData.biography) {
+                console.log('[Login] 📝 Profil incomplet, redirection vers usersinfos');
+                router.replace({
+                    pathname: '/loginzone/usersinfos',
+                    params: {
+                        id: userData.id,
+                        name: userData.name,
+                        first_name: userData.first_name,
+                        email: userData.email
+                    }
+                });
+            } else {
+                console.log('[Login] 🏠 Profil complet, redirection vers app');
+                router.replace('/(tabs)');
+            }
+
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+            console.error('[Login] ❌ Erreur connexion:', err);
+            Alert.alert(
+                'Erreur de connexion',
+                errorMessage,
+                [{ text: 'OK' }]
+            );
+        } finally {
+            setIsLoading(false);
+        }
+    }, [name, first_name, email, login, authenticateUser]);
+
+    // Afficher les erreurs d'authentification
+    if (error) {
+        console.error('[Login] ⚠️ Erreur auth:', error);
+    }
+
+    const isButtonDisabled = isLoading || authLoading;
+
+    return (
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.container}
+        >
             <StatusBar style="dark" />
             <View style={styles.container}>
-                <View style={{ width: (w * 80 / 100), gap: convert(12) }}>
-                    <Text style={{ fontSize: convert(32), fontWeight: "900" }}> Let Log In</Text>
+                <View style={styles.formContainer}>
+                    <Text style={styles.title}>Let's Log In</Text>
+
+                    {/* Afficher les erreurs */}
+                    {error && (
+                        <View style={styles.errorContainer}>
+                            <Text style={styles.errorText}>{error}</Text>
+                        </View>
+                    )}
+
+                    {/* Champ First Name */}
                     <View>
-                        <TextInput style={{ paddingHorizontal: convert(12), paddingVertical: convert(12), fontSize: convert(18), fontWeight: "700", color: '#444', borderWidth: 1, borderColor: "#ccc" }} placeholder='first name' placeholderTextColor={"#ccc"} onChangeText={(e) => setName(e)} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder='First name'
+                            placeholderTextColor="#ccc"
+                            value={name}
+                            onChangeText={setName}
+                            editable={!isButtonDisabled}
+                            autoCapitalize="words"
+                        />
                     </View>
+
+                    {/* Champ Last Name */}
                     <View>
-                        <TextInput style={{ paddingHorizontal: convert(12), paddingVertical: convert(12), fontSize: convert(18), fontWeight: "700", color: '#444', borderWidth: 1, borderColor: "#ccc" }} placeholder='Last Name' placeholderTextColor={"#ccc"} onChangeText={(e) => setFirstName(e)} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder='Last Name'
+                            placeholderTextColor="#ccc"
+                            value={first_name}
+                            onChangeText={setFirstName}
+                            editable={!isButtonDisabled}
+                            autoCapitalize="words"
+                        />
                     </View>
+
+                    {/* Champ Email */}
                     <View>
-                        <TextInput style={{ paddingHorizontal: convert(12), paddingVertical: convert(12), fontSize: convert(18), fontWeight: "700", color: '#444', borderWidth: 1, borderColor: "#ccc" }} placeholder='Type your email address' placeholderTextColor={"#ccc"} inputMode='email' onChangeText={(e) => setEmail(e)} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder='Type your email address'
+                            placeholderTextColor="#ccc"
+                            value={email}
+                            onChangeText={setEmail}
+                            inputMode='email'
+                            keyboardType='email-address'
+                            autoCapitalize='none'
+                            editable={!isButtonDisabled}
+                        />
                     </View>
+
+                    {/* Bouton de connexion */}
                     <View>
-                        <TouchableOpacity style={{ backgroundColor: "#0083ff", paddingHorizontal: convert(18), paddingVertical: convert(12), alignItems: 'center', flexDirection: 'row', gap: convert(8), justifyContent: 'center' }} onPress={() => router.replace("/_sitemap")} disabled={isloading} >
-                            <Text style={{ fontSize: convert(18), fontWeight: "700", color: '#fff' }}>Connect</Text>
-                            {isloading && <ActivityIndicator size="small" color="#fff" />}
+                        <TouchableOpacity
+                            style={[
+                                styles.button,
+                                isButtonDisabled && styles.buttonDisabled
+                            ]}
+                            onPress={handleLogin}
+                            disabled={isButtonDisabled}
+                        >
+                            <Text style={styles.buttonText}>
+                                {isLoading ? 'Connexion...' : 'Connect'}
+                            </Text>
+                            {isButtonDisabled && (
+                                <ActivityIndicator size="small" color="#fff" />
+                            )}
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -100,13 +227,54 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: '#fff'
     },
+    formContainer: {
+        width: w * 80 / 100,
+        gap: convert(12)
+    },
     title: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: convert(32),
+        fontWeight: "900",
+        marginBottom: convert(8)
     },
-    separator: {
-        marginVertical: 30,
-        height: 1,
-        width: '80%',
+    input: {
+        paddingHorizontal: convert(12),
+        paddingVertical: convert(12),
+        fontSize: convert(18),
+        fontWeight: "700",
+        color: '#444',
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: convert(8)
     },
+    button: {
+        backgroundColor: "#0083ff",
+        paddingHorizontal: convert(18),
+        paddingVertical: convert(12),
+        alignItems: 'center',
+        flexDirection: 'row',
+        gap: convert(8),
+        justifyContent: 'center',
+        borderRadius: convert(8)
+    },
+    buttonDisabled: {
+        backgroundColor: "#6bb0ff",
+        opacity: 0.7
+    },
+    buttonText: {
+        fontSize: convert(18),
+        fontWeight: "700",
+        color: '#fff'
+    },
+    errorContainer: {
+        backgroundColor: '#ffe6e6',
+        padding: convert(12),
+        borderRadius: convert(8),
+        borderWidth: 1,
+        borderColor: '#ff4444'
+    },
+    errorText: {
+        color: '#cc0000',
+        fontSize: convert(14),
+        fontWeight: '600'
+    }
 });

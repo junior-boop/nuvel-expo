@@ -21,7 +21,7 @@ export type User = {
   biography: string;
   photo: string;
   country: string;
-  association : string | null; 
+  association: string | null;
   created: Date | string;
   modified: Date | string;
   lastlogin: Date | string | null;
@@ -102,7 +102,7 @@ export interface Articles {
   appreciation: string;
   createdAt: string;
   updatedAt: string;
-  user : User
+  user: User
 }
 
 export interface BibleMetadata {
@@ -153,6 +153,8 @@ export interface Comments {
   creator: string;
   content: string;
   notes: number;
+  upvotes: string; // JSON array of userids
+  signals: string; // JSON array of userids
   created: string;
   modified: string;
 }
@@ -181,4 +183,9 @@ export interface Devices {
   devicename: string;
   devicecharac: string;
   created: string;
+}
+
+export interface localStorage {
+  id: string;
+  value: string;
 }
