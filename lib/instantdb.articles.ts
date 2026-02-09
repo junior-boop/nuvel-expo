@@ -1,40 +1,5 @@
-import { APP_ID } from '@/constants/server_url';
-import { i, id, init, InstaQLEntity } from '@instantdb/react-native';
-
-/** 
-
-articleStats: {
-    articleId: string,      // Référence unique
-    commentCount: number,
-    likeCount: number,
-    viewCount: number,
-    shareCount: number,
-    lastCommentAt: number,
-    updatedAt: number
-  }
-
-*/
-
-const articles = i.schema({
-    entities: {
-        articlesStats: i.entity({
-            articleId: i.string().indexed(),
-            commentCount: i.number(),
-            likeCount: i.number(),
-            viewCount: i.number(),
-            shareCount: i.number(),
-            lastCommentAt: i.number(),
-            updatedAt: i.number(),
-        }),
-    }
-})
-type ArticleStatsType = InstaQLEntity<typeof articles, 'articlesStats'>
-
-
-export const db = init({
-    appId: APP_ID,
-    schema: articles,
-})
+import { id } from '@instantdb/react-native';
+import { db } from './instantdb.init';
 
 export const createdArticleStats = async (articleId: string) => {
     try {
@@ -43,13 +8,79 @@ export const createdArticleStats = async (articleId: string) => {
             commentCount: 0,
             likeCount: 0,
             viewCount: 0,
-            shareCount: 0,
-            lastCommentAt: 0,
-            updatedAt: 0,
+            lastCommentAt: new Date(),
+            updatedAt: new Date(),
         }))
 
         return articleStats.clientId
     } catch (error) {
         console.log(error)
+    }
+}
+
+export const setViewCount = async (id: string, lastCount: number) => {
+    try {
+        const articleStats = await db.transact(db.tx.articlesStats[id].update({
+            viewCount: lastCount + 1,
+        }))
+
+        return articleStats.clientId
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const setCommentCount = async (id: string, lastCount: number) => {
+    try {
+        const articleStats = await db.transact(db.tx.articlesStats[id].update({
+            commentCount: lastCount + 1,
+        }))
+
+        return articleStats.clientId
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const updateArticleStats = async (id: string, commentCount: number, likeCount: number) => {
+    try {
+        const articleStats = await db.transact(db.tx.articlesStats[id].update({
+            commentCount: commentCount,
+            likeCount: likeCount,
+            updatedAt: new Date(),
+        }))
+
+        return articleStats.clientId
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const checkArticleStats = async (articleId: string) => {
+    try {
+        const query = {
+            articlesStats: {
+                $: {
+                    where: {
+                        articleId: articleId,
+                    },
+                },
+            }
+        }
+        const data = db.queryOnce(query)
+
+        return data
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const deleteArticleStats = async (id: string) => {
+    try {
+        const articleStats = await db.transact(db.tx.articlesStats[id].delete())
+        console.log("[deleteArticleStats] Article Stats Deleted", articleStats)
+        return articleStats.clientId
+    } catch (error) {
+        console.log("[deleteArticleStats] Error", error)
     }
 }

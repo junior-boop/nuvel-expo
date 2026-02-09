@@ -28,12 +28,12 @@ export const useCommentInteractions = (
       const response = await fetch(
         `${apiBase}/comments/${articleId}/${commentId}/stats`
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error: ${response.status}`);
       }
       const data = await response.json();
-      
+
       setUpvotesCount(data.upvotesCount || 0);
       setSignalsCount(data.signalsCount || 0);
       setIsUpvoted(data.upvotes?.includes(userId) || false);
@@ -48,6 +48,7 @@ export const useCommentInteractions = (
   useEffect(() => {
     loadStats();
   }, [loadStats]);
+
   // Toggle upvote
   const toggleUpvote = useCallback(async () => {
     try {
@@ -65,7 +66,7 @@ export const useCommentInteractions = (
         throw new Error(`HTTP error: ${response.status}`);
       }
       const data = await response.json();
-      
+
       if (data.success) {
         setUpvotesCount(data.upvotesCount);
         setIsUpvoted(data.action === 'added');
@@ -93,7 +94,7 @@ export const useCommentInteractions = (
         throw new Error(`HTTP error: ${response.status}`);
       }
       const data = await response.json();
-      
+
       if (data.success) {
         setSignalsCount(data.signalsCount);
         setIsSignaled(data.action === 'added');

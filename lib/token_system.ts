@@ -5,6 +5,7 @@ import { server_url } from '@/constants/server_url';
 let accessToken = (async () => await localStorage.getItem('accessToken'))()
 let refreshToken = (async () => await localStorage.getItem('refreshToken'))()
 
+
 // Fonction pour rafraîchir le token
 async function refreshAccessToken() {
     try {
@@ -58,7 +59,9 @@ function getTokenExpiration(token: string) {
 
 // Vérifier et rafraîchir automatiquement
 function setupAutoRefresh() {
+
     const checkInterval = setInterval(async () => {
+        console.log("token [token_system]", await accessToken)
         const expiration = getTokenExpiration(await accessToken as string);
         const now = Date.now();
         const timeUntilExpiry = expiration - now;

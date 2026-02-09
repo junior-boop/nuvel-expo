@@ -24,8 +24,8 @@ export default function CommentaireItem({ comment, index, articleId, userId }: {
             </View>
             <View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: convert(5) }}>
-                    <Text style={{ fontSize: convert(14), fontWeight: 'bold', color: '#252525ff' }}>{name} {first_name}</Text>
-                    <Text style={{ fontSize: convert(14), fontStyle: "italic", color: '#252525ff' }}>• {moment(comment.created).fromNow()}</Text>
+                    <Text style={{ fontSize: convert(12), fontWeight: 'bold', color: '#252525ff' }}>{name} {first_name}</Text>
+                    <Text style={{ fontSize: convert(12), fontStyle: "italic", color: '#252525ff' }}>• {moment(comment.created).fromNow()}</Text>
                 </View>
                 <Text style={{ fontSize: convert(16), color: '#202020ff', width: w * 0.7 }}>{comment.content}</Text>
                 <View style={{ marginTop: convert(8), flexDirection: 'row', alignItems: 'center', gap: convert(24) }}>

@@ -5,6 +5,7 @@ import * as Articles from '@/Database/articles';
 import * as BibleMetadata from "@/Database/bible.metadata";
 import * as Groups from '@/Database/groups';
 
+import * as LocalStorage from '@/Database/localstorage';
 import * as Notes from '@/Database/notes';
 import * as Session from '@/Database/session';
 import * as Sync from '@/Database/sync_event';
@@ -128,6 +129,8 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         await AiStore.createTable()
         await Sync.createEvent()
         await Articles.createTable()
+        await LocalStorage.createTable()
+
 
         // Créer la table sync_metadata pour stocker device_id et last_sync
         try {
@@ -141,14 +144,15 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         await syncToServer()
         clearError();
         try {
-            const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, Sync_EventResult, articlesResult] = await Promise.all([
+            const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, Sync_EventResult, articlesResult, localStorageResult] = await Promise.all([
                 Notes.getall(),
                 Groups.getall(),
                 Session.get(),
                 User.getAll(),
                 BibleMetadata.getall(),
                 Sync.getAll(),
-                Articles.getall()
+                Articles.getall(),
+                LocalStorage.getItem("accessToken")
             ]);
             const notesArray = new QueryForTable<NotesType>(notesResult || []);
             const groupArray = new QueryForTable<GroupsType>(groupesResult || []);
@@ -161,6 +165,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             console.log("Articles :", articlesResult.length)
 
             console.log("Articles :", articlesResult)
+            console.log("Access Token :", localStorageResult)
 
             setUsers(userArray);
             setGroups(groupArray);

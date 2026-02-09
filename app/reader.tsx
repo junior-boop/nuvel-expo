@@ -17,6 +17,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 
+
 export default function ReaderPage() {
     const { article } = useLocalSearchParams()
     const [commentOpen, setCommentOpen] = useState(false)
@@ -24,17 +25,16 @@ export default function ReaderPage() {
     const note = JSON.parse(article as string)
     const [bookmark, setBookmark] = useState(false)
 
-    const sheetRef = useRef<BottomSheet>(null);
-    const snapPoints = useMemo(() => ["100%"], []);
+    // const sheetRef = useRef<BottomSheet>(null);
+    // const snapPoints = useMemo(() => ["100%"], []);
     const { usersQuery, session, addArticle, articlesQuery } = useDatabase()
     const userinfo = usersQuery?.findById(session?.iduser as string)
-
+    const A = useArticle(note.id);
     const creatorName = JSON.stringify(userinfo);
-    const articleToSave = useArticle(note.id).article
 
     const handleBookmark = () => {
         if (!session) return;
-        addArticle(articleToSave as Articles)
+        addArticle(A.article as Articles)
         setBookmark(true)
     }
 
@@ -46,6 +46,27 @@ export default function ReaderPage() {
             setBookmark(false)
         }
     }, [articlesQuery])
+
+    const Article = ({ id }: { id: string }) => {
+        const { articlesQuery } = useDatabase()
+        const a = articlesQuery?.findById(id)
+        const articleWhichSaved = a === undefined ? undefined : { ...a, user: JSON.parse(a.user as string) }
+
+
+
+        return (
+            <>
+                {
+                    A.loading
+                        ? (<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                            <ActivityIndicator size={'large'} color={"black"} />
+                        </View>)
+                        : <ReaderHtml note={articleWhichSaved || A.article} />
+
+                }
+            </>
+        )
+    }
 
     return (
         <PageLayout_3>
@@ -88,26 +109,7 @@ export default function ReaderPage() {
 }
 
 
-const Article = ({ id }: { id: string }) => {
-    const { articlesQuery } = useDatabase()
-    const a = articlesQuery?.findById(id)
-    const articleWhichSaved = a === undefined ? undefined : { ...a, user: JSON.parse(a.user as string) }
-    const { article, loading, error, refresh } = useArticle(id);
 
-
-    return (
-        <>
-            {
-                loading
-                    ? (<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <ActivityIndicator size={'large'} color={"black"} />
-                    </View>)
-                    : <ReaderHtml note={articleWhichSaved || article} />
-
-            }
-        </>
-    )
-}
 
 export interface CommentsProps {
     id: string;

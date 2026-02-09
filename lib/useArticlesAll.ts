@@ -69,13 +69,13 @@ export const useArticlesAll = (
       console.log('[useArticlesAll] Fetching articles...');
 
       const response = await fetch(`${apiBase}/articles`);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP Error: ${response.status}`);
       }
 
       const data = await response.json();
-      
+
       // S'assurer que data est un tableau
       if (Array.isArray(data)) {
         setArticles(data);
@@ -98,7 +98,7 @@ export const useArticlesAll = (
    */
   useEffect(() => {
     fetchArticles();
-  }, [fetchArticles]);
+  }, []);
 
   return {
     articles,

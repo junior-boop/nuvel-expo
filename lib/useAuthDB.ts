@@ -1,3 +1,4 @@
+import { server_url } from '@/constants/server_url';
 import { User as UserType } from '@/Database/db';
 import * as LocalStorage from '@/Database/localstorage';
 import * as Session from '@/Database/session';
@@ -76,10 +77,10 @@ export const useAuthDB = (): UseAuthDBResult => {
      * Sauvegarde les tokens dans le localStorage
      */
     const saveTokens = useCallback(async (newAccessToken: string, newRefreshToken?: string) => {
-        await LocalStorage.setItem('accessToken', newAccessToken);
+        const sessionSave = await LocalStorage.setItem('accessToken', newAccessToken);
         setAccessToken(newAccessToken);
 
-        if (newRefreshToken) {
+        if (newRefreshToken && sessionSave) {
             await LocalStorage.setItem('refreshToken', newRefreshToken);
             setRefreshToken(newRefreshToken);
         }
@@ -124,8 +125,7 @@ export const useAuthDB = (): UseAuthDBResult => {
             console.log('[AuthDB] 🔄 Rafraîchissement du token...');
 
             // TODO: Remplacer par votre endpoint API
-            const API_URL = 'https://votre-api.com';
-            const response = await fetch(`${API_URL}/auth/refresh`, {
+            const response = await fetch(`${server_url}/auth/refresh`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refreshToken: currentRefreshToken })
@@ -250,6 +250,7 @@ export const useAuthDB = (): UseAuthDBResult => {
             setLoading(true);
             setError(null);
 
+            console.log(userData, tokens)
             console.log('[AuthDB] 🔐 Connexion...', userData.email);
 
             // 1. Créer/mettre à jour l'utilisateur dans la table users

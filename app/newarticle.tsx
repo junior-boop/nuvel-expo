@@ -5,6 +5,7 @@ import { FluentImageAdd32Regular, IcBaselineArrowBack } from '@/constants/icons'
 import { useDatabase } from '@/context/database.context';
 import * as Session from '@/Database/session';
 import { generateUUID as uuidv4 } from '@/Database/uuid';
+import { createdArticleStats } from '@/lib/instantdb.articles';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -151,6 +152,9 @@ export default function NewArticle() {
 
                 const response = await post_req.json()
                 if (response.status === '/articles 200 OK succes') {
+
+                    const articleStatsId = await createdArticleStats(articleid)
+                    console.log(articleStatsId)
 
                     db.publishNote({
                         id: params.noteid as string,

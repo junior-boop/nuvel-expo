@@ -9,6 +9,7 @@ import { View } from '@/components/Themed';
 import { convert } from '@/constants/convert';
 import { DatabaseProvider } from '@/context/database.context';
 import * as localStorage from '@/Database/localstorage';
+import { cleanupAutoRefresh } from '@/lib/token_system';
 import { useAuthDB } from '@/lib/useAuthDB';
 import { useCallback, useEffect } from 'react';
 import { ActivityIndicator, Image } from 'react-native';
@@ -42,6 +43,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     prepare();
+    return () => {
+      cleanupAutoRefresh();
+    };
   }, []);
 
 

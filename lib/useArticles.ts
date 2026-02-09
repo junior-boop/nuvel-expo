@@ -1,6 +1,9 @@
 // hooks/useArticle.ts
 import * as LocalStorage from '@/Database/localstorage';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, } from 'react';
+import { checkArticleStats, createdArticleStats, deleteArticleStats, setViewCount } from './instantdb.articles';
+import { createdHistoryItem } from './instantdb.histories';
+
 interface User {
   id: string;
   name: string;
@@ -37,6 +40,10 @@ export const useArticle = (
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Protection contre les doubles appels (React Strict Mode)
+  const hasTrackedHistory = useRef(false);
+
   const fetchArticle = useCallback(async () => {
     if (!articleId) {
       setError('Article ID manquant');
@@ -47,21 +54,51 @@ export const useArticle = (
       setLoading(true);
       setError(null);
 
+      const check = await checkArticleStats(articleId)
+      console.log("[useArticle] Check:", check);
+
+
+      if (check?.data.articlesStats.length === 0) {
+        await createdArticleStats(articleId)
+      }
+
+      if (check?.data.articlesStats.length > 1) {
+        console.log("[useArticle] Delete Article Stats", check?.data.articlesStats[0].id)
+        await deleteArticleStats(check?.data.articlesStats[0].id)
+      }
+
       const token = await LocalStorage.getItem("accessToken")
       console.log("[useArticle] Token:", token);
 
+      // Construire les headers - n'inclure Authorization que si token existe
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${apiBase}/articles/${articleId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.log("[useArticle] Error Response:", errorText);
         throw new Error(`Erreur HTTP: ${response.status}`);
       }
+
       const data = await response.json();
-      setArticle(data);
+
+      // Le serveur renvoie maintenant { success: true, article: {...}, historyTracked: boolean }
+      if (data.success && data.article) {
+        setArticle(data.article);
+        setArticleStats(data.article);
+      } else {
+        // Fallback pour l'ancien format
+        setArticle(data);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       setError(message);
@@ -69,11 +106,34 @@ export const useArticle = (
     } finally {
       setLoading(false);
     }
-  }, [articleId, apiBase]);
+  }, []);
   // Charger l'article au montage
+
+  const setArticleStats = useCallback(async (article: Article) => {
+    // Protection contre les doubles appels (React Strict Mode en dev)
+    if (hasTrackedHistory.current) {
+      console.log("[useArticle] Histoire déjà trackée, skip");
+      return;
+    }
+
+    const check = await checkArticleStats(articleId)
+
+    if (check?.data.articlesStats.length === 1) {
+      console.log("[useArticle] Article Stats", check?.data.articlesStats[0].id)
+      await setViewCount(check?.data.articlesStats[0].id, check?.data.articlesStats[0].viewCount)
+      await createdHistoryItem(articleId, check?.data.articlesStats[0].id, { title: article?.title as string, image: article?.imageurl as string, createdAt: new Date(article?.createdAt as string) })
+
+      // Marquer comme déjà tracké
+      hasTrackedHistory.current = true;
+    }
+  }, []);
+
+
   useEffect(() => {
-    fetchArticle();
-  }, [fetchArticle]);
+    fetchArticle()
+  }, []);
+
+
   return {
     article,
     loading,

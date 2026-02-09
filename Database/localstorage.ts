@@ -10,6 +10,14 @@ export const createTable = async () => {
     await localStorage.createTable();
 };
 
+const checkLocalStorage = async () => {
+    const session = await localStorage.findAll();
+    if (session) {
+        console.log("Local storage", JSON.stringify(session));
+    }
+    return false;
+}
+
 export async function getItem(key: string): Promise<string | null> {
     try {
         const session = await localStorage.findById(key);
@@ -33,3 +41,5 @@ export async function removeItem(key: string): Promise<Boolean> {
     return session;
 }
 
+
+checkLocalStorage()

@@ -8,9 +8,10 @@ import { useAuthDB } from "./useAuthDB";
 
 export default function useLogin({ name, first_name, email }: { name: string, first_name: string, email: string }) {
     const [loading, setloading] = useState(false)
-    const { usersQuery, adduser  } = useDatabase()
+    const { usersQuery, adduser } = useDatabase()
 
     const { login, error } = useAuthDB()
+
 
     const getuserinfo = useCallback(async (data: Partial<User>) => {
         if (name === '' || first_name === '' || email === '') {
@@ -19,46 +20,46 @@ export default function useLogin({ name, first_name, email }: { name: string, fi
         }
         try {
             setloading(true)
-            
+
             // 1. Appel API pour signin
-            const response = await fetch(`${server_url}/users/signin`, {
+            const response = await fetch(`${server_url}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(data),
             });
-            
-            const result = await response.json() as { data: User, status: string };
-            
+
+            const result = await response.json() as { user: User, success: boolean, accessToken: string, refreshToken: string };
+
             // 2. Créer la session locale avec useAuthDB
-            const loginSuccess = await login(result.data)
-            
+            const loginSuccess = await login(result.user, { accessToken: result.accessToken, refreshToken: result.refreshToken })
+
             if (!loginSuccess) {
                 Alert.alert("Error", "Failed to create local session")
                 return
             }
 
-            console.log('[useLogin] ✅ Session créée, userData:', result.data);
+            console.log('[useLogin] ✅ Session créée, userData:', result.user);
 
-            await adduser(result.data)
+            await adduser(result.user)
 
             // 3. Préparer les params pour la navigation
             const params = {
-                id: result.data.id,
-                name: result.data.name,
-                first_name: result.data.first_name,
-                email: result.data.email
+                id: result.user.id,
+                name: result.user.name,
+                first_name: result.user.first_name,
+                email: result.user.email
             }
 
             // 4. Vérifier si l'utilisateur doit compléter son profil
-            if (result.data.photo === null || result.data.biography === null || result.data.biography === '') {
+            if (result.user.photo === null || result.user.biography === null || result.user.biography === '') {
                 console.log('[useLogin] 📝 Profil incomplet, redirection vers /loginzone/usersinfos');
                 router.replace({
                     pathname: "/loginzone/usersinfos",
                     params
                 })
-            } else if(result.data.notes.count > 0 ){
+            } else if (result.user.notes.count > 0) {
                 console.log('[useLogin] 📝 Profil incomplet, redirection vers /loginzone/usersinfos');
                 router.replace({
                     pathname: "/loginzone/sync_note_group",
@@ -84,7 +85,7 @@ export default function useLogin({ name, first_name, email }: { name: string, fi
     const handleUser = useCallback(async () => {
         await getuserinfo({ name, first_name, email })
     }, [getuserinfo, name, first_name, email])
-    
+
     return {
         loading,
         handleUser
