@@ -6,8 +6,8 @@ const schema = i.schema({
         histories: i.entity({
             id: i.string().unique().indexed(),
             articleId: i.string(),
-            userId: i.string(),
-            content: i.json(),
+            userId: i.string().indexed(),
+            content: i.json<{ title: string, image: string; createdAt: Date }>(),
             createdAt: i.date().indexed(),
         }),
     }
@@ -41,6 +41,28 @@ export const createdHistoryItem = async (articleId: string, creator: string, con
     }
 }
 
+export const getHistoryForUser = async (userid: string) => {
+
+    try {
+        const query = {
+            histories: {
+                $: {
+                    where: {
+                        userId: userid,
+                    },
+                    order: {
+                        createdAt: 'desc' as const,
+                    },
+                },
+            }
+        }
+        const data = historiesDB.queryOnce(query)
+        return data
+    } catch (error) {
+        console.log("[deleteHistoryItem] Error", error)
+    }
+
+}
 export const deleteHistoryItem = async (id: string) => {
     try {
         const historyItem = await historiesDB.transact(historiesDB.tx.histories[id].delete())

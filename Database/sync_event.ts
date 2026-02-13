@@ -30,6 +30,7 @@ export const createEvent = async () => {
 };
 
 export async function Set(data: Partial<SyncEvent>) {
+  console.log("[SyncEvent] 💾 Setting sync event", data);
   const result = await sync_event.create({
     id: data.id || uuidv4(),
     userId: data.userId!,

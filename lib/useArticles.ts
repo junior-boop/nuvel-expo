@@ -1,5 +1,6 @@
 // hooks/useArticle.ts
-import * as LocalStorage from '@/Database/localstorage';
+import * as Session from '@/Database/session';
+import { getAccessToken } from '@/lib/token_system';
 import { useCallback, useEffect, useRef, useState, } from 'react';
 import { checkArticleStats, createdArticleStats, deleteArticleStats, setViewCount } from './instantdb.articles';
 import { createdHistoryItem } from './instantdb.histories';
@@ -54,8 +55,10 @@ export const useArticle = (
       setLoading(true);
       setError(null);
 
+
       const check = await checkArticleStats(articleId)
       console.log("[useArticle] Check:", check);
+
 
 
       if (check?.data.articlesStats.length === 0) {
@@ -67,8 +70,8 @@ export const useArticle = (
         await deleteArticleStats(check?.data.articlesStats[0].id)
       }
 
-      const token = await LocalStorage.getItem("accessToken")
-      console.log("[useArticle] Token:", token);
+      const token = await getAccessToken();
+      console.log("[useArticle] Token:", token ? 'Present' : 'Not found');
 
       // Construire les headers - n'inclure Authorization que si token existe
       const headers: Record<string, string> = {
@@ -110,6 +113,7 @@ export const useArticle = (
   // Charger l'article au montage
 
   const setArticleStats = useCallback(async (article: Article) => {
+    const session = await Session.get()
     // Protection contre les doubles appels (React Strict Mode en dev)
     if (hasTrackedHistory.current) {
       console.log("[useArticle] Histoire déjà trackée, skip");
@@ -121,7 +125,7 @@ export const useArticle = (
     if (check?.data.articlesStats.length === 1) {
       console.log("[useArticle] Article Stats", check?.data.articlesStats[0].id)
       await setViewCount(check?.data.articlesStats[0].id, check?.data.articlesStats[0].viewCount)
-      await createdHistoryItem(articleId, check?.data.articlesStats[0].id, { title: article?.title as string, image: article?.imageurl as string, createdAt: new Date(article?.createdAt as string) })
+      await createdHistoryItem(articleId, session?.iduser as string, { title: article?.title as string, image: article?.imageurl as string, createdAt: new Date(article?.createdAt as string) })
 
       // Marquer comme déjà tracké
       hasTrackedHistory.current = true;

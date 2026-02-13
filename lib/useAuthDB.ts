@@ -1,8 +1,7 @@
-import { server_url } from '@/constants/server_url';
 import { User as UserType } from '@/Database/db';
-import * as LocalStorage from '@/Database/localstorage';
 import * as Session from '@/Database/session';
 import * as Users from '@/Database/users';
+import { clearTokens as clearTokensSystem, setTokens } from '@/lib/token_system';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseAuthDBResult {
@@ -11,173 +10,36 @@ interface UseAuthDBResult {
     loading: boolean;
     error: string | null;
     isAuthenticated: boolean;
-    accessToken: string | null;
-    refreshToken: string | null;
     login: (userData: UserType, tokens?: { accessToken?: string; refreshToken?: string }) => Promise<boolean>;
     logout: () => Promise<boolean>;
     refreshUser: () => Promise<void>;
     checkSession: () => Promise<void>;
-    refreshAccessToken: () => Promise<string | null>;
-    getAccessToken: () => Promise<string | null>;
 }
 
 /**
- * Hook personnalisé pour gérer l'authentification avec SQLite + Token Management
+ * Hook personnalisé pour gérer l'authentification avec SQLite
  * 
  * Fonctionnalités :
  * - Vérifie la session au montage du composant
  * - Récupère les informations complètes de l'utilisateur depuis la DB
  * - Permet de créer/supprimer une session
  * - Synchronise session et table users
- * - Gère les tokens JWT (accessToken et refreshToken)
- * - Rafraîchit automatiquement les tokens expirés
+ * - Délègue la gestion des tokens au système centralisé (token_system.ts)
  * 
  * @example
- * const { user, isAuthenticated, accessToken, login, logout, refreshAccessToken } = useAuthDB();
+ * const { user, isAuthenticated, login, logout } = useAuthDB();
  */
 export const useAuthDB = (): UseAuthDBResult => {
     const [user, setUser] = useState<UserType | null>(null);
     const [session, setSession] = useState<any | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [accessToken, setAccessToken] = useState<string | null>(null);
-    const [refreshToken, setRefreshToken] = useState<string | null>(null);
 
     // Utiliser useRef pour éviter les appels multiples
     const isCheckingRef = useRef(false);
-    const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    /**
-     * Décode le token JWT et retourne l'expiration en millisecondes
-     */
-    const getTokenExpiration = useCallback((token: string): number => {
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.exp * 1000; // Convertir en millisecondes
-        } catch (error) {
-            console.error('[AuthDB] ❌ Erreur décodage token:', error);
-            return 0;
-        }
-    }, []);
-
-    /**
-     * Charge les tokens depuis le localStorage
-     */
-    const loadTokens = useCallback(async () => {
-        const storedAccessToken = await LocalStorage.getItem('accessToken');
-        const storedRefreshToken = await LocalStorage.getItem('refreshToken');
-
-        if (storedAccessToken) setAccessToken(storedAccessToken);
-        if (storedRefreshToken) setRefreshToken(storedRefreshToken);
-
-        return { accessToken: storedAccessToken, refreshToken: storedRefreshToken };
-    }, []);
-
-    /**
-     * Sauvegarde les tokens dans le localStorage
-     */
-    const saveTokens = useCallback(async (newAccessToken: string, newRefreshToken?: string) => {
-        const sessionSave = await LocalStorage.setItem('accessToken', newAccessToken);
-        setAccessToken(newAccessToken);
-
-        if (newRefreshToken && sessionSave) {
-            await LocalStorage.setItem('refreshToken', newRefreshToken);
-            setRefreshToken(newRefreshToken);
-        }
-
-        console.log('[AuthDB] ✅ Tokens sauvegardés');
-    }, []);
-
-    /**
-     * Supprime les tokens du localStorage
-     */
-    const clearTokens = useCallback(async () => {
-        await LocalStorage.removeItem('accessToken');
-        await LocalStorage.removeItem('refreshToken');
-        setAccessToken(null);
-        setRefreshToken(null);
-        console.log('[AuthDB] 🗑️ Tokens supprimés');
-    }, []);
-
-    /**
-     * Récupère le token d'accès actuel (depuis le state ou le storage)
-     */
-    const getAccessToken = useCallback(async (): Promise<string | null> => {
-        if (accessToken) return accessToken;
-        const stored = await LocalStorage.getItem('accessToken');
-        if (stored) setAccessToken(stored);
-        return stored;
-    }, [accessToken]);
-
-    /**
-     * Rafraîchit le token d'accès en utilisant le refresh token
-     * À personnaliser avec votre API
-     */
-    const refreshAccessToken = useCallback(async (): Promise<string | null> => {
-        try {
-            const currentRefreshToken = refreshToken || await LocalStorage.getItem('refreshToken');
-
-            if (!currentRefreshToken) {
-                console.warn('[AuthDB] ⚠️ Pas de refresh token disponible');
-                return null;
-            }
-
-            console.log('[AuthDB] 🔄 Rafraîchissement du token...');
-
-            // TODO: Remplacer par votre endpoint API
-            const response = await fetch(`${server_url}/auth/refresh`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ refreshToken: currentRefreshToken })
-            });
-
-            if (!response.ok) {
-                throw new Error('Échec du rafraîchissement du token');
-            }
-
-            const data = await response.json();
-            const newAccessToken = data.accessToken;
-
-            // Sauvegarder le nouveau token
-            await saveTokens(newAccessToken, data.refreshToken);
-
-            console.log('[AuthDB] ✅ Token rafraîchi avec succès');
-            return newAccessToken;
-
-        } catch (error) {
-            console.error('[AuthDB] ❌ Erreur refresh token:', error);
-            // En cas d'échec, déconnecter l'utilisateur
-            await logout();
-            return null;
-        }
-    }, [refreshToken, saveTokens]);
-
-    /**
-     * Configure le rafraîchissement automatique des tokens
-     */
-    const setupTokenAutoRefresh = useCallback(() => {
-        // Nettoyer l'ancien interval s'il existe
-        if (refreshIntervalRef.current) {
-            clearInterval(refreshIntervalRef.current);
-        }
-
-        if (!accessToken) return;
-
-        // Vérifier l'expiration toutes les 30 secondes
-        refreshIntervalRef.current = setInterval(async () => {
-            const expiration = getTokenExpiration(accessToken);
-            const now = Date.now();
-            const timeUntilExpiry = expiration - now;
-
-            // Rafraîchir 1 minute avant l'expiration
-            if (timeUntilExpiry < 60000 && timeUntilExpiry > 0) {
-                console.log('[AuthDB] ⏰ Token expire bientôt, rafraîchissement...');
-                await refreshAccessToken();
-            }
-        }, 30000);
-
-        console.log('[AuthDB] ✅ Auto-refresh token configuré');
-    }, [accessToken, getTokenExpiration, refreshAccessToken]);
+    // Token management is now handled by token_system.ts
+    // No duplicate token state or auto-refresh logic needed here
 
     /**
      * Vérifie s'il existe une session active et charge l'utilisateur
@@ -196,17 +58,14 @@ export const useAuthDB = (): UseAuthDBResult => {
 
             console.log('[AuthDB] 🔍 Vérification de la session...');
 
-            // 1. Charger les tokens
-            await loadTokens();
-
-            // 2. Vérifier s'il y a une session
+            // Vérifier s'il y a une session
             const currentSession = await Session.get();
 
             if (!currentSession) {
                 console.log('[AuthDB] ❌ Aucune session active');
                 setUser(null);
                 setSession(null);
-                await clearTokens();
+                await clearTokensSystem();
                 return;
             }
 
@@ -222,7 +81,7 @@ export const useAuthDB = (): UseAuthDBResult => {
                 await Session.deleted();
                 setSession(null);
                 setUser(null);
-                await clearTokens();
+                await clearTokensSystem();
                 return;
             }
 
@@ -237,7 +96,7 @@ export const useAuthDB = (): UseAuthDBResult => {
             setLoading(false);
             isCheckingRef.current = false;
         }
-    }, [loadTokens, clearTokens]);
+    }, []);
 
     /**
      * Connecte un utilisateur (crée une session et enregistre l'utilisateur + tokens)
@@ -268,8 +127,8 @@ export const useAuthDB = (): UseAuthDBResult => {
             }
 
             // 3. Sauvegarder les tokens si fournis
-            if (tokens?.accessToken) {
-                await saveTokens(tokens.accessToken, tokens.refreshToken);
+            if (tokens?.accessToken && tokens?.refreshToken) {
+                await setTokens(tokens.accessToken, tokens.refreshToken);
             }
 
             // 4. Mettre à jour le state
@@ -287,7 +146,7 @@ export const useAuthDB = (): UseAuthDBResult => {
         } finally {
             setLoading(false);
         }
-    }, [saveTokens]);
+    }, []);
 
     /**
      * Déconnecte l'utilisateur (supprime la session et les tokens)
@@ -296,19 +155,13 @@ export const useAuthDB = (): UseAuthDBResult => {
         try {
             setLoading(true);
 
-            // Nettoyer l'auto-refresh
-            if (refreshIntervalRef.current) {
-                clearInterval(refreshIntervalRef.current);
-                refreshIntervalRef.current = null;
-            }
-
             // Supprimer la session
             const deleted = await Session.deleted();
 
             if (deleted) {
                 setUser(null);
                 setSession(null);
-                await clearTokens();
+                await clearTokensSystem();
                 console.log('[AuthDB] ✅ Déconnexion réussie');
                 return true;
             }
@@ -321,7 +174,7 @@ export const useAuthDB = (): UseAuthDBResult => {
         } finally {
             setLoading(false);
         }
-    }, [clearTokens]);
+    }, []);
 
     /**
      * Rafraîchit les données de l'utilisateur depuis la DB
@@ -361,35 +214,15 @@ export const useAuthDB = (): UseAuthDBResult => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // ✅ Tableau vide = exécuté une seule fois au montage
 
-    /**
-     * Configurer l'auto-refresh des tokens quand un accessToken est disponible
-     */
-    useEffect(() => {
-        if (accessToken) {
-            setupTokenAutoRefresh();
-        }
-
-        // Cleanup à la déconnexion
-        return () => {
-            if (refreshIntervalRef.current) {
-                clearInterval(refreshIntervalRef.current);
-            }
-        };
-    }, [accessToken, setupTokenAutoRefresh]);
-
     return {
         user,
         session,
         loading,
         error,
         isAuthenticated: !!user && !!session,
-        accessToken,
-        refreshToken,
         login,
         logout,
         refreshUser,
         checkSession,
-        refreshAccessToken,
-        getAccessToken,
     };
 };

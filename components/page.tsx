@@ -77,12 +77,36 @@ export function PageLayout_2({ children, addnote = true }: { children: React.Rea
     );
 }
 
-export function PageLayout_3({ children, addnote = true }: { children: React.ReactNode, addnote?: boolean }) {
+export function PageLayout_3({ children, addnote = false }: { children: React.ReactNode, addnote?: boolean }) {
 
     const [data, setData] = useState<{
         insets: EdgeInsets;
         frame: Rect;
     } | null>(null);
+
+    const { addNote, notesQuery, session } = useDatabase()
+    const handleNewNote = async () => {
+        const placeholderText = `{"type":"doc","content":[{"type":"heading","attrs":{"textAlign":null,"level":1},"content":[{"type":"text","text":"Entrez votre titre"}]},{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Écrivez votre note et autres ici."}]}]}`
+
+        const result = await addNote({
+            body: placeholderText,
+            html: "<div>vide<vide>",
+            pinned: false,
+            archived: false,
+            grouped: null,
+            creator: session?.iduser as string
+        })
+
+        if (result) {
+            router.navigate({
+                pathname: '/noteeditor',
+                params: {
+                    id: result?.id,
+                    userid: result?.creator,
+                }
+            })
+        }
+    }
 
     return (
         <SafeAreaProvider>
@@ -90,6 +114,13 @@ export function PageLayout_3({ children, addnote = true }: { children: React.Rea
                 <StatusBar style="dark" />
                 <SafeAreaView style={{ flex: 1 }}>
                     {children}
+                    {
+                        addnote && (<View style={NewNoteButton.container} >
+                            <TouchableOpacity style={NewNoteButton.button} onPress={handleNewNote}>
+                                <FluentNoteAdd28Regular width={28} height={28} color={"white"} />
+                            </TouchableOpacity>
+                        </View>)
+                    }
                 </SafeAreaView>
             </View>
         </SafeAreaProvider>

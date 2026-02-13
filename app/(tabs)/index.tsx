@@ -1,13 +1,14 @@
 import ArticlesItems from '@/components/articlesItems';
-import PageLayout from '@/components/page';
+import { PageLayout_3 } from '@/components/page';
 import { Text, View } from '@/components/Themed';
 // import { convert } from '@/constants/convert';
 import { useArticlesAll } from '@/lib/useArticlesAll';
 // import moment from 'moment';
 import { convert } from '@/constants/convert';
 import moment from 'moment';
+import { useCallback, useState } from 'react';
 import { Image } from 'react-native';
-import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
+import { GestureHandlerRootView, RefreshControl, ScrollView } from 'react-native-gesture-handler';
 import { HeaderStyles } from '../styles/cards';
 
 
@@ -16,11 +17,19 @@ import { HeaderStyles } from '../styles/cards';
 export default function TabOneScreen() {
   // Utilisation du hook personnalisé
   const { articles, loading, error } = useArticlesAll();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
 
   return (
-    <PageLayout>
+    <PageLayout_3 addnote>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <ScrollView style={{ flex: 1 }}>
+        <ScrollView style={{ flex: 1 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} size={"default"} />} >
           <View style={HeaderStyles.container}>
             <Image source={require("../../assets/images/Nuvel.png")} style={HeaderStyles.image} />
           </View>
@@ -52,7 +61,7 @@ export default function TabOneScreen() {
 
         </ScrollView>
       </GestureHandlerRootView>
-    </PageLayout>
+    </PageLayout_3>
   );
 }
 

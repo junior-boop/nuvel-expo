@@ -12,6 +12,7 @@ import * as Sync from '@/Database/sync_event';
 import { first_sync, Sync_to_serveur } from '@/Database/sync_online';
 import * as User from '@/Database/users';
 import { generateUUID as uuidv4 } from '@/Database/uuid';
+import { getHistoryForUser, HistoryType } from '@/lib/instantdb.histories';
 import { useSQLiteDevTools } from 'expo-sqlite-devtools';
 import React, {
     createContext,
@@ -70,6 +71,7 @@ interface DatabaseContextType {
     addArticle: (data: ArticlesType) => Promise<ArticlesType | undefined>,
     getallArticle: () => ArticlesType[],
     deletedArticle: (id: string) => Promise<void>,
+    historyQuery: QueryForTable<HistoryType> | null,
 }
 
 const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined);
@@ -82,6 +84,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     const [session, setSession] = useState<SessionType | null>(null);
     const [biblemetadatState, setBibleMetadataState] = useState<QueryForTable<BibleMetadataType> | null>(null);
     const [articlesQuery, setArticles] = useState<QueryForTable<ArticlesType> | null>(null);
+    const [historyQuery, setHistory] = useState<QueryForTable<HistoryType> | null>(null);
 
 
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -144,34 +147,37 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         await syncToServer()
         clearError();
         try {
-            const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, Sync_EventResult, articlesResult, localStorageResult] = await Promise.all([
+
+            const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, Sync_EventResult, articlesResult] = await Promise.all([
                 Notes.getall(),
                 Groups.getall(),
                 Session.get(),
                 User.getAll(),
                 BibleMetadata.getall(),
                 Sync.getAll(),
-                Articles.getall(),
-                LocalStorage.getItem("accessToken")
+                Articles.getall()
             ]);
             const notesArray = new QueryForTable<NotesType>(notesResult || []);
             const groupArray = new QueryForTable<GroupsType>(groupesResult || []);
             const userArray = new QueryForTable<UserType>(userResult || []);
             const bibleMetadataArray = new QueryForTable<BibleMetadataType>(bibleMetadataResult || []);
             const articlesArray = new QueryForTable<ArticlesType>(articlesResult || []);
+            const historyResponse = await getHistoryForUser(sessionResult?.iduser as string);
+            const historyArray = new QueryForTable<HistoryType>(historyResponse?.data?.histories || []);
 
             console.log("Note length:", notesResult.length)
             console.log("Sync_event :", Sync_EventResult.length)
             console.log("Articles :", articlesResult.length)
+            console.log("Session :", sessionResult)
+            console.log("History :", historyResponse)
 
-            console.log("Articles :", articlesResult)
-            console.log("Access Token :", localStorageResult)
-
+            setHistory(historyArray)
             setUsers(userArray);
             setGroups(groupArray);
             setNotes(notesArray);
             setSession(sessionResult || null);
-            setBibleMetadataState(bibleMetadataArray)
+
+
             setArticles(articlesArray)
         } catch (error) {
             handleError(error, 'initial data loading');
@@ -616,7 +622,8 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         addArticle,
         getallArticle,
         deletedArticle,
-        articlesQuery
+        articlesQuery,
+        historyQuery
     }), [
         notesQuery,
         setNotes,
@@ -649,7 +656,8 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         addArticle,
         getallArticle,
         deletedArticle,
-        articlesQuery
+        articlesQuery,
+        historyQuery
     ]);
 
     return (
