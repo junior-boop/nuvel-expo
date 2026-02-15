@@ -56,7 +56,7 @@ interface DatabaseContextType {
     addNotetoGroup: (data: { id: string, grouped: string }) => Promise<NotesType>;
     addGroup: (data: GroupsType, userid: string) => Promise<GroupsType>;
     updatedGroup: (data: GroupsType) => Promise<GroupsType>;
-    deletedGroup: (id: string) => Promise<Boolean>;
+    deletedGroup: (id: string, userid: string) => Promise<Boolean>;
     addBible: (data: BibleMetadataType) => Promise<Partial<BibleMetadataType> | undefined>;
     deletedBible: (id: string) => Promise<void>;
     clearError: () => void;
@@ -440,12 +440,12 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [loadInitialData])
 
-    const deletedGroup = useCallback(async (id: string) => {
+    const deletedGroup = useCallback(async (id: string, userid: string) => {
         clearError();
         try {
             const result = await Groups.deleted(id);
             const objet: Partial<SyncEvent> = {
-                userId: session?.iduser,
+                userId: userid,
                 entityId: id,
                 entityType: "group",
                 deviceId: null,

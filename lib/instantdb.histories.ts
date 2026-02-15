@@ -26,6 +26,12 @@ export const createdHistoryItem = async (articleId: string, creator: string, con
         // Générer un seul ID pour éviter les duplications
         const historyId = id();
 
+        const check = await getHistoryByArticleId(articleId, creator)
+        if (check) {
+            await updatedHistoryItem(check.data.histories[0].id)
+            return 'sucess'
+        }
+
         const comment = await historiesDB.transact(historiesDB.tx.histories[historyId].create({
             id: historyId,
             articleId: articleId,
@@ -33,7 +39,6 @@ export const createdHistoryItem = async (articleId: string, creator: string, con
             content: content,
             createdAt: new Date(),
         }))
-
 
         return comment.clientId
     } catch (error) {
@@ -63,6 +68,27 @@ export const getHistoryForUser = async (userid: string) => {
     }
 
 }
+
+
+
+export const getHistoryByArticleId = async (articleId: string, userId: string) => {
+    try {
+        const query = {
+            histories: {
+                $: {
+                    where: {
+                        articleId: articleId,
+                        userId: userId,
+                    },
+                },
+            }
+        }
+        const data = historiesDB.queryOnce(query)
+        return data
+    } catch (error) {
+        console.log("[getHistoryById] Error", error)
+    }
+}
 export const deleteHistoryItem = async (id: string) => {
     try {
         const historyItem = await historiesDB.transact(historiesDB.tx.histories[id].delete())
@@ -70,5 +96,18 @@ export const deleteHistoryItem = async (id: string) => {
         return historyItem.clientId
     } catch (error) {
         console.log("[deleteHistoryItem] Error", error)
+    }
+}
+
+
+export const updatedHistoryItem = async (id: string) => {
+    try {
+        const historyItem = await historiesDB.transact(historiesDB.tx.histories[id].update({
+            createdAt: new Date(),
+        }))
+        console.log("[updatedHistoryItem] History Item Updated", historyItem)
+        return historyItem.clientId
+    } catch (error) {
+        console.log("[updatedHistoryItem] Error", error)
     }
 }

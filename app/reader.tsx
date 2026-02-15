@@ -9,7 +9,7 @@ import { FluentSubtractCircle12Regular, IcBaselineArrowBack, RiBookmark3Fill, Ri
 import { useDatabase } from "@/context/database.context";
 import { Articles, Comments } from "@/Database/db";
 import ReaderHtml from "@/editor/readerhtml";
-import { setShareCount } from "@/lib/instantdb.articles";
+import { setShareCount, setSignals } from "@/lib/instantdb.articles";
 import { CommentType } from "@/lib/instantdb.init";
 import { useArticle } from "@/lib/useArticles";
 import { ArticleStat } from "@/lib/useArticlesAll";
@@ -94,10 +94,7 @@ export default function ReaderPage() {
                         <LikeButton articleId={note?.id as string} userId={session?.iduser as string} />
                         <Commentaire onPress={() => setCommentOpen(true)} />
                         <ShareButton articleId={articleStats.id as string} Count={articleStats.shareCount as number} />
-                        <TouchableOpacity style={styles.btn_appreciation}>
-                            <FluentSubtractCircle12Regular width={24} height={24} color={'#777'} />
-                            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>Signal</Text>
-                        </TouchableOpacity>
+                        <SignalButton articleId={articleStats.id as string} signalStat={articleStats.signals as string[]} userId={session?.iduser as string} />
                     </View>
                 </View>
                 {
@@ -268,6 +265,46 @@ const ShareButton = ({ articleId, Count }: { articleId: string, Count: number })
         <TouchableOpacity onPress={onShare} style={styles.btn_appreciation}>
             <RiShareForwardLine width={24} height={24} color={'#777'} />
             <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>{shareCount}</Text>
+        </TouchableOpacity>
+    )
+}
+
+
+const SignalButton = ({ articleId, signalStat, userId }: { articleId: string, signalStat: string[], userId: string }) => {
+    const [loading, setLoading] = useState<boolean>(false)
+    const [error, setError] = useState<string | null>(null)
+    const [isSignal, setIsSignal] = useState<boolean>(signalStat.includes(userId))
+
+    const signalArticle = async () => {
+        console.log('signalArticle', articleId)
+        try {
+            setLoading(true)
+            if (isSignal) {
+                console.log('remove')
+                const newSignalStat = signalStat.filter((id) => id !== userId)
+                await setSignals(articleId, newSignalStat)
+                setIsSignal(false)
+            } else {
+                console.log('add')
+                const newSignalStat = [...signalStat, userId]
+                await setSignals(articleId, newSignalStat)
+                setIsSignal(true)
+            }
+            setLoading(false)
+        } catch (error) {
+            console.log(error)
+            setError(error.message)
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        setIsSignal(signalStat.includes(userId))
+    }, [signalStat])
+    return (
+        <TouchableOpacity onPress={signalArticle} style={styles.btn_appreciation}>
+            <FluentSubtractCircle12Regular width={24} height={24} color={isSignal ? '#ff2323ff' : '#777'} />
+            <Text style={{ fontSize: convert(18), fontWeight: 'bold', color: isSignal ? '#ff2323ff' : '#777' }}>Signal</Text>
         </TouchableOpacity>
     )
 }

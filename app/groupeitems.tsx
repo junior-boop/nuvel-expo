@@ -46,7 +46,7 @@ export default function GroupeItemps() {
     }
 
     const handleDelete = async () => {
-        const res = await deletedGroup(id as string)
+        const res = await deletedGroup(id as string, session?.iduser as string)
         if (res) navigation.goBack()
     }
 

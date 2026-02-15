@@ -34,44 +34,44 @@ type GroupsType = {
 
 const serveur = "https://nuvelserver.godigital.workers.dev"
 
-const senddata = async (table_name : string , id : string) => {
+const senddata = async (table_name: string, id: string) => {
   const data = table_name === "notes" ? await Notes.get(id)
-  : table_name === "groups" ? await Groups.get(id) : null
+    : table_name === "groups" ? { ...(await Groups.get(id)), userid: (await Session.get())?.iduser } : null
 
-  console.log(table_name , id)
+  console.log(table_name, id)
 
   try {
     const req = await fetch(serveur + "/" + table_name + "/" + id, {
-    method : "POST",
-    headers : {
-      "Content-type" : "application/json"
-    },
-    body : JSON.stringify(data)
+      method: "POST",
+      headers: {
+        "Content-type": "application/json"
+      },
+      body: JSON.stringify(data)
 
-   
-  })
-   if(table_name === 'groups'){
+
+    })
+    if (table_name === 'groups') {
       console.log("groups : ", await req.text())
     }
-  await req.text()
+    await req.text()
   } catch (error) {
     console.log(error)
   } finally {
     console.log("updated done!")
-  } 
+  }
 
-} 
+}
 
-const deletedata = async (table_name : string , id : string) => {
+const deletedata = async (table_name: string, id: string) => {
   await fetch(serveur + "/" + table_name + "/" + id, {
-    method : "DELETE",
-    headers : {
-      "Content-type" : "application/json"
+    method: "DELETE",
+    headers: {
+      "Content-type": "application/json"
     }
   })
-} 
+}
 
-const getOldRecords = (rows : Sync.Sync_Event[] ) => {
+const getOldRecords = (rows: Sync.Sync_Event[]) => {
   // D'abord, trouver les derniers pour chaque clé
   const latestByKey = rows.reduce((acc, cur) => {
     const key = `${cur.elementid}_${cur.action}`;
@@ -84,14 +84,14 @@ const getOldRecords = (rows : Sync.Sync_Event[] ) => {
   // Ensuite, filtrer pour garder seulement les anciens
   const latestIds = Object.values(latestByKey).map(row => row.id);
   const oldRecords = rows.filter(row => !latestIds.includes(row.id));
-  
+
   return oldRecords;
 };
 
 const deleteSyncData = async () => {
   try {
     const rows = await Sync.getAll();
-    
+
     // Vérifier qu'on a des données
     if (!rows || rows.length === 0) {
       console.log('Aucune donnée à traiter');
@@ -100,11 +100,11 @@ const deleteSyncData = async () => {
 
     // Garder seulement les dernières opérations par élément et action
     const latestOps = getOldRecords(rows);
-    
+
 
     // IDs à garder
     const idsToKeep = latestOps.map(r => r.id);
-    
+
     // Éviter la suppression si aucun ID à garder
     if (idsToKeep.length === 0) {
       console.log('Aucun élément à supprimer');
@@ -114,10 +114,10 @@ const deleteSyncData = async () => {
     // Utiliser des paramètres pour éviter l'injection SQL
     const placeholders = idsToKeep.map(() => '?').join(',');
     const sql = `DELETE FROM sync_event WHERE id IN (${placeholders})`;
-    
-   const result = (await orm.run(sql, idsToKeep)).changes;
-   console.log('Données sync supprimées avec succès', result)
-   return result
+
+    const result = (await orm.run(sql, idsToKeep)).changes;
+    console.log('Données sync supprimées avec succès', result)
+    return result
   } catch (error) {
     console.error('Erreur lors de la suppression des données sync:', error);
     throw error;
@@ -126,8 +126,8 @@ const deleteSyncData = async () => {
 
 export const Sync_to_serveur = async () => {
   const session = await Session.get()
-  const check = await fetch(serveur+"/health")
-  const sync =await fetch(serveur + "/notes/sync/" + session?.iduser+'?lastupdate='+Date.now())
+  const check = await fetch(serveur + "/health")
+  const sync = await fetch(serveur + "/notes/sync/" + session?.iduser + '?lastupdate=' + Date.now())
   const result = await sync.json()
   const allnotes = await Notes.getall()
   const allgroupes = await Groups.getall()
@@ -135,42 +135,42 @@ export const Sync_to_serveur = async () => {
   deleteSyncData()
   const sync_event = await Sync.getAll()
 
-  if(check.status === 200) {
-    if(result.data.length > 0) {
-      for(let note of sync_event) {
-        if(note.table_name === "notes"){
-          if(note.action === "CREATE" || note.action === "UPDATE") {
+  if (check.status === 200) {
+    if (result.data.length > 0) {
+      for (let note of sync_event) {
+        if (note.table_name === "notes") {
+          if (note.action === "CREATE" || note.action === "UPDATE") {
             await senddata(note.table_name, note.elementid)
             await Sync.updated(note.id)
           }
 
-          if(note.action === "DELETE"){
+          if (note.action === "DELETE") {
             await deletedata(note.table_name, note.elementid)
             await Sync.updated(note.id)
           }
         }
 
-        if(note.table_name === "groups"){
-          if(note.action === "CREATE" || note.action === "UPDATE") {
+        if (note.table_name === "groups") {
+          if (note.action === "CREATE" || note.action === "UPDATE") {
             await senddata(note.table_name, note.elementid)
             await Sync.updated(note.id)
           }
 
-          if(note.action === "DELETE") {
+          if (note.action === "DELETE") {
             await deletedata(note.table_name, note.elementid)
             await Sync.updated(note.id)
           }
-        
+
         }
-          
-      
+
+
       }
-    } else if(result.data.length === 0) {
-      for(let note of allnotes){
+    } else if (result.data.length === 0) {
+      for (let note of allnotes) {
         senddata("notes", note.id)
       }
 
-      for(let groupe of allgroupes){
+      for (let groupe of allgroupes) {
         senddata("groups", groupe.id)
       }
     }
@@ -185,13 +185,13 @@ export const first_sync = async () => {
   const check_notes = await Notes.getall()
   const check_groups = await Groups.getall()
   const session = await Session.get()
-  
-  // note sync
-  const sync_note =await fetch(serveur + "/notes/" + session?.iduser)
-  const result_note = await sync_note.json() as {data : NotesType[]}
 
-  if( check_sync.length === 0 && check_notes.length === 0){
-    for(let note of result_note.data){
+  // note sync
+  const sync_note = await fetch(serveur + "/notes/" + session?.iduser)
+  const result_note = await sync_note.json() as { data: NotesType[] }
+
+  if (check_sync.length === 0 && check_notes.length === 0) {
+    for (let note of result_note.data) {
       const n = await Notes.created({
         id: note.id,
         body: note.body,
@@ -209,14 +209,14 @@ export const first_sync = async () => {
   }
 
   // group sync
-  const sync_group =await fetch(serveur + "/groups/" + session?.iduser)
-  const result_group = await sync_group.json() as { data : GroupsType[]}
+  const sync_group = await fetch(serveur + "/groups/" + session?.iduser)
+  const result_group = await sync_group.json() as { data: GroupsType[] }
 
-  if(check_sync.length === 0 && check_groups.length === 0){
-    for(let group of result_group.data){
+  if (check_sync.length === 0 && check_groups.length === 0) {
+    for (let group of result_group.data) {
       const g = await Groups.created({
         id: group.id,
-        name : group.name,
+        name: group.name,
         created: group.created,
         modified: group.modified,
       })

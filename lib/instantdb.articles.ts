@@ -130,6 +130,7 @@ export const setSignals = async (id: string, signals: string[]) => {
     try {
         const articleStats = await db.transact(db.tx.articlesStats[id].update({
             signals: signals,
+            updatedAt: new Date(),
         }))
 
         return articleStats.clientId
@@ -137,6 +138,7 @@ export const setSignals = async (id: string, signals: string[]) => {
         console.log(error)
     }
 }
+
 
 export const deleteArticleStats = async (id: string) => {
     try {
