@@ -26,10 +26,25 @@ export const createdComment = async (articleId: string, creator: string, content
 }
 
 
-export const addupvote = async (commentId: string, upvotes: string[]) => {
+export const addupvote = async (commentId: string, upvotes: string[], notes: number) => {
     try {
         const comment = await db.transact(db.tx.comments[commentId].update({
             upvotes: upvotes,
+            notes: notes,
+            modified: new Date(),
+        }))
+
+        return comment.clientId
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+export const removeupvote = async (commentId: string, upvotes: string[], notes: number) => {
+    try {
+        const comment = await db.transact(db.tx.comments[commentId].update({
+            upvotes: upvotes,
+            notes: notes - 1,
             modified: new Date(),
         }))
 

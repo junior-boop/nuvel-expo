@@ -1,35 +1,38 @@
 import { LikeButton } from "@/components/appreciation";
-import Commentaire from "@/components/commentaire";
+import Commentaire, { useCommentHooks } from "@/components/commentaire";
 import CommentaireItem from "@/components/commentaireItem";
 import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
 import { w } from "@/constants/Colors";
 import { convert } from "@/constants/convert";
-import { IcBaselineArrowBack, RiBookmark3Fill, RiBookmark3Line, RiSendPlaneLine, RiShareForwardLine } from "@/constants/icons";
+import { FluentSubtractCircle12Regular, IcBaselineArrowBack, RiBookmark3Fill, RiBookmark3Line, RiSendPlaneLine, RiShareForwardLine } from "@/constants/icons";
 import { useDatabase } from "@/context/database.context";
 import { Articles, Comments } from "@/Database/db";
 import ReaderHtml from "@/editor/readerhtml";
+import { setShareCount } from "@/lib/instantdb.articles";
+import { CommentType } from "@/lib/instantdb.init";
 import { useArticle } from "@/lib/useArticles";
-import { useCommentsWebSocket } from "@/lib/useComments";
+import { ArticleStat } from "@/lib/useArticlesAll";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Share, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 
 
 export default function ReaderPage() {
-    const { article } = useLocalSearchParams()
+    const { element } = useLocalSearchParams()
     const [commentOpen, setCommentOpen] = useState(false)
     const [request, setRequest] = useState<{ articlesId: string, comments: Comments[], count: number } | null>(null)
-    const note = JSON.parse(article as string)
+    const articleStats = JSON.parse(element as string) as ArticleStat
     const [bookmark, setBookmark] = useState(false)
 
     // const sheetRef = useRef<BottomSheet>(null);
     // const snapPoints = useMemo(() => ["100%"], []);
+    const note = articleStats.article
     const { usersQuery, session, addArticle, articlesQuery } = useDatabase()
     const userinfo = usersQuery?.findById(session?.iduser as string)
-    const A = useArticle(note.id);
+    const A = useArticle(note?.id as string);
     const creatorName = JSON.stringify(userinfo);
 
     const handleBookmark = () => {
@@ -39,7 +42,7 @@ export default function ReaderPage() {
     }
 
     useEffect(() => {
-        const bookmark = articlesQuery?.findById(note.id);
+        const bookmark = articlesQuery?.findById(note?.id as string);
         if (bookmark) {
             setBookmark(true)
         } else {
@@ -57,7 +60,7 @@ export default function ReaderPage() {
         return (
             <>
                 {
-                    A.loading
+                    A.loading || note === undefined
                         ? (<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                             <ActivityIndicator size={'large'} color={"black"} />
                         </View>)
@@ -85,23 +88,20 @@ export default function ReaderPage() {
                         }
                     </TouchableOpacity>
                 </View>
-                <Article id={note.id} />
+                <Article id={note?.id as string} />
                 <View style={{ height: 52, width: w, backgroundColor: 'white', elevation: convert(12), justifyContent: 'center' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: convert(16) }}>
-                        <LikeButton articleId={note.id} userId={note.user.id} apiBase="https://nuvelserver.godigital.workers.dev" />
+                        <LikeButton articleId={note?.id as string} userId={session?.iduser as string} />
                         <Commentaire onPress={() => setCommentOpen(true)} />
+                        <ShareButton articleId={articleStats.id as string} Count={articleStats.shareCount as number} />
                         <TouchableOpacity style={styles.btn_appreciation}>
-                            <RiShareForwardLine width={24} height={24} color={'#777'} />
-                            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>Share</Text>
+                            <FluentSubtractCircle12Regular width={24} height={24} color={'#777'} />
+                            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>Signal</Text>
                         </TouchableOpacity>
-                        {/* <TouchableOpacity style={styles.btn_appreciation}>
-                            <RiDownload2Line width={24} height={24} color={'#777'} />
-                            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>Save</Text>
-                        </TouchableOpacity> */}
                     </View>
                 </View>
                 {
-                    commentOpen && (<SheetComments onClose={() => setCommentOpen(false)} articleId={note.id} creatorName={creatorName} userId={note.user.id} />)
+                    commentOpen && (<SheetComments onClose={() => setCommentOpen(false)} articleId={note?.id as string} creatorName={creatorName} userId={note?.user.id as string} />)
                 }
             </GestureHandlerRootView>
         </PageLayout_3>
@@ -127,34 +127,35 @@ const SheetComments = ({ onClose, articleId, creatorName, commentCount, userId }
     const sheetRef = useRef<BottomSheet>(null);
     const snapPoints = useMemo(() => ["100%"], []);
     const [commentValue, setCommentValue] = useState<String | null>(null)
-    const [listComments, setListComments] = useState<CommentsProps[]>([])
+    const [listComments, setListComments] = useState<CommentType[]>([])
     const {
         comments,
         count,
         loading,
-        postComment,
-        loadComments,
-    } = useCommentsWebSocket(articleId);
+        addComment,
+        deleteComment,
+        fetchComments
+    } = useCommentHooks(articleId);
 
     // Fonction pour envoyer un commentaire
     const handlePostComment = useCallback(async () => {
 
         if (!commentValue?.trim()) return;
-        const success = await postComment(commentValue.trim(), creatorName);
-
+        const success = await addComment(JSON.parse(creatorName), commentValue.trim());
+        console.log('je veux voir')
         if (success) {
             setCommentValue("");
-            loadComments();
+            fetchComments();
         }
-    }, [commentValue, postComment, creatorName]);
+    }, [commentValue, addComment, creatorName]);
 
     useEffect(() => {
         setListComments(comments)
     }, [comments]);
 
     useEffect(() => {
-        loadComments();
-    }, [loadComments]);
+        fetchComments();
+    }, []);
     return (<BottomSheet
         ref={sheetRef}
         snapPoints={snapPoints}
@@ -172,7 +173,7 @@ const SheetComments = ({ onClose, articleId, creatorName, commentCount, userId }
         >
             <BottomSheetView style={{ flex: 1, height: '100%' }}>
                 <View style={{ height: convert(42), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
-                    <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>{count > 9 ? count : `0${count}`} Comments</Text>
+                    <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>Comments ( {count} )</Text>
                 </View>
                 <ScrollView style={{ flex: 1, backgroundColor: 'white' }}>
                     <View style={{ gap: convert(24), paddingVertical: convert(16) }}>
@@ -212,6 +213,63 @@ const SheetComments = ({ onClose, articleId, creatorName, commentCount, userId }
             </BottomSheetView>
         </KeyboardAvoidingView>
     </BottomSheet>)
+}
+
+const useShareHook = ({ articleId, Count }: { articleId: string, Count: number }) => {
+    const [shareCount, setSharCounts] = useState<number>(Count)
+    const [loading, setLoading] = useState<boolean>(false)
+    const [error, setError] = useState<string | null>(null)
+
+    const shareArticle = useCallback(async () => {
+        console.log('shareArticle', articleId, shareCount)
+        try {
+            setLoading(true)
+            await setShareCount(articleId, shareCount)
+            setSharCounts(shareCount + 1)
+            setLoading(false)
+        } catch (error) {
+            console.log(error)
+            setError(error.message)
+            setLoading(false)
+        }
+    }, [articleId, shareCount])
+
+    return { shareCount, shareArticle, loading, error }
+}
+
+const ShareButton = ({ articleId, Count }: { articleId: string, Count: number }) => {
+    const { shareCount, shareArticle, loading, error } = useShareHook({ articleId, Count })
+
+    const onShare = useCallback(async () => {
+        try {
+            const result = await Share.share({
+                message: "https://www.nuvel.cc/a/" + articleId
+            })
+
+            console.log(result)
+
+            if (result.action === Share.sharedAction) {
+                if (result.activityType !== null) {
+                    console.log('result activity', result.activityType)
+                } else {
+                    shareArticle()
+                    // share
+                }
+            } else if (result.action === Share.dismissedAction) {
+                Alert.alert('dismissed')
+            }
+
+        } catch (error) {
+            console.log(error)
+            Alert.alert(error.message)
+        }
+    }, [articleId, shareCount])
+    return (
+        <TouchableOpacity onPress={onShare} style={styles.btn_appreciation}>
+            <RiShareForwardLine width={24} height={24} color={'#777'} />
+            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>{shareCount}</Text>
+        </TouchableOpacity>
+    )
 }
 
 const styles = StyleSheet.create({

@@ -327,7 +327,7 @@ export default function NoteEditor() {
                                                         <View
 
                                                             key={index}
-                                                            style={{ width: '100%', borderRadius: convert(12), backgroundColor: "#008cff18", paddingHorizontal: convert(12), paddingVertical: convert(8), gap: convert(2) }}
+                                                            style={{ width: '100%', borderRadius: convert(4), backgroundColor: "#008cff18", paddingHorizontal: convert(12), paddingVertical: convert(8), gap: convert(2) }}
                                                         >
                                                             <Text style={{ fontSize: convert(16), fontWeight: '600' }}>{item.content}</Text>
                                                             <Text style={{ fontSize: convert(12), color: "#0009", textAlign: 'right' }}>{moment(item.created).fromNow()}</Text>
@@ -392,7 +392,6 @@ function Response_Ai({ item }: { item: AiHistoryType }) {
                         style={{ paddingTop: convert(8), marginBottom: convert(12) }}
                     >
                         <Markdown mergeStyle={true} style={{ body: { color: 'black', fontSize: convert(16) } }}>
-
                             {item.content}
                         </Markdown>
                     </Pressable>)

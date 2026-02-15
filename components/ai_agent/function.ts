@@ -5,7 +5,7 @@ export default async function aiAgent(
   context: { content: string; iduser: string },
   prompt: string
 ) {
-  const google_key_api = "AIzaSyBgYvaw4tNg-YUnnIOCZRq4JWAMaNqiN0o";
+  const google_key_api = "AIzaSyC9BGnSAM2lAqH-4hlGtvikTXzIGKHFSPo";
   const explainContext = `
   Tu es un assistant théologique expérimenté. Voici une méditation biblique existante.
   CONTEXTE ORIGINAL : ${context.content}

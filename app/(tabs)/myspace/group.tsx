@@ -14,12 +14,13 @@ import { useEffect, useState } from 'react';
 
 export default function TabTwoScreen() {
     const [value, onChangeText] = useState<string>('')
-    const { addGroup, groupsQuery } = useDatabase();
+    const { addGroup, groupsQuery, session } = useDatabase();
     const [groups, setGroups] = useState<Groups[]>([]);
 
+    console.log("Session", session)
 
     const handleNewGroup = async () => {
-        const newGroup = await addGroup({ name: value });
+        const newGroup = await addGroup({ name: value }, session?.iduser);
         onChangeText('');
     }
 

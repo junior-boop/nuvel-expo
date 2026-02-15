@@ -22,6 +22,8 @@ const schema = i.schema({
             viewCount: i.number(),
             lastCommentAt: i.date(),
             updatedAt: i.date(),
+            shareCount: i.number(),
+            signals: i.json(),
         }),
         appreciation: i.entity({
             id: i.string().unique().indexed(),

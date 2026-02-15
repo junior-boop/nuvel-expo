@@ -1,5 +1,4 @@
 import { QueryForTable } from '@/constants/Queryuilder';
-import db from '@/Database';
 import * as AiStore from '@/Database/ai';
 import * as Articles from '@/Database/articles';
 import * as BibleMetadata from "@/Database/bible.metadata";
@@ -13,7 +12,6 @@ import { first_sync, Sync_to_serveur } from '@/Database/sync_online';
 import * as User from '@/Database/users';
 import { generateUUID as uuidv4 } from '@/Database/uuid';
 import { getHistoryForUser, HistoryType } from '@/lib/instantdb.histories';
-import { useSQLiteDevTools } from 'expo-sqlite-devtools';
 import React, {
     createContext,
     ReactNode,
@@ -56,7 +54,7 @@ interface DatabaseContextType {
     toggleNotePinned: (note: NotesType) => Promise<void>;
     toggleNoteArchived: (note: NotesType) => Promise<void>;
     addNotetoGroup: (data: { id: string, grouped: string }) => Promise<NotesType>;
-    addGroup: (data: GroupsType) => Promise<GroupsType>;
+    addGroup: (data: GroupsType, userid: string) => Promise<GroupsType>;
     updatedGroup: (data: GroupsType) => Promise<GroupsType>;
     deletedGroup: (id: string) => Promise<Boolean>;
     addBible: (data: BibleMetadataType) => Promise<Partial<BibleMetadataType> | undefined>;
@@ -77,7 +75,6 @@ interface DatabaseContextType {
 const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined);
 
 export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
-    useSQLiteDevTools(db)
     const [notesQuery, setNotes] = useState<QueryForTable<NotesType> | null>(null);
     const [groupsQuery, setGroups] = useState<QueryForTable<GroupsType> | null>(null);
     const [usersQuery, setUsers] = useState<QueryForTable<UserType> | null>(null);
@@ -176,16 +173,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             setGroups(groupArray);
             setNotes(notesArray);
             setSession(sessionResult || null);
-
-
             setArticles(articlesArray)
+
         } catch (error) {
             handleError(error, 'initial data loading');
         } finally {
             setIsLoading(false);
         }
     }, [handleError, clearError]);
-
 
 
     useEffect(() => {
@@ -238,7 +233,6 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     const updateNote = useCallback(async (noteData: { id: string, body: string, version: number, html: string, userId: string }) => {
         clearError();
         try {
-            console.log("noteData", noteData)
             const result = await Notes.update(noteData);
             const objet: Partial<SyncEvent> = {
                 userId: noteData.userId,
@@ -401,18 +395,21 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [loadInitialData])
 
-    const addGroup = useCallback(async (data: GroupsType) => {
+    const addGroup = useCallback(async (data: GroupsType, userid: string) => {
+        console.log('loadInitialData')
+        loadInitialData()
         clearError();
         try {
             const result = await Groups.created(data);
             const objet: Partial<SyncEvent> = {
-                userId: session?.iduser,
+                userId: userid,
                 entityId: result.id,
                 entityType: "group",
                 deviceId: null,
                 action: "created",
                 synced: 1,
             }
+            console.log(user)
             const sync = await Sync.Set(objet)
             console.log(`Sync_event created ${result.id}`, sync)
             if (result) loadInitialData();

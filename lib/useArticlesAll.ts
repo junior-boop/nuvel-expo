@@ -1,31 +1,45 @@
 import { useCallback, useEffect, useState } from 'react';
 
-interface User {
+export type User = {
   id: string;
   name: string;
   email: string;
-  first_name: string;
   church_status: string;
+  first_name: string;
   photo: string;
-}
+};
 
-interface Article {
+export type Article = {
   id: string;
   userid: string;
   title: string;
   description: string;
   body: string;
+  topic: string;
   imageurl: string;
   noteid: string;
-  topic: string;
-  appreciation: string;
+  appreciation: string; // JSON stringifié "[]"
+  version: number;
   createdAt: string;
   updatedAt: string;
-  user?: User;
-}
+  user?: User; // lien InstantDB
+};
+
+export type ArticleStat = {
+  id: string;
+  articleId: string;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  lastCommentAt: string;
+  updatedAt: string;
+  shareCount: number;
+  signals: string[];
+  article?: Article; // lien InstantDB
+};
 
 interface UseArticlesAllResult {
-  articles: Article[];
+  articles: ArticleStat[];
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
@@ -54,7 +68,7 @@ interface UseArticlesAllResult {
 export const useArticlesAll = (
   apiBase: string = 'https://nuvelserver.godigital.workers.dev'
 ): UseArticlesAllResult => {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<ArticleStat[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,20 +80,17 @@ export const useArticlesAll = (
       setLoading(true);
       setError(null);
 
-      console.log('[useArticlesAll] Fetching articles...');
-
-      const response = await fetch(`${apiBase}/articles`);
+      const response = await fetch(`${apiBase}/articles/stats`);
 
       if (!response.ok) {
         throw new Error(`HTTP Error: ${response.status}`);
       }
 
       const data = await response.json();
-
       // S'assurer que data est un tableau
-      if (Array.isArray(data)) {
-        setArticles(data);
-        console.log(`[useArticlesAll] ✅ ${data.length} articles loaded`);
+      if (Array.isArray(data.stats)) {
+        setArticles(data.stats);
+        console.log(`[useArticlesAll] ✅ ${data.stats.length} articles loaded`);
       } else {
         throw new Error('Invalid response format: expected array');
       }
