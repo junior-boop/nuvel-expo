@@ -1,8 +1,10 @@
-{
+import "dotenv/config"
+
+export default {
   "expo": {
     "name": "nuvel",
-    "slug": "nuvel",
-    "version": "0.4.5",
+    "slug": "nuvel-expo",
+    "version": "0.8.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "nuvel",
@@ -58,6 +60,9 @@
       "checkAutomatically": "ON_ERROR_RECOVERY",
       "fallbackToCacheTimeout": 0,
       "enabled": true
+    },
+    "extra": {
+      "GEMINI_HELPER": process.env.GEMINI_HELPER
     }
   }
 }

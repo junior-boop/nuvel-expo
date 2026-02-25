@@ -27,6 +27,8 @@ export default function TabTwoScreen() {
     }, 2000);
   }, []);
 
+  console.log("biblelist", biblemetadatState)
+
   return (
     <PageLayout_3>
 

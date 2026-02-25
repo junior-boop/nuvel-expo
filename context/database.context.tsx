@@ -168,12 +168,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             console.log("Session :", sessionResult)
             console.log("History :", historyResponse)
 
+
             setHistory(historyArray)
             setUsers(userArray);
             setGroups(groupArray);
             setNotes(notesArray);
             setSession(sessionResult || null);
             setArticles(articlesArray)
+            setBibleMetadataState(bibleMetadataArray)
 
         } catch (error) {
             handleError(error, 'initial data loading');

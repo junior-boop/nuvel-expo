@@ -5,6 +5,7 @@ import { ArticleStat, useArticlesAll } from '@/lib/useArticlesAll';
 // import moment from 'moment';
 import ArticlesItems from '@/components/articlesItems';
 import { convert } from '@/constants/convert';
+import { createdHistoryItem } from '@/lib/instantdb.histories';
 import { router } from 'expo-router';
 import moment from 'moment';
 import { useCallback, useState } from 'react';
@@ -20,6 +21,7 @@ export default function TabOneScreen() {
   // Utilisation du hook personnalisé
   const { articles, loading, error, refresh } = useArticlesAll();
   const [refreshing, setRefreshing] = useState(false);
+
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -71,7 +73,14 @@ export default function TabOneScreen() {
 
 
 const TopArticles = ({ articles }: { articles: ArticleStat }) => {
+  const addToHistory = useCallback(async () => {
+    const addHistory = await createdHistoryItem(articles.articleId, articles.article?.userid as string, { title: articles.article?.title as string, image: articles.article?.imageurl as string, createdAt: articles.article?.createdAt });
+    console.log(addHistory)
+  }, [])
+
+
   const handleOpen = async () => {
+    addToHistory()
     router.navigate({
       pathname: '/reader',
       params: {

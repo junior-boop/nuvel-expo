@@ -1,13 +1,22 @@
 import { w } from "@/constants/Colors";
 import { convert } from "@/constants/convert";
+import { createdHistoryItem } from "@/lib/instantdb.histories";
 import { ArticleStat } from "@/lib/useArticlesAll";
 import { router } from "expo-router";
 import moment from "moment";
+import { useCallback } from "react";
 import { Image, Pressable } from "react-native";
 import { Text, View } from "./Themed";
 
 export default function ArticlesItems({ article }: { article: ArticleStat }) {
+
+    const addToHistory = useCallback(async () => {
+        const addHistory = await createdHistoryItem(article.articleId, article.article?.userid as string, { title: article.article?.title as string, image: article.article?.imageurl as string, createdAt: article.article?.createdAt });
+        console.log(addHistory)
+    }, [])
+
     const handleOpen = async () => {
+        addToHistory()
         router.navigate({
             pathname: '/reader',
             params: {
