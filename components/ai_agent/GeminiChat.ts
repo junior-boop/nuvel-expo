@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai/web";
+import { GoogleGenAI } from "@google/genai";
 import * as marked from "marked";
 
 interface ChatMessage {

@@ -3,6 +3,7 @@ import * as Notes from '@/Database/notes';
 import * as Session from '@/Database/session';
 import * as Sync from '@/Database/sync_event';
 import { orm } from '.';
+import { SyncEvent } from './db';
 
 
 type NotesType = {
@@ -71,10 +72,10 @@ const deletedata = async (table_name: string, id: string) => {
   })
 }
 
-const getOldRecords = (rows: Sync.Sync_Event[]) => {
+const getOldRecords = (rows: SyncEvent[]) => {
   // D'abord, trouver les derniers pour chaque clé
   const latestByKey = rows.reduce((acc, cur) => {
-    const key = `${cur.elementid}_${cur.action}`;
+    const key = `${cur.entityId}_${cur.action}`;
     if (!acc[key] || new Date(cur.timestamp) > new Date(acc[key].timestamp)) {
       acc[key] = cur;
     }
@@ -138,27 +139,27 @@ export const Sync_to_serveur = async () => {
   if (check.status === 200) {
     if (result.data.length > 0) {
       for (let note of sync_event) {
-        if (note.table_name === "notes") {
-          if (note.action === "CREATE" || note.action === "UPDATE") {
-            await senddata(note.table_name, note.elementid)
-            await Sync.updated(note.id)
+        if (note.entityType === "notes") {
+          if (note.action === "created" || note.action === "updated") {
+            await senddata(note.entityType, note.entityId)
+            await Sync.markAsSynced(note.id)
           }
 
-          if (note.action === "DELETE") {
-            await deletedata(note.table_name, note.elementid)
-            await Sync.updated(note.id)
+          if (note.action === "deleted") {
+            await deletedata(note.entityType, note.entityId)
+            await Sync.markAsSynced(note.id)
           }
         }
 
-        if (note.table_name === "groups") {
-          if (note.action === "CREATE" || note.action === "UPDATE") {
-            await senddata(note.table_name, note.elementid)
-            await Sync.updated(note.id)
+        if (note.entityType === "groups") {
+          if (note.action === "created" || note.action === "updated") {
+            await senddata(note.entityType, note.entityId)
+            await Sync.markAsSynced(note.id)
           }
 
-          if (note.action === "DELETE") {
-            await deletedata(note.table_name, note.elementid)
-            await Sync.updated(note.id)
+          if (note.action === "deleted") {
+            await deletedata(note.entityType, note.entityId)
+            await Sync.markAsSynced(note.id)
           }
 
         }

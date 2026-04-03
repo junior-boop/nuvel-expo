@@ -169,7 +169,7 @@ export interface SyncEvent {
   id: string;
   userId: string;
   deviceId: string;
-  entityType: 'note' | 'group';
+  entityType: 'notes' | 'groups';
   entityId: string;
   action: 'created' | 'updated' | 'deleted';
   timestamp: string; // ISO timestamp

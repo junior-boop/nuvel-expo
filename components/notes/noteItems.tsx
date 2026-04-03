@@ -44,7 +44,12 @@ export default function NoteItems({ note }: { note: NotesType }) {
         t.forEach((element, key) => {
             const p = element.content
             if (p !== undefined) {
-                const text = element.content[0].text.replace('&nbsp;', '')
+                const text = p[0].text
+                if (text !== undefined) {
+                    if (text.includes('&nbsp;')) {
+                        text.replace('&nbsp;', '')
+                    }
+                }
                 if (key < 1) String += text
                 if (key >= 1) String += "\n" + text
             }

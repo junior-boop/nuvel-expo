@@ -5,3 +5,4 @@ eas build --platform android --profile preview --local
 npx expo start -c --dev-client
 npx expo prebuild --clean
 npx expo run:android
+npx expo-doctor
