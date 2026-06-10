@@ -1,0 +1,82 @@
+import { useColorScheme } from '@/components/useColorScheme';
+import { Redirect, Tabs } from 'expo-router';
+import React from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+
+import { FluentAlert32Filled, FluentAlert32Regular, FluentBookmark32Filled, FluentBookmark32Regular, FluentDocumentFolder32Filled, FluentDocumentFolder32Regular, FluentHome32Filled, FluentHome32Regular, FluentSettings32Filled, FluentSettings32Regular } from '@/constants/icons';
+import { useAuthDB } from '@/lib/useAuthDB';
+
+
+
+export default function TabLayout() {
+  const colorScheme = useColorScheme();
+  const frame = useSafeAreaInsets()
+  const { isAuthenticated, loading } = useAuthDB();
+
+  if (__DEV__) console.log(isAuthenticated, loading)
+  // Rediriger vers login si non authentifié
+  if (!loading && !isAuthenticated) {
+    return <Redirect href="/loginzone" />
+  }
+
+  return (
+    <Tabs
+
+      screenOptions={{
+        // tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        // Disable the static render of the header on web
+        // to prevent a hydration error in React Navigation v6.
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          height: frame.bottom >= 20 ? 55 : 60,
+          borderTopColor: "#eee",
+          borderTopWidth: 1,
+          elevation: 0, // Pour Android
+          shadowOpacity: 0, // Pour iOS
+        },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingVertical: 8,
+        },
+
+      }}>
+      <Tabs.Screen
+        name="index"
+        options={{
+          tabBarIcon: ({ color, focused, size }) => {
+            return (!focused ? <FluentHome32Regular width={size} height={size} color={color} /> : <FluentHome32Filled width={size} height={size} color={color} />)
+          }
+
+        }}
+      />
+      <Tabs.Screen
+        name="bookmarks"
+        options={{
+          tabBarIcon: ({ color, focused, size }) => (focused ? <FluentBookmark32Filled width={size} height={size} color={color} /> : <FluentBookmark32Regular width={size} height={size} color={color} />),
+        }}
+      />
+      <Tabs.Screen
+        name="myspace"
+        options={{
+          tabBarIcon: ({ color, focused, size }) => (focused ? <FluentDocumentFolder32Filled width={size} height={size} color={color} /> : <FluentDocumentFolder32Regular width={size} height={size} color={color} />),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          tabBarIcon: ({ color, focused, size }) => (focused ? <FluentAlert32Filled width={size} height={size} color={color} /> : <FluentAlert32Regular width={size} height={size} color={color} />),
+
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          tabBarIcon: ({ color, focused, size }) => (focused ? <FluentSettings32Filled width={size} height={size} color={color} /> : <FluentSettings32Regular width={size} height={size} color={color} />),
+        }}
+      />
+    </Tabs>
+  );
+}
