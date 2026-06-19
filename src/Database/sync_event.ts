@@ -1,6 +1,23 @@
 import db from ".";
-import { SyncEvent } from "./db";
+import { SyncEvent, SyncableTable } from "./db";
 import { generateUUID as uuidv4 } from "./uuid";
+import * as SyncState from "./sync_state";
+
+/**
+ * Mapping nom client → nom serveur (table_name dans sync_state).
+ * Le serveur utilise "groupes" (FR) là où le client utilise "groups".
+ */
+const toSyncableTable = (entityType: string): SyncableTable | null => {
+  switch (entityType) {
+    case "notes": return "notes";
+    case "groups": return "groupes";
+    case "articles": return "articles";
+    case "publish": return "publish";
+    case "comments": return "comments";
+    case "appreciations": return "appreciations";
+    default: return null;
+  }
+};
 
 const sync_event = db.createModel<SyncEvent>("sync_event", {
   id: "TEXT PRIMARY KEY NOT NULL",
@@ -31,6 +48,11 @@ export const createEvent = async () => {
 
 export async function Set(data: Partial<SyncEvent>) {
   if (__DEV__) console.log("[SyncEvent] 💾 Setting sync event", data);
+  if (!data.userId || !data.entityId) {
+    if (__DEV__) console.log("[SyncEvent] skip: missing userId/entityId", data);
+    return null;
+  }
+  const timestamp = data.timestamp || new Date().toISOString();
   const result = await sync_event.create({
     id: data.id || uuidv4(),
     userId: data.userId!,
@@ -38,10 +60,24 @@ export async function Set(data: Partial<SyncEvent>) {
     entityType: data.entityType!,
     entityId: data.entityId!,
     action: data.action!,
-    timestamp: data.timestamp || new Date().toISOString(),
+    timestamp,
     synced: data.synced ?? 0,
     created: new Date().toISOString(),
   });
+
+  // Hook Phase 3 : alimenter sync_state (dirty bit) en parallele du sync_event legacy.
+  try {
+    const table = toSyncableTable(String(data.entityType));
+    if (table && data.entityId && data.userId) {
+      if (data.action === "deleted") {
+        await SyncState.markDirtyDeleted(table, data.entityId, data.userId, timestamp);
+      } else {
+        await SyncState.markDirty(table, data.entityId, data.userId, timestamp);
+      }
+    }
+  } catch (e) {
+    if (__DEV__) console.log("[SyncEvent] markDirty failed:", e);
+  }
 
   return result;
 }

@@ -102,93 +102,121 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         setError(null);
     }, []);
 
-    const syncToServer = useCallback(async () => {
-        const session = await Session.get()
-        if (session) {
-            Sync_to_serveur()
-        }
+    // Sync best-effort en arrière-plan. Ne jamais throw, ne jamais bloquer l'UI.
+    const syncToServer = useCallback(() => {
+        Session.get().then(session => {
+            if (!session) return;
+            Sync_to_serveur().catch(e => { if (__DEV__) console.log('[Database] sync background error:', e); });
+        }).catch(() => {});
+    }, []);
 
-    }, [])
+    const firstSync = useCallback(() => {
+        Session.get().then(session => {
+            if (!session) return;
+            first_sync().catch(e => { if (__DEV__) console.log('[Database] first_sync background error:', e); });
+        }).catch(() => {});
+    }, []);
 
-    const firstSync = useCallback(async () => {
-        const session = await Session.get()
-        if (session) {
-            first_sync()
-        }
-
-    }, [])
-
-
-    const loadInitialData = useCallback(async () => {
-        setIsLoading(true);
-        await Notes.createdtable()
-        await Groups.createtable()
-        await User.createTable()
-        await Session.createTable()
-        await BibleMetadata.createTable()
-        await AiStore.createTable()
-        await Sync.createEvent()
-        await Articles.createTable()
-        await LocalStorage.createTable()
-
-
-        // Créer la table sync_metadata pour stocker device_id et last_sync
+    // Recharge uniquement depuis SQLite — n'appelle JAMAIS le réseau.
+    const refreshLocalData = useCallback(async () => {
         try {
-            const { createTable } = await import('@/Database/sync_metadata');
-            await createTable();
-            if (__DEV__) console.log('[Database] ✅ sync_metadata table initialized');
-        } catch (error) {
-            if (__DEV__) console.log('[Database] sync_metadata table creation skipped:', error);
-        }
-
-        await syncToServer()
-        clearError();
-        try {
-
-            const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, Sync_EventResult, articlesResult] = await Promise.all([
+            const [notesResult, groupesResult, sessionResult, userResult, bibleMetadataResult, articlesResult] = await Promise.all([
                 Notes.getall(),
                 Groups.getall(),
                 Session.get(),
                 User.getAll(),
                 BibleMetadata.getall(),
-                Sync.getAll(),
-                Articles.getall()
+                Articles.getall(),
             ]);
-            const notesArray = new QueryForTable<NotesType>(notesResult || []);
-            const groupArray = new QueryForTable<GroupsType>(groupesResult || []);
-            const userArray = new QueryForTable<UserType>(userResult || []);
-            const bibleMetadataArray = new QueryForTable<BibleMetadataType>(bibleMetadataResult || []);
-            const articlesArray = new QueryForTable<ArticlesType>(articlesResult || []);
-            const historyResponse = await getHistoryForUser(sessionResult?.iduser as string);
-            const historyArray = new QueryForTable<HistoryType>(historyResponse?.data?.histories || []);
-
-            if (__DEV__) console.log("Note length:", notesResult.length)
-            if (__DEV__) console.log("Sync_event :", Sync_EventResult.length)
-            if (__DEV__) console.log("Articles :", articlesResult.length)
-            if (__DEV__) console.log("Session :", sessionResult)
-            if (__DEV__) console.log("History :", historyResponse)
-
-
-            setHistory(historyArray)
-            setUsers(userArray);
-            setGroups(groupArray);
-            setNotes(notesArray);
+            setNotes(new QueryForTable<NotesType>(notesResult || []));
+            setGroups(new QueryForTable<GroupsType>(groupesResult || []));
+            setUsers(new QueryForTable<UserType>(userResult || []));
+            setBibleMetadataState(new QueryForTable<BibleMetadataType>(bibleMetadataResult || []));
+            setArticles(new QueryForTable<ArticlesType>(articlesResult || []));
             setSession(sessionResult || null);
-            setArticles(articlesArray)
-            setBibleMetadataState(bibleMetadataArray)
+        } catch (error) {
+            handleError(error, 'local data refresh');
+        }
+    }, [handleError]);
 
+    const loadInitialData = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            await Notes.createdtable();
+            await Groups.createtable();
+            await User.createTable();
+            await Session.createTable();
+            await BibleMetadata.createTable();
+            await AiStore.createTable();
+            await Sync.createEvent();
+            await Articles.createTable();
+            await LocalStorage.createTable();
+
+            try {
+                const { createTable } = await import('@/Database/sync_metadata');
+                await createTable();
+                if (__DEV__) console.log('[Database] ✅ sync_metadata table initialized');
+            } catch (error) {
+                if (__DEV__) console.log('[Database] sync_metadata table creation skipped:', error);
+            }
+
+            try {
+                const { createTable } = await import('@/Database/sync_state');
+                await createTable();
+                if (__DEV__) console.log('[Database] ✅ sync_state table initialized');
+            } catch (error) {
+                if (__DEV__) console.log('[Database] sync_state table creation skipped:', error);
+            }
+
+            // Phase 5 — migration one-shot: seed sync_state depuis notes/groups existants.
+            try {
+                const SyncMetadata = await import('@/Database/sync_metadata');
+                const flag = await SyncMetadata.get('sync_state.seeded');
+                if (flag !== '1') {
+                    const sessionResult = await Session.get();
+                    const uid = sessionResult?.iduser;
+                    if (uid) {
+                        const { seedFromExisting } = await import('@/Database/sync_state');
+                        const counts = await seedFromExisting(uid);
+                        await SyncMetadata.set('sync_state.seeded', '1');
+                        if (__DEV__) console.log('[Database] ✅ sync_state seeded', counts);
+                    } else if (__DEV__) {
+                        console.log('[Database] sync_state seed skipped: no session');
+                    }
+                }
+            } catch (error) {
+                if (__DEV__) console.log('[Database] sync_state seed skipped:', error);
+            }
+
+            clearError();
+
+            // 1. Charger les données locales en premier — UI prête immédiatement, même offline.
+            await refreshLocalData();
+
+            // 2. Charger l'historique distant en best-effort, sans bloquer.
+            try {
+                const sessionResult = await Session.get();
+                if (sessionResult?.iduser) {
+                    getHistoryForUser(sessionResult.iduser)
+                        .then(historyResponse => {
+                            setHistory(new QueryForTable<HistoryType>(historyResponse?.data?.histories || []));
+                        })
+                        .catch(e => { if (__DEV__) console.log('[Database] history fetch failed:', e); });
+                }
+            } catch (e) {
+                if (__DEV__) console.log('[Database] history step skipped:', e);
+            }
+
+            // 3. Déclencher la sync serveur en arrière-plan, jamais bloquante.
+            firstSync();
+            syncToServer();
         } catch (error) {
             handleError(error, 'initial data loading');
         } finally {
             setIsLoading(false);
         }
-    }, [handleError, clearError]);
+    }, [handleError, clearError, refreshLocalData, firstSync, syncToServer]);
 
-
-    useEffect(() => {
-        firstSync()
-        loadInitialData()
-    }, [loadInitialData])
 
     useEffect(() => {
         loadInitialData();
@@ -215,9 +243,9 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             setNotes(new QueryForTable(notesQuery?.add(objdata)))
 
             const objet: Partial<SyncEvent> = {
-                userId: noteData.creator,
-                entityId: noteData.id,
-                entityType: "note",
+                userId: noteData.creator || session?.iduser,
+                entityId: objdata.id,
+                entityType: "notes",
                 deviceId: null,
                 action: "created",
                 synced: 1,
@@ -225,7 +253,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             const sync = await Sync.Set(objet)
             if (__DEV__) console.log(`Sync_event ${objdata.id}`, sync)
             const result = await Notes.created(objdata);
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
             return objdata;
         } catch (error) {
             handleError(error, 'adding note');
@@ -239,14 +267,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             const objet: Partial<SyncEvent> = {
                 userId: noteData.userId,
                 entityId: noteData.id,
-                entityType: "note",
+                entityType: "notes",
                 deviceId: null,
                 action: "updated",
                 synced: 1,
             }
             const sync = await Sync.Set(objet)
             if (__DEV__) console.log(`Sync_event updated ${noteData.id}`, sync)
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
         } catch (error) {
             handleError(error, 'updating note');
         }
@@ -259,40 +287,40 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             const objet: Partial<SyncEvent> = {
                 userId: noteData.userId,
                 entityId: noteData.id,
-                entityType: "note",
+                entityType: "notes",
                 deviceId: null,
                 action: "updated",
                 synced: 1,
             }
             const sync = await Sync.Set(objet)
             if (__DEV__) console.log(`Sync_event updated ${noteData.id}`, sync)
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
         } catch (error) {
             handleError(error, 'updating note');
         }
     }, [loadInitialData]);
 
     // Modifier deleteNote
-    const deleteNote = useCallback(async (noteData: { id: string, body: string, version: number, html: string, userId: string }) => {
+    const deleteNote = useCallback(async (id: string) => {
         clearError();
         try {
-            const result = await Notes.deleted(noteData.id);
+            const result = await Notes.deleted(id);
+            setNotes(new QueryForTable(notesQuery?.delete(id)))
             const objet: Partial<SyncEvent> = {
-                userId: noteData.userId,
-                entityId: noteData.id,
-                entityType: "note",
+                userId: session?.iduser,
+                entityId: id,
+                entityType: "notes",
                 deviceId: null,
                 action: "deleted",
                 synced: 1,
             }
             const sync = await Sync.Set(objet)
-            if (__DEV__) console.log(`Sync_event deleted ${noteData.id}`, sync)
-            setNotes(new QueryForTable(notesQuery?.delete(noteData.id)))
-            if (result) loadInitialData();
+            if (__DEV__) console.log(`Sync_event deleted ${id}`, sync)
+            if (result) { refreshLocalData(); syncToServer(); }
         } catch (error) {
             handleError(error, 'deleting note');
         }
-    }, [handleError, clearError, loadInitialData]);
+    }, [handleError, clearError, loadInitialData, session, notesQuery]);
 
     const clearAllUserData = useCallback(async (): Promise<boolean> => {
         try {
@@ -341,14 +369,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             const objet: Partial<SyncEvent> = {
                 userId: note.creator,
                 entityId: note.id,
-                entityType: "note",
+                entityType: "notes",
                 deviceId: null,
                 action: "updated",
                 synced: 1,
             }
             const sync = await Sync.Set(objet)
             if (__DEV__) console.log(`Sync_event updated ${note.id}`, sync)
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
 
         } catch (error) {
             handleError(error, 'toggling note pin status');
@@ -364,14 +392,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             const objet: Partial<SyncEvent> = {
                 userId: note.creator,
                 entityId: note.id,
-                entityType: "note",
+                entityType: "notes",
                 deviceId: null,
                 action: "updated",
                 synced: 1,
             }
             const sync = await Sync.Set(objet)
             if (__DEV__) console.log(`Sync_event updated ${note.id}`, sync)
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
         } catch (error) {
             handleError(error, 'toggling note archive status');
         }
@@ -380,11 +408,11 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     const addNotetoGroup = useCallback(async (data: NotesType) => {
         try {
             const result = await Notes.addtogroup(data);
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
             const objet: Partial<SyncEvent> = {
                 userId: data.creator,
                 entityId: result?.id,
-                entityType: "note",
+                entityType: "notes",
                 deviceId: null,
                 action: "updated",
                 synced: 1,
@@ -406,7 +434,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             const objet: Partial<SyncEvent> = {
                 userId: userid,
                 entityId: result.id,
-                entityType: "group",
+                entityType: "groups",
                 deviceId: null,
                 action: "created",
                 synced: 1,
@@ -414,7 +442,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             if (__DEV__) console.log(user)
             const sync = await Sync.Set(objet)
             if (__DEV__) console.log(`Sync_event created ${result.id}`, sync)
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
             return result;
         } catch (error) {
             handleError(error, 'adding note');
@@ -428,14 +456,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             const objet: Partial<SyncEvent> = {
                 userId: session?.iduser,
                 entityId: result?.id,
-                entityType: "group",
+                entityType: "groups",
                 deviceId: null,
                 action: "updated",
                 synced: 1,
             }
             const sync = await Sync.Set(objet)
             if (__DEV__) console.log(`Sync_event updated ${result?.id}`, sync)
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
             return result;
         } catch (error) {
             handleError(error, 'adding note');
@@ -449,14 +477,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
             const objet: Partial<SyncEvent> = {
                 userId: userid,
                 entityId: id,
-                entityType: "group",
+                entityType: "groups",
                 deviceId: null,
                 action: "deleted",
                 synced: 1,
             }
             const sync = await Sync.Set(objet)
             if (__DEV__) console.log(`Sync_event deleted ${id}`, sync)
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
             return result;
         } catch (error) {
             handleError(error, 'adding note');
@@ -508,7 +536,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await BibleMetadata.created(data);
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
             return result;
         } catch (error) {
             handleError(error, 'adding bible');
@@ -519,7 +547,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await BibleMetadata.deleted(id);
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
             return result
         } catch (error) {
             handleError(error, 'deleting bible');
@@ -559,7 +587,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         try {
             const result = await Articles.created({ ...data, user: JSON.stringify(data.user) });
 
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
             return result;
         } catch (error) {
             handleError(error, 'adding article');
@@ -570,7 +598,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await Articles.getall();
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
             return result;
         } catch (error) {
             handleError(error, 'adding article');
@@ -581,7 +609,7 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await Articles.deleted(id);
-            if (result) loadInitialData();
+            if (result) { refreshLocalData(); syncToServer(); }
             return result;
         } catch (error) {
             handleError(error, 'adding article');

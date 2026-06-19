@@ -1,8 +1,21 @@
+import { server_url } from '@/constants/server_url';
 import { User as UserType } from '@/Database/db';
 import * as Session from '@/Database/session';
 import * as Users from '@/Database/users';
+import { safeFetch } from '@/lib/safeFetch';
 import { clearTokens as clearTokensSystem, setTokens } from '@/lib/token_system';
 import { useCallback, useEffect, useRef, useState } from 'react';
+
+export interface SignInCredentials {
+    name: string;
+    first_name: string;
+    email: string;
+}
+
+export interface SignInResult {
+    ok: boolean;
+    user?: UserType;
+}
 
 interface UseAuthDBResult {
     user: UserType | null;
@@ -10,6 +23,7 @@ interface UseAuthDBResult {
     loading: boolean;
     error: string | null;
     isAuthenticated: boolean;
+    signIn: (credentials: SignInCredentials) => Promise<SignInResult>;
     login: (userData: UserType, tokens?: { accessToken?: string; refreshToken?: string }) => Promise<boolean>;
     logout: () => Promise<boolean>;
     refreshUser: () => Promise<void>;
@@ -149,6 +163,66 @@ export const useAuthDB = (): UseAuthDBResult => {
     }, []);
 
     /**
+     * Authentifie via l'API puis crée la session locale.
+     * Source de vérité unique pour l'appel /auth/login.
+     */
+    const signIn = useCallback(async (credentials: SignInCredentials): Promise<SignInResult> => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const res = await safeFetch<{
+                user: UserType;
+                success?: boolean;
+                accessToken?: string;
+                refreshToken?: string;
+            }>(`${server_url}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(credentials),
+            });
+
+            // Fallback offline / serveur injoignable : si un utilisateur local correspond
+            // à l'email fourni, autoriser la connexion à partir des données locales.
+            if (!res.ok) {
+                if (res.offline || res.status === 0 || res.timeout) {
+                    const allUsers = await Users.getAll();
+                    const localMatch = (allUsers || []).find(u => u.email === credentials.email);
+                    if (localMatch) {
+                        if (__DEV__) console.log('[AuthDB] 🛰️ offline signIn — using local user');
+                        const ok = await login(localMatch);
+                        return { ok, user: ok ? localMatch : undefined };
+                    }
+                    setError('Connexion requise pour la première utilisation');
+                    return { ok: false };
+                }
+                setError(`Auth failed (${res.status})`);
+                return { ok: false };
+            }
+
+            const result = res.data;
+            if (!result?.user) {
+                setError('Invalid auth response: missing user');
+                return { ok: false };
+            }
+
+            const ok = await login(result.user, {
+                accessToken: result.accessToken,
+                refreshToken: result.refreshToken,
+            });
+
+            return { ok, user: ok ? result.user : undefined };
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Erreur de connexion';
+            setError(message);
+            console.error('[AuthDB] ❌ signIn:', err);
+            return { ok: false };
+        } finally {
+            setLoading(false);
+        }
+    }, [login]);
+
+    /**
      * Déconnecte l'utilisateur (supprime la session et les tokens)
      */
     const logout = useCallback(async (): Promise<boolean> => {
@@ -220,6 +294,7 @@ export const useAuthDB = (): UseAuthDBResult => {
         loading,
         error,
         isAuthenticated: !!user && !!session,
+        signIn,
         login,
         logout,
         refreshUser,

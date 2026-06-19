@@ -800,7 +800,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "package_dependencies_expo_sqlite",
-      "community": 7,
+      "community": 48,
       "norm_label": "expo-sqlite"
     },
     {
@@ -1410,7 +1410,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "database_ai",
-      "community": 31,
+      "community": 19,
       "norm_label": "ai.ts"
     },
     {
@@ -1420,7 +1420,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "database_ai_aihistory",
-      "community": 31,
+      "community": 19,
       "norm_label": "aihistory"
     },
     {
@@ -1430,7 +1430,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "database_ai_createtable",
-      "community": 31,
+      "community": 19,
       "norm_label": "createtable()"
     },
     {
@@ -1440,7 +1440,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "database_ai_get",
-      "community": 31,
+      "community": 19,
       "norm_label": "get()"
     },
     {
@@ -1450,7 +1450,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "database_ai_set",
-      "community": 31,
+      "community": 19,
       "norm_label": "set()"
     },
     {
@@ -1460,7 +1460,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "database_ai_deleted",
-      "community": 31,
+      "community": 19,
       "norm_label": "deleted()"
     },
     {
@@ -1550,7 +1550,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "database_bible_content",
-      "community": 74,
+      "community": 7,
       "norm_label": "bible.content.ts"
     },
     {
@@ -1560,7 +1560,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "database_bible_content_bible",
-      "community": 74,
+      "community": 7,
       "norm_label": "bible"
     },
     {
@@ -1570,7 +1570,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "database_bible_content_createtable",
-      "community": 74,
+      "community": 7,
       "norm_label": "createtable()"
     },
     {
@@ -1580,7 +1580,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "database_bible_content_created",
-      "community": 74,
+      "community": 7,
       "norm_label": "created()"
     },
     {
@@ -1590,7 +1590,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "database_bible_content_getall",
-      "community": 74,
+      "community": 7,
       "norm_label": "getall()"
     },
     {
@@ -1600,7 +1600,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "database_bible_content_get",
-      "community": 74,
+      "community": 7,
       "norm_label": "get()"
     },
     {
@@ -1610,7 +1610,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "database_bible_content_find",
-      "community": 74,
+      "community": 7,
       "norm_label": "find()"
     },
     {
@@ -1620,7 +1620,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "database_bible_content_deleted",
-      "community": 74,
+      "community": 7,
       "norm_label": "deleted()"
     },
     {
@@ -2170,7 +2170,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "database_index",
-      "community": 21,
+      "community": 77,
       "norm_label": "index.ts"
     },
     {
@@ -2180,7 +2180,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "database_index_orm",
-      "community": 21,
+      "community": 35,
       "norm_label": "orm"
     },
     {
@@ -2190,7 +2190,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "database_index_db",
-      "community": 21,
+      "community": 77,
       "norm_label": "db"
     },
     {
@@ -2730,7 +2730,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "database_users",
-      "community": 75,
+      "community": 23,
       "norm_label": "users.ts"
     },
     {
@@ -2740,7 +2740,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "database_users_users",
-      "community": 75,
+      "community": 23,
       "norm_label": "users"
     },
     {
@@ -2750,7 +2750,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "database_users_createtable",
-      "community": 75,
+      "community": 23,
       "norm_label": "createtable()"
     },
     {
@@ -2760,7 +2760,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "database_users_created",
-      "community": 75,
+      "community": 23,
       "norm_label": "created()"
     },
     {
@@ -2770,7 +2770,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "database_users_getall",
-      "community": 75,
+      "community": 23,
       "norm_label": "getall()"
     },
     {
@@ -2780,7 +2780,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "database_users_get",
-      "community": 75,
+      "community": 23,
       "norm_label": "get()"
     },
     {
@@ -2790,7 +2790,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "database_users_updated",
-      "community": 75,
+      "community": 23,
       "norm_label": "updated()"
     },
     {
@@ -2800,7 +2800,7 @@
       "source_location": "L85",
       "_origin": "ast",
       "id": "database_users_deleted",
-      "community": 75,
+      "community": 23,
       "norm_label": "deleted()"
     },
     {
@@ -2810,7 +2810,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "database_uuid",
-      "community": 31,
+      "community": 19,
       "norm_label": "uuid.ts"
     },
     {
@@ -2820,7 +2820,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "database_uuid_generateuuid",
-      "community": 31,
+      "community": 19,
       "norm_label": "generateuuid()"
     },
     {
@@ -3400,7 +3400,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "auth_login",
-      "community": 44,
+      "community": 10,
       "norm_label": "login.tsx"
     },
     {
@@ -3410,7 +3410,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "auth_login_modalscreen",
-      "community": 44,
+      "community": 10,
       "norm_label": "modalscreen()"
     },
     {
@@ -3420,7 +3420,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "auth_login_styles",
-      "community": 44,
+      "community": 10,
       "norm_label": "styles"
     },
     {
@@ -3500,7 +3500,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "onboarding_sync",
-      "community": 32,
+      "community": 23,
       "norm_label": "sync.tsx"
     },
     {
@@ -3510,7 +3510,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "onboarding_sync_syncnotegroup",
-      "community": 32,
+      "community": 23,
       "norm_label": "syncnotegroup()"
     },
     {
@@ -3540,7 +3540,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tabs_bookmarks",
-      "community": 14,
+      "community": 12,
       "norm_label": "bookmarks.tsx"
     },
     {
@@ -3550,7 +3550,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "tabs_bookmarks_tabtwoscreen",
-      "community": 14,
+      "community": 12,
       "norm_label": "tabtwoscreen()"
     },
     {
@@ -3560,7 +3560,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "tabs_bookmarks_styles",
-      "community": 14,
+      "community": 12,
       "norm_label": "styles"
     },
     {
@@ -3730,7 +3730,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tabs_search",
-      "community": 5,
+      "community": 12,
       "norm_label": "search.tsx"
     },
     {
@@ -3740,7 +3740,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "tabs_search_tabtwoscreen",
-      "community": 5,
+      "community": 12,
       "norm_label": "tabtwoscreen()"
     },
     {
@@ -3750,7 +3750,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "tabs_search_styles",
-      "community": 5,
+      "community": 12,
       "norm_label": "styles"
     },
     {
@@ -3830,7 +3830,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_not_found",
-      "community": 12,
+      "community": 32,
       "norm_label": "+not-found.tsx"
     },
     {
@@ -3840,7 +3840,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "app_not_found_notfoundscreen",
-      "community": 12,
+      "community": 32,
       "norm_label": "notfoundscreen()"
     },
     {
@@ -3850,7 +3850,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "app_not_found_styles",
-      "community": 12,
+      "community": 32,
       "norm_label": "styles"
     },
     {
@@ -3920,7 +3920,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_biblepage",
-      "community": 48,
+      "community": 7,
       "norm_label": "biblepage.tsx"
     },
     {
@@ -3930,7 +3930,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "app_biblepage_delay",
-      "community": 48,
+      "community": 7,
       "norm_label": "delay()"
     },
     {
@@ -3940,7 +3940,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "app_biblepage_fetchsequentielavecdelai",
-      "community": 48,
+      "community": 7,
       "norm_label": "fetchsequentielavecdelai()"
     },
     {
@@ -3950,7 +3950,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "app_biblepage_biblepage",
-      "community": 48,
+      "community": 44,
       "norm_label": "biblepage()"
     },
     {
@@ -3960,7 +3960,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "app_biblepage_addbiblebook",
-      "community": 48,
+      "community": 7,
       "norm_label": "addbiblebook()"
     },
     {
@@ -3970,7 +3970,7 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "app_biblepage_bibleitems",
-      "community": 48,
+      "community": 44,
       "norm_label": "bibleitems()"
     },
     {
@@ -3980,7 +3980,7 @@
       "source_location": "L220",
       "_origin": "ast",
       "id": "app_biblepage_styles",
-      "community": 48,
+      "community": 7,
       "norm_label": "styles"
     },
     {
@@ -4040,7 +4040,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_history",
-      "community": 44,
+      "community": 14,
       "norm_label": "history.tsx"
     },
     {
@@ -4050,7 +4050,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "app_history_historypage",
-      "community": 44,
+      "community": 14,
       "norm_label": "historypage()"
     },
     {
@@ -4060,7 +4060,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "app_history_historyitem",
-      "community": 44,
+      "community": 14,
       "norm_label": "historyitem()"
     },
     {
@@ -4070,7 +4070,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "app_history_styles",
-      "community": 44,
+      "community": 14,
       "norm_label": "styles"
     },
     {
@@ -4110,7 +4110,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_newarticle",
-      "community": 53,
+      "community": 44,
       "norm_label": "newarticle.tsx"
     },
     {
@@ -4120,7 +4120,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "app_newarticle_articlestype",
-      "community": 53,
+      "community": 44,
       "norm_label": "articlestype"
     },
     {
@@ -4130,7 +4130,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "app_newarticle_newarticle",
-      "community": 53,
+      "community": 44,
       "norm_label": "newarticle()"
     },
     {
@@ -4150,7 +4150,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "app_noteeditor_noteeditor",
-      "community": 5,
+      "community": 44,
       "norm_label": "noteeditor()"
     },
     {
@@ -4170,47 +4170,37 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_profils",
-      "community": 53,
+      "community": 44,
       "norm_label": "profils.tsx"
     },
     {
       "label": "Country",
       "file_type": "code",
       "source_file": "src/app/profils.tsx",
-      "source_location": "L13",
+      "source_location": "L12",
       "_origin": "ast",
       "id": "app_profils_country",
-      "community": 53,
+      "community": 44,
       "norm_label": "country"
-    },
-    {
-      "label": "CHURCH_STATUSES",
-      "file_type": "code",
-      "source_file": "src/app/profils.tsx",
-      "source_location": "L21",
-      "_origin": "ast",
-      "id": "app_profils_church_statuses",
-      "community": 53,
-      "norm_label": "church_statuses"
     },
     {
       "label": "Profils()",
       "file_type": "code",
       "source_file": "src/app/profils.tsx",
-      "source_location": "L23",
+      "source_location": "L20",
       "_origin": "ast",
       "id": "app_profils_profils",
-      "community": 53,
+      "community": 44,
       "norm_label": "profils()"
     },
     {
       "label": "styles",
       "file_type": "code",
       "source_file": "src/app/profils.tsx",
-      "source_location": "L307",
+      "source_location": "L143",
       "_origin": "ast",
       "id": "app_profils_styles",
-      "community": 53,
+      "community": 44,
       "norm_label": "styles"
     },
     {
@@ -4230,7 +4220,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "app_reader_readerpage",
-      "community": 5,
+      "community": 44,
       "norm_label": "readerpage()"
     },
     {
@@ -4300,7 +4290,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "app_searchnotes",
-      "community": 56,
+      "community": 44,
       "norm_label": "searchnotes.tsx"
     },
     {
@@ -4310,7 +4300,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "app_searchnotes_searchnotes",
-      "community": 56,
+      "community": 44,
       "norm_label": "searchnotes()"
     },
     {
@@ -5160,7 +5150,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "notes_allnoteingroup",
-      "community": 5,
+      "community": 44,
       "norm_label": "allnoteingroup.tsx"
     },
     {
@@ -5170,7 +5160,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "notes_allnoteingroup_allnotesfiltersgroup",
-      "community": 5,
+      "community": 44,
       "norm_label": "allnotesfiltersgroup()"
     },
     {
@@ -5200,7 +5190,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "notes_allnotesarchived",
-      "community": 12,
+      "community": 44,
       "norm_label": "allnotesarchived.tsx"
     },
     {
@@ -5210,7 +5200,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "notes_allnotesarchived_allnotesarchived",
-      "community": 12,
+      "community": 44,
       "norm_label": "allnotesarchived()"
     },
     {
@@ -5250,7 +5240,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "notes_column",
-      "community": 56,
+      "community": 44,
       "norm_label": "column.tsx"
     },
     {
@@ -5260,7 +5250,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "notes_column_column",
-      "community": 56,
+      "community": 44,
       "norm_label": "column()"
     },
     {
@@ -5270,7 +5260,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "notes_column_styles",
-      "community": 56,
+      "community": 44,
       "norm_label": "styles"
     },
     {
@@ -5280,7 +5270,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "notes_noteitems",
-      "community": 56,
+      "community": 44,
       "norm_label": "noteitems.tsx"
     },
     {
@@ -5290,7 +5280,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "notes_noteitems_contenttype",
-      "community": 56,
+      "community": 44,
       "norm_label": "contenttype"
     },
     {
@@ -5300,7 +5290,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "notes_noteitems_datatype",
-      "community": 56,
+      "community": 44,
       "norm_label": "datatype"
     },
     {
@@ -5310,7 +5300,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "notes_noteitems_noteitems",
-      "community": 56,
+      "community": 44,
       "norm_label": "noteitems()"
     },
     {
@@ -5320,7 +5310,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "notes_noteitems_styles",
-      "community": 56,
+      "community": 44,
       "norm_label": "styles"
     },
     {
@@ -5820,7 +5810,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "constants_queryuilder",
-      "community": 32,
+      "community": 23,
       "norm_label": "queryuilder.ts"
     },
     {
@@ -5830,7 +5820,7 @@
       "source_location": "L2",
       "_origin": "ast",
       "id": "constants_queryuilder_baseentity",
-      "community": 32,
+      "community": 23,
       "norm_label": "baseentity"
     },
     {
@@ -5840,7 +5830,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "constants_queryuilder_queryoptions",
-      "community": 32,
+      "community": 23,
       "norm_label": "queryoptions"
     },
     {
@@ -5850,7 +5840,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "constants_queryuilder_sortoptions",
-      "community": 32,
+      "community": 23,
       "norm_label": "sortoptions"
     },
     {
@@ -5860,7 +5850,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "constants_queryuilder_paginationresult",
-      "community": 32,
+      "community": 23,
       "norm_label": "paginationresult"
     },
     {
@@ -5870,7 +5860,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "constants_queryuilder_statsresult",
-      "community": 32,
+      "community": 23,
       "norm_label": "statsresult"
     },
     {
@@ -5880,7 +5870,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "constants_queryuilder_predicatefunction",
-      "community": 32,
+      "community": 23,
       "norm_label": "predicatefunction"
     },
     {
@@ -5890,7 +5880,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "constants_queryuilder_updatedata",
-      "community": 32,
+      "community": 23,
       "norm_label": "updatedata"
     },
     {
@@ -6650,7 +6640,7 @@
       "source_location": "L227",
       "_origin": "ast",
       "id": "constants_icons_fluentimageadd32regular",
-      "community": 53,
+      "community": 44,
       "norm_label": "fluentimageadd32regular()"
     },
     {
@@ -6680,7 +6670,7 @@
       "source_location": "L249",
       "_origin": "ast",
       "id": "constants_icons_fluentarrowdownload32filled",
-      "community": 48,
+      "community": 7,
       "norm_label": "fluentarrowdownload32filled()"
     },
     {
@@ -6700,7 +6690,7 @@
       "source_location": "L262",
       "_origin": "ast",
       "id": "constants_icons_fluentcheckmark28filled",
-      "community": 48,
+      "community": 7,
       "norm_label": "fluentcheckmark28filled()"
     },
     {
@@ -6800,7 +6790,7 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "constants_icons_icbaselinearrowback",
-      "community": 56,
+      "community": 17,
       "norm_label": "icbaselinearrowback()"
     },
     {
@@ -6940,7 +6930,7 @@
       "source_location": "L410",
       "_origin": "ast",
       "id": "constants_icons_fluentcloudarrowdown48regular",
-      "community": 32,
+      "community": 23,
       "norm_label": "fluentcloudarrowdown48regular()"
     },
     {
@@ -7000,7 +6990,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "constants_server_url",
-      "community": 10,
+      "community": 23,
       "norm_label": "server_url.ts"
     },
     {
@@ -7160,7 +7150,7 @@
       "source_location": "L669",
       "_origin": "ast",
       "id": "context_database_context_usedatabase",
-      "community": 5,
+      "community": 44,
       "norm_label": "usedatabase()"
     },
     {
@@ -7970,7 +7960,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "lib_useadduserinfos",
-      "community": 5,
+      "community": 44,
       "norm_label": "useadduserinfos.ts"
     },
     {
@@ -7980,7 +7970,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "lib_useadduserinfos_usetakeuserinfos",
-      "community": 5,
+      "community": 44,
       "norm_label": "usetakeuserinfos()"
     },
     {
@@ -8150,7 +8140,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_useauthdb_ts_lib_useauthdb",
-      "community": 10,
+      "community": 23,
       "norm_label": "useauthdb.ts"
     },
     {
@@ -8160,7 +8150,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "lib_useauthdb_signincredentials",
-      "community": 10,
+      "community": 23,
       "norm_label": "signincredentials"
     },
     {
@@ -8170,7 +8160,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "lib_useauthdb_signinresult",
-      "community": 10,
+      "community": 23,
       "norm_label": "signinresult"
     },
     {
@@ -8180,7 +8170,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "lib_useauthdb_useauthdbresult",
-      "community": 10,
+      "community": 23,
       "norm_label": "useauthdbresult"
     },
     {
@@ -9719,7 +9709,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 48,
       "norm_label": "useauthdb hook documentation",
       "id": "lib_useauthdb_doc"
     },
@@ -9745,7 +9735,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 48,
       "norm_label": "useauthdb react hook",
       "id": "useauthdb_hook"
     },
@@ -9758,7 +9748,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 48,
       "norm_label": "expo sqlite",
       "id": "expo_sqlite"
     },
@@ -12462,9 +12452,9 @@
       "source_file": "src/app/(onboarding)/sync.tsx",
       "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_sync",
-      "target": "database_groups"
+      "target": "database_groups",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -12882,9 +12872,9 @@
       "source_file": "src/app/(onboarding)/sync.tsx",
       "source_location": "L8",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_sync",
-      "target": "database_notes"
+      "target": "database_notes",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -14353,9 +14343,9 @@
       "source_file": "src/app/(auth)/_layout.tsx",
       "source_location": "L3",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "auth_layout",
-      "target": "auth_layout_authlayout"
+      "target": "auth_layout_authlayout",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -14363,9 +14353,9 @@
       "source_file": "src/app/(auth)/login.tsx",
       "source_location": "L12",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "auth_login",
-      "target": "auth_login_modalscreen"
+      "target": "auth_login_modalscreen",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -14373,9 +14363,9 @@
       "source_file": "src/app/(auth)/login.tsx",
       "source_location": "L46",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "auth_login",
-      "target": "auth_login_styles"
+      "target": "auth_login_styles",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14384,9 +14374,9 @@
       "source_file": "src/app/(auth)/login.tsx",
       "source_location": "L3",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "auth_login",
-      "target": "components_themed"
+      "target": "components_themed",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14395,9 +14385,9 @@
       "source_file": "src/app/(auth)/login.tsx",
       "source_location": "L4",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "auth_login",
-      "target": "constants_colors"
+      "target": "constants_colors",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14406,9 +14396,9 @@
       "source_file": "src/app/(auth)/login.tsx",
       "source_location": "L5",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "auth_login",
-      "target": "constants_convert"
+      "target": "constants_convert",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -14417,9 +14407,9 @@
       "source_file": "src/app/(auth)/login.tsx",
       "source_location": "L5",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "auth_login",
-      "target": "constants_convert_convert"
+      "target": "constants_convert_convert",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14428,9 +14418,9 @@
       "source_file": "src/app/(auth)/login.tsx",
       "source_location": "L10",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "auth_login",
-      "target": "lib_uselogin"
+      "target": "lib_uselogin",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -14460,9 +14450,9 @@
       "source_file": "src/app/(onboarding)/_layout.tsx",
       "source_location": "L3",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_layout",
-      "target": "onboarding_layout_onboardinglayout"
+      "target": "onboarding_layout_onboardinglayout",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14471,9 +14461,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L3",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "components_page"
+      "target": "components_page",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -14482,9 +14472,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L3",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "components_page_pagelayout_3"
+      "target": "components_page_pagelayout_3",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14493,9 +14483,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L4",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "components_themed"
+      "target": "components_themed",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14504,9 +14494,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L5",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "constants_colors"
+      "target": "constants_colors",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14515,9 +14505,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L6",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "constants_convert"
+      "target": "constants_convert",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -14526,9 +14516,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L6",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "constants_convert_convert"
+      "target": "constants_convert_convert",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14537,9 +14527,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "constants_icons"
+      "target": "constants_icons",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -14548,9 +14538,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "constants_icons_fluentchevrondown24filled"
+      "target": "constants_icons_fluentchevrondown24filled",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -14559,9 +14549,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "constants_icons_fluentimageadd32regular"
+      "target": "constants_icons_fluentimageadd32regular",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14570,9 +14560,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L8",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "lib_useadduserinfos"
+      "target": "lib_useadduserinfos",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -14580,9 +14570,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L175",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "onboarding_profile_churchrulepicker"
+      "target": "onboarding_profile_churchrulepicker",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -14590,9 +14580,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L126",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "onboarding_profile_countrypicker"
+      "target": "onboarding_profile_countrypicker",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -14600,9 +14590,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L14",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "onboarding_profile_modalscreen"
+      "target": "onboarding_profile_modalscreen",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -14610,9 +14600,9 @@
       "source_file": "src/app/(onboarding)/profile.tsx",
       "source_location": "L217",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_profile",
-      "target": "onboarding_profile_styles"
+      "target": "onboarding_profile_styles",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -14665,9 +14655,9 @@
       "source_file": "src/app/(onboarding)/sync.tsx",
       "source_location": "L1",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_sync",
-      "target": "components_themed"
+      "target": "components_themed",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14676,9 +14666,9 @@
       "source_file": "src/app/(onboarding)/sync.tsx",
       "source_location": "L2",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_sync",
-      "target": "constants_icons"
+      "target": "constants_icons",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -14687,9 +14677,9 @@
       "source_file": "src/app/(onboarding)/sync.tsx",
       "source_location": "L2",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_sync",
-      "target": "constants_icons_fluentcloudarrowdown48regular"
+      "target": "constants_icons_fluentcloudarrowdown48regular",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14698,9 +14688,9 @@
       "source_file": "src/app/(onboarding)/sync.tsx",
       "source_location": "L3",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_sync",
-      "target": "constants_queryuilder"
+      "target": "constants_queryuilder",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -14709,9 +14699,9 @@
       "source_file": "src/app/(onboarding)/sync.tsx",
       "source_location": "L3",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_sync",
-      "target": "constants_queryuilder_queryfortable"
+      "target": "constants_queryuilder_queryfortable",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14720,9 +14710,9 @@
       "source_file": "src/app/(onboarding)/sync.tsx",
       "source_location": "L4",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_sync",
-      "target": "constants_server_url"
+      "target": "constants_server_url",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -14731,9 +14721,9 @@
       "source_file": "src/app/(onboarding)/sync.tsx",
       "source_location": "L5",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_sync",
-      "target": "context_database_context"
+      "target": "context_database_context",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -14742,9 +14732,9 @@
       "source_file": "src/app/(onboarding)/sync.tsx",
       "source_location": "L5",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_sync",
-      "target": "context_database_context_usedatabase"
+      "target": "context_database_context_usedatabase",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -14752,9 +14742,9 @@
       "source_file": "src/app/(onboarding)/sync.tsx",
       "source_location": "L13",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "onboarding_sync",
-      "target": "onboarding_sync_syncnotegroup"
+      "target": "onboarding_sync_syncnotegroup",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16158,9 +16148,9 @@
       "source_file": "src/app/_layout.tsx",
       "source_location": "L78",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "app_layout",
-      "target": "app_layout_authgate"
+      "target": "app_layout_authgate",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -17530,16 +17520,6 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/app/profils.tsx",
-      "source_location": "L21",
-      "weight": 1.0,
-      "source": "app_profils",
-      "target": "app_profils_church_statuses",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/app/profils.tsx",
       "source_location": "L12",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -17639,28 +17619,6 @@
       "source_file": "src/app/profils.tsx",
       "source_location": "L7",
       "weight": 1.0,
-      "source": "app_profils",
-      "target": "context_auth_context",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/app/profils.tsx",
-      "source_location": "L7",
-      "weight": 1.0,
-      "source": "app_profils",
-      "target": "context_auth_context_useauth",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/app/profils.tsx",
-      "source_location": "L7",
-      "weight": 1.0,
       "confidence_score": 1.0,
       "source": "app_profils",
       "target": "context_database_context"
@@ -17686,17 +17644,6 @@
       "weight": 1.0,
       "source": "app_profils_profils",
       "target": "constants_convert_convert"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/app/profils.tsx",
-      "source_location": "L25",
-      "weight": 1.0,
-      "source": "app_profils_profils",
-      "target": "context_auth_context_useauth"
     },
     {
       "relation": "calls",

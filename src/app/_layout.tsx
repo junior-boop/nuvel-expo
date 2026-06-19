@@ -1,16 +1,16 @@
 
-import { Stack } from 'expo-router';
+import { router, Stack, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { View } from '@/components/Themed';
 import { convert } from '@/constants/convert';
+import { AuthProvider, useAuth } from '@/context/auth.context';
 import { DatabaseProvider } from '@/context/database.context';
 import * as localStorage from '@/Database/localstorage';
 import { cleanupAutoRefresh } from '@/lib/token_system';
-import { useAuthDB } from '@/lib/useAuthDB';
-import { useCallback, useEffect } from 'react';
+import { ReactNode, useCallback, useEffect } from 'react';
 import { ActivityIndicator, Image } from 'react-native';
 import { HeaderStyles } from './styles/cards';
 
@@ -31,7 +31,16 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   localStorage.createTable()
-  const { loading } = useAuthDB();
+  return (
+    <AuthProvider>
+      <RootLayoutGate />
+    </AuthProvider>
+  );
+}
+
+function RootLayoutGate() {
+  const { loading } = useAuth();
+
   const prepare = useCallback(async () => {
     try {
       await SplashScreen.hideAsync();
@@ -46,7 +55,6 @@ export default function RootLayout() {
       cleanupAutoRefresh();
     };
   }, []);
-
 
   if (loading) {
     return (
@@ -67,15 +75,45 @@ export default function RootLayout() {
   );
 }
 
+function AuthGate({ children }: { children: ReactNode }) {
+  const { user, isAuthenticated, loading } = useAuth();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const root = segments[0] as string | undefined;
+    const inAuthGroup = root === '(auth)';
+    const inOnboardingGroup = root === '(onboarding)';
+    const profileIncomplete = !!user && (!user.photo || !user.biography);
+
+    if (!isAuthenticated) {
+      if (!inAuthGroup) router.replace('/login' as never);
+      return;
+    }
+    if (profileIncomplete) {
+      if (!inOnboardingGroup) router.replace('/profile' as never);
+      return;
+    }
+    if (inAuthGroup || (inOnboardingGroup && (segments[1] as string) !== 'sync')) {
+      router.replace('/(tabs)');
+    }
+  }, [user, isAuthenticated, loading, segments]);
+
+  return <>{children}</>;
+}
+
 function RootLayoutNav() {
   const frame = useSafeAreaInsets()
 
   return (
     // <ThemeProvider value={DefaultTheme}>
     <DatabaseProvider>
+      <AuthGate>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="loginzone" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         <Stack.Screen name='noteeditor' options={{ headerShown: true }} />
         <Stack.Screen name='groupeitems' options={{ headerShown: true, headerShadowVisible: false, animation: 'fade_from_bottom', headerTitle: '' }} />
@@ -86,6 +124,7 @@ function RootLayoutNav() {
         <Stack.Screen name="history" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
         <Stack.Screen name="reader" options={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: "#fff" } }} />
       </Stack>
+      </AuthGate>
       <View style={{ height: frame.bottom }} />
     </DatabaseProvider>
     // </ThemeProvider>

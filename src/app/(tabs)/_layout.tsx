@@ -1,24 +1,13 @@
-import { useColorScheme } from '@/components/useColorScheme';
-import { Redirect, Tabs } from 'expo-router';
-import React from 'react';
+import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 import { FluentAlert32Filled, FluentAlert32Regular, FluentBookmark32Filled, FluentBookmark32Regular, FluentDocumentFolder32Filled, FluentDocumentFolder32Regular, FluentHome32Filled, FluentHome32Regular, FluentSettings32Filled, FluentSettings32Regular } from '@/constants/icons';
-import { useAuthDB } from '@/lib/useAuthDB';
 
 
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   const frame = useSafeAreaInsets()
-  const { isAuthenticated, loading } = useAuthDB();
-
-  if (__DEV__) console.log(isAuthenticated, loading)
-  // Rediriger vers login si non authentifié
-  if (!loading && !isAuthenticated) {
-    return <Redirect href="/loginzone" />
-  }
 
   return (
     <Tabs

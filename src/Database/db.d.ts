@@ -190,3 +190,22 @@ export interface localStorage {
   id: string;
   value: string;
 }
+
+export type SyncableTable =
+  | "notes"
+  | "groupes"
+  | "articles"
+  | "publish"
+  | "comments"
+  | "appreciations";
+
+export interface SyncStateRow {
+  table_name: SyncableTable | string;
+  element_id: string;
+  version: number;          // version connue cote serveur (0 si jamais sync)
+  clientVersion: number;    // version locale (incrementee a chaque mutation locale)
+  updatedAt: string;        // ISO timestamp de la derniere mutation locale
+  updatedBy: string;        // userid auteur de la mutation
+  deleted: 0 | 1;           // tombstone
+  dirty: 0 | 1;             // 1 = mutation locale non pushee
+}

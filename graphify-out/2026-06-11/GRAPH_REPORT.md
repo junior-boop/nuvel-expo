@@ -1,12 +1,12 @@
 # Graph Report - nuvel-twyo-ptbpmwgsox1tafyp  (2026-06-11)
 
 ## Corpus Check
-- 144 files · ~84,975 words
+- 144 files · ~84,444 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 990 nodes · 1536 edges · 78 communities (60 shown, 18 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.81)
+- 989 nodes · 1532 edges · 75 communities (57 shown, 18 thin omitted)
+- Extraction: 98% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 15 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
@@ -66,7 +66,6 @@
 - [[_COMMUNITY_Misc Module 50|Misc Module 50]]
 - [[_COMMUNITY_Misc Module 51|Misc Module 51]]
 - [[_COMMUNITY_Misc Module 52|Misc Module 52]]
-- [[_COMMUNITY_Community 53|Community 53]]
 - [[_COMMUNITY_Misc Module 54|Misc Module 54]]
 - [[_COMMUNITY_Misc Module 55|Misc Module 55]]
 - [[_COMMUNITY_Misc Module 56|Misc Module 56]]
@@ -82,8 +81,6 @@
 - [[_COMMUNITY_Community 71|Community 71]]
 - [[_COMMUNITY_Community 72|Community 72]]
 - [[_COMMUNITY_Community 73|Community 73]]
-- [[_COMMUNITY_Community 74|Community 74]]
-- [[_COMMUNITY_Community 75|Community 75]]
 - [[_COMMUNITY_Community 76|Community 76]]
 - [[_COMMUNITY_Community 77|Community 77]]
 
@@ -108,13 +105,13 @@
   src/app/(tabs)/myspace/group.tsx → src/context/database.context.tsx
 - `HistoryItems()` --calls--> `convert()`  [EXTRACTED]
   src/app/(tabs)/settings.tsx → src/constants/convert.ts
-- `Response_Ai()` --calls--> `convert()`  [EXTRACTED]
-  src/app/noteeditor.tsx → src/constants/convert.ts
+- `HistoryPage()` --calls--> `convert()`  [EXTRACTED]
+  src/app/history.tsx → src/constants/convert.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (78 total, 18 thin omitted)
+## Communities (75 total, 18 thin omitted)
 
 ### Community 0 - "NPM Dependencies"
 Cohesion: 0.03
@@ -133,16 +130,16 @@ Cohesion: 0.06
 Nodes (5): BxsBible(), FluentArchive16Regular(), FluentChevronDown24Filled(), FluentChevronRight32Regular(), FluentSearch32Filled()
 
 ### Community 5 - "Article & Profile Screens"
-Cohesion: 0.16
-Nodes (15): NoteEditor(), ReaderPage(), DatabaseContext, DatabaseContextType, DatabaseError, useDatabase(), HistoryType, useTakeUserInfos() (+7 more)
+Cohesion: 0.24
+Nodes (8): DatabaseContext, DatabaseContextType, DatabaseError, HistoryType, History(), HistoryItems(), styles, TabTwoScreen()
 
 ### Community 6 - "Expo App Config"
 Cohesion: 0.06
 Nodes (30): backgroundColor, backgroundImage, foregroundImage, monochromeImage, adaptiveIcon, package, predictiveBackGestureEnabled, projectId (+22 more)
 
 ### Community 7 - "Bible Download Page"
-Cohesion: 0.15
-Nodes (6): BibleDownloader, versets, Expo SQLite, useAuthDB Hook Documentation, expo-sqlite, useAuthDB React Hook
+Cohesion: 0.09
+Nodes (8): delay(), fetchSequentielAvecDelai(), styles, FluentArrowDownload32Filled(), FluentCheckmark28Filled(), Bible, BibleDownloader, versets
 
 ### Community 8 - "SimpleORM Schema Types"
 Cohesion: 0.07
@@ -153,20 +150,20 @@ Cohesion: 0.09
 Nodes (21): AiHistoryType, Appreciations, ArchivedNote, Articles, BibleData, BibleMetadata, BibleVerse, Comments (+13 more)
 
 ### Community 10 - "Root Layout & Login"
-Cohesion: 0.16
-Nodes (15): AuthGate(), RootLayout(), RootLayoutGate(), unstable_settings, AuthContext, AuthContextValue, AuthProvider(), useAuth() (+7 more)
+Cohesion: 0.18
+Nodes (14): AuthGate(), RootLayout(), RootLayoutGate(), unstable_settings, ModalScreen(), styles, AuthContext, AuthContextValue (+6 more)
 
 ### Community 12 - "Themed UI Components"
-Cohesion: 0.11
-Nodes (9): styles, ThemeProps, ViewProps, FluentFolderOpenDown28Regular(), styles, styles, TabTwoScreen(), AllNotesArchived() (+1 more)
+Cohesion: 0.10
+Nodes (11): ThemeProps, ViewProps, FluentFolderOpenDown28Regular(), styles, styles, TabTwoScreen(), HeaderStyles, styles (+3 more)
 
 ### Community 13 - "Sheet UI Components"
 Cohesion: 0.16
 Nodes (9): cn(), SheetContent(), SheetDescription(), SheetFooter(), SheetHeader(), SheetOverlay(), SheetTitle(), Textarea() (+1 more)
 
 ### Community 14 - "Groups & History Pages"
-Cohesion: 0.16
-Nodes (11): GroupeItemps(), PageLayout(), PageLayout_3(), styles, styles_2, FluentNoteAdd28Regular(), unstable_settings, CardStyles (+3 more)
+Cohesion: 0.15
+Nodes (11): GroupeItemps(), HistoryPage(), styles, PageLayout(), PageLayout_3(), styles, styles_2, FluentNoteAdd28Regular() (+3 more)
 
 ### Community 15 - "Database Context Provider"
 Cohesion: 0.06
@@ -177,28 +174,28 @@ Cohesion: 0.25
 Nodes (7): checkArticleStats(), createdArticleStats(), deleteArticleStats(), setViewCount(), Article, UseArticleResult, User
 
 ### Community 17 - "Note Editor & AI"
-Cohesion: 0.13
-Nodes (12): Response_Ai(), FluentArrowUp32Filled(), FluentDelete32Regular(), FluentDismiss32Filled(), FluentFolderLink32Regular(), FluentGlobeArrowForward32Regular(), FluentMoreVertical32Filled(), FluentShare32Regular() (+4 more)
+Cohesion: 0.12
+Nodes (13): Response_Ai(), FluentArrowUp32Filled(), FluentDelete32Regular(), FluentDismiss32Filled(), FluentFolderLink32Regular(), FluentGlobeArrowForward32Regular(), FluentMoreVertical32Filled(), FluentShare32Regular() (+5 more)
 
 ### Community 18 - "Claude Instructions Docs"
 Cohesion: 0.04
 Nodes (44): Global Claude Instructions, Add and Watch Reference, Expo HAS CHANGED, graphify, Expo v56 Versioned Docs, Exports Reference, Extraction Spec, GitHub and Merge Reference (+36 more)
 
+### Community 19 - "Bible Database Tables"
+Cohesion: 0.15
+Nodes (3): AIhistory, BibleMetadata, generateUUID()
+
 ### Community 20 - "Misc Module 20"
 Cohesion: 0.13
 Nodes (14): devDependencies, @types/react, typescript, main, name, private, scripts, android (+6 more)
-
-### Community 21 - "Misc Module 21"
-Cohesion: 0.22
-Nodes (3): db, orm, Session
 
 ### Community 22 - "Misc Module 22"
 Cohesion: 0.20
 Nodes (5): AppreciationType, ArticleStatsType, schema, storage, ReactNativeStorage
 
 ### Community 23 - "Misc Module 23"
-Cohesion: 0.23
-Nodes (9): addtogroup(), deleted(), deletedall(), getall(), Notes, publish(), setarchived(), setpinned() (+1 more)
+Cohesion: 0.06
+Nodes (22): FluentCloudArrowDown48Regular(), BaseEntity, PaginationResult, PredicateFunction, QueryOptions, SortOptions, StatsResult, UpdateData (+14 more)
 
 ### Community 24 - "Misc Module 24"
 Cohesion: 0.21
@@ -229,12 +226,8 @@ Cohesion: 0.22
 Nodes (5): addsignal(), addupvote(), createdComment(), getComments(), Comment
 
 ### Community 31 - "Misc Module 31"
-Cohesion: 0.14
-Nodes (6): AIhistory, deleted(), deletedall(), getAll(), sync_event, generateUUID()
-
-### Community 32 - "Misc Module 32"
-Cohesion: 0.18
-Nodes (9): FluentCloudArrowDown48Regular(), BaseEntity, PaginationResult, PredicateFunction, QueryOptions, SortOptions, StatsResult, UpdateData (+1 more)
+Cohesion: 0.24
+Nodes (4): deleted(), deletedall(), getAll(), sync_event
 
 ### Community 33 - "Misc Module 33"
 Cohesion: 0.28
@@ -245,8 +238,8 @@ Cohesion: 0.28
 Nodes (4): deleted(), deletedall(), getall(), Groups
 
 ### Community 35 - "Misc Module 35"
-Cohesion: 0.33
-Nodes (8): deletedata(), deleteSyncData(), first_sync(), getOldRecords(), GroupsType, NotesType, senddata(), Sync_to_serveur()
+Cohesion: 0.29
+Nodes (9): orm, deletedata(), deleteSyncData(), first_sync(), getOldRecords(), GroupsType, NotesType, senddata() (+1 more)
 
 ### Community 36 - "Misc Module 36"
 Cohesion: 0.22
@@ -273,8 +266,8 @@ Cohesion: 0.29
 Nodes (4): glowKeyframe, keyframe, logoKeyframe, styles
 
 ### Community 44 - "Misc Module 44"
-Cohesion: 0.17
-Nodes (14): HistoryPage(), styles, ModalScreen(), styles, convert(), PublishElement(), PublishSqare(), TabTwoScreen() (+6 more)
+Cohesion: 0.10
+Nodes (30): BibleItems(), BiblePage(), ArticlesType, NewArticle(), NoteEditor(), Country, Profils(), styles (+22 more)
 
 ### Community 45 - "Misc Module 45"
 Cohesion: 0.33
@@ -289,8 +282,8 @@ Cohesion: 0.40
 Nodes (3): SignInData, UseAuthResult, User
 
 ### Community 48 - "Misc Module 48"
-Cohesion: 0.25
-Nodes (7): BibleItems(), BiblePage(), delay(), fetchSequentielAvecDelai(), styles, FluentArrowDownload32Filled(), FluentCheckmark28Filled()
+Cohesion: 0.50
+Nodes (4): Expo SQLite, useAuthDB Hook Documentation, expo-sqlite, useAuthDB React Hook
 
 ### Community 49 - "Misc Module 49"
 Cohesion: 0.50
@@ -299,14 +292,6 @@ Nodes (4): Nuvel App Branding, Personal Section Title, High-contrast Serif Typog
 ### Community 50 - "Misc Module 50"
 Cohesion: 0.50
 Nodes (4): Nuvel App Identity, Nuvel Brand, Nuvel Logo (Wordmark), Bold Black Serif Wordmark
-
-### Community 53 - "Community 53"
-Cohesion: 0.22
-Nodes (7): ArticlesType, NewArticle(), CHURCH_STATUSES, Country, Profils(), styles, FluentImageAdd32Regular()
-
-### Community 56 - "Misc Module 56"
-Cohesion: 0.14
-Nodes (8): SearchNotes(), IcBaselineArrowBack(), NoteLongPress_Btn_Props, styles, contentType, DataType, NoteItems(), styles
 
 ### Community 65 - "Community 65"
 Cohesion: 0.32
@@ -329,21 +314,21 @@ Cohesion: 0.50
 Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
 
 ## Knowledge Gaps
-- **377 isolated node(s):** `name`, `slug`, `version`, `orientation`, `icon` (+372 more)
+- **376 isolated node(s):** `name`, `slug`, `version`, `orientation`, `icon` (+371 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Expo SQLite` connect `Bible Download Page` to `SimpleORM Schema Types`?**
+- **Why does `Expo SQLite` connect `Misc Module 48` to `SimpleORM Schema Types`, `Bible Download Page`?**
   _High betweenness centrality (0.124) - this node is a cross-community bridge._
-- **Why does `dependencies` connect `NPM Dependencies` to `Misc Module 20`, `Bible Download Page`?**
+- **Why does `dependencies` connect `NPM Dependencies` to `Misc Module 48`, `Misc Module 20`?**
   _High betweenness centrality (0.115) - this node is a cross-community bridge._
-- **Why does `expo-sqlite` connect `Bible Download Page` to `NPM Dependencies`?**
+- **Why does `expo-sqlite` connect `Misc Module 48` to `NPM Dependencies`?**
   _High betweenness centrality (0.108) - this node is a cross-community bridge._
 - **What connects `name`, `slug`, `version` to the rest of the system?**
-  _378 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _377 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `NPM Dependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.02631578947368421 - nodes in this community are weakly interconnected._
 - **Should `SimpleORM Query Builder` be split into smaller, more focused modules?**

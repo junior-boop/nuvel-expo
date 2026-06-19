@@ -1,4 +1,4 @@
-import { Image, RefreshControl, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { Text, View } from '@/components/Themed';
 import { convert } from '@/constants/convert';
@@ -8,7 +8,11 @@ import { PageLayout_3 } from '@/components/page';
 import { w } from '@/constants/Colors';
 import { BxsBible, FluentChevronRight32Regular } from '@/constants/icons';
 import { useDatabase } from "@/context/database.context";
+import type { Notes as NotesType } from '@/Database/db';
+import * as SyncMetadata from '@/Database/sync_metadata';
+import { Sync_to_serveur } from '@/Database/sync_online';
 import { HistoryType } from '@/lib/instantdb.histories';
+import * as Clipboard from 'expo-clipboard';
 import { router } from "expo-router";
 import { StatusBar } from 'expo-status-bar';
 import moment from 'moment';
@@ -71,6 +75,9 @@ export default function TabTwoScreen() {
         <Text style={{ ...styles.title, marginBottom: convert(16), paddingHorizontal: convert(16) }}>History</Text>
         <History />
         <View style={{ height: 40, width: 200, paddingHorizontal: convert(16) }} />
+        <Text style={{ ...styles.title, marginBottom: convert(16), paddingHorizontal: convert(16) }}>Data</Text>
+        <DataSection />
+        <View style={{ height: 40, width: 200, paddingHorizontal: convert(16) }} />
         <Text style={{ ...styles.title, marginBottom: convert(16), paddingHorizontal: convert(16) }}>Bible Downloads</Text>
         {
           biblelist?.length === 0 && (<View style={{ paddingHorizontal: convert(16) }}>
@@ -129,6 +136,117 @@ const History = () => {
         <FluentChevronRight32Regular width={convert(20)} height={convert(20)} />
       </TouchableOpacity>
     </ScrollView>
+  )
+}
+
+const stripHtml = (html: string) =>
+  (html || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+
+const noteTitle = (n: NotesType) => {
+  const text = stripHtml(n.html || n.body || '')
+  return text ? text.slice(0, 60) : 'Untitled'
+}
+
+const DataSection = () => {
+  const { notesQuery, groupsQuery } = useDatabase()
+  const notes = notesQuery?.findAll() ?? []
+  const groups = groupsQuery?.findAll() ?? []
+  const [lastSync, setLastSync] = useState<string | null>(null)
+  const [syncing, setSyncing] = useState(false)
+
+  const loadLastSync = useCallback(async () => {
+    const v = await SyncMetadata.get('last_sync')
+    setLastSync(v)
+  }, [])
+
+  useEffect(() => { loadLastSync() }, [loadLastSync])
+
+  const buildJson = () => JSON.stringify({
+    exportedAt: new Date().toISOString(),
+    notes,
+    groups,
+  }, null, 2)
+
+  const buildMarkdown = () => {
+    const lines: string[] = [`# Notes export`, `_${new Date().toISOString()}_`, '']
+    for (const g of groups) {
+      lines.push(`## ${(g as any).name ?? 'Group'}`, '')
+      const ofGroup = notes.filter(n => n.grouped === (g as any).id)
+      for (const n of ofGroup) {
+        lines.push(`### ${noteTitle(n)}`, '', stripHtml(n.html || n.body || ''), '')
+      }
+    }
+    const ungrouped = notes.filter(n => !n.grouped)
+    if (ungrouped.length) {
+      lines.push(`## Ungrouped`, '')
+      for (const n of ungrouped) {
+        lines.push(`### ${noteTitle(n)}`, '', stripHtml(n.html || n.body || ''), '')
+      }
+    }
+    return lines.join('\n')
+  }
+
+  const exportTo = async (kind: 'json' | 'md') => {
+    try {
+      const payload = kind === 'json' ? buildJson() : buildMarkdown()
+      await Clipboard.setStringAsync(payload)
+      Alert.alert('Exported', `${notes.length} notes copied to clipboard as ${kind.toUpperCase()}.`)
+    } catch (e) {
+      console.error('[Settings] export error:', e)
+      Alert.alert('Error', 'Could not export notes.')
+    }
+  }
+
+  const forceSync = async () => {
+    try {
+      setSyncing(true)
+      await Sync_to_serveur()
+      const now = new Date().toISOString()
+      await SyncMetadata.set('last_sync', now)
+      setLastSync(now)
+      Alert.alert('Sync', 'Sync completed.')
+    } catch (e) {
+      console.error('[Settings] force sync error:', e)
+      Alert.alert('Error', 'Sync failed. Please try again.')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  const Row = ({ title, subtitle, onPress, disabled, loading }: { title: string, subtitle: string, onPress: () => void, disabled?: boolean, loading?: boolean }) => (
+    <TouchableOpacity disabled={disabled} onPress={onPress} style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee', flexDirection: 'row', alignItems: 'center', justifyContent: "space-between" }}>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>{title}</Text>
+        <Text style={{ fontSize: convert(16) }}>{subtitle}</Text>
+      </View>
+      <View style={{ width: convert(20), height: convert(20) }}>
+        {loading
+          ? <ActivityIndicator size={'small'} color={'#048effff'} />
+          : <FluentChevronRight32Regular width={convert(20)} height={convert(20)} />}
+      </View>
+    </TouchableOpacity>
+  )
+
+  return (
+    <View style={{ paddingHorizontal: convert(16) }}>
+      <View style={{ flexDirection: 'row', gap: convert(12), marginBottom: convert(16) }}>
+        <View style={{ flex: 1, justifyContent: 'space-between', backgroundColor: '#004f9913', padding: convert(12), aspectRatio: 1 }}>
+          <Text style={{ fontSize: convert(11), fontWeight: 'bold', color: '#777', textTransform: 'uppercase' }}>Notes</Text>
+          <Text style={{ fontSize: convert(36), fontWeight: 'bold' }}>{notes.length}</Text>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'space-between', backgroundColor: '#004f9913', padding: convert(12), aspectRatio: 1 }}>
+          <Text style={{ fontSize: convert(11), fontWeight: 'bold', color: '#777', textTransform: 'uppercase' }}>Groups</Text>
+          <Text style={{ fontSize: convert(36), fontWeight: 'bold' }}>{groups.length}</Text>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'space-between', backgroundColor: '#004f9913', padding: convert(12), aspectRatio: 1 }}>
+          <Text style={{ fontSize: convert(11), fontWeight: 'bold', color: '#777', textTransform: 'uppercase' }}>Last sync</Text>
+          <Text style={{ fontSize: convert(20), fontWeight: 'bold' }}>{lastSync ? moment(lastSync).fromNow() : '—'}</Text>
+        </View>
+      </View>
+      <Row title="Export notes (JSON)" subtitle="Copy a full backup to clipboard" onPress={() => exportTo('json')} />
+      <Row title="Export notes (Markdown)" subtitle="Copy a readable version to clipboard" onPress={() => exportTo('md')} />
+      <Row title="Force sync" subtitle="Push local changes to the server now" onPress={forceSync} disabled={syncing} loading={syncing} />
+    </View>
   )
 }
 

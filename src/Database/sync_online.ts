@@ -2,8 +2,10 @@ import * as Groups from '@/Database/groups';
 import * as Notes from '@/Database/notes';
 import * as Session from '@/Database/session';
 import * as Sync from '@/Database/sync_event';
-import { orm } from '.';
-import { SyncEvent } from './db';
+import * as SyncState from '@/Database/sync_state';
+import { isOnline } from '@/lib/network';
+import { safeFetch } from '@/lib/safeFetch';
+import { SyncableTable } from './db';
 
 
 type NotesType = {
@@ -33,194 +35,254 @@ type GroupsType = {
 };
 
 
-const serveur = "https://nuvelserver.godigital.workers.dev"
+const serveur = "https://nuvelserver.godigital.workers.dev";
 
-const senddata = async (table_name: string, id: string) => {
-  const data = table_name === "notes" ? await Notes.get(id)
-    : table_name === "groups" ? { ...(await Groups.get(id)), userid: (await Session.get())?.iduser } : null
-
-  if (__DEV__) console.log(table_name, id)
-
-  try {
-    const req = await fetch(serveur + "/" + table_name + "/" + id, {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json"
-      },
-      body: JSON.stringify(data)
-
-
-    })
-    if (table_name === 'groups') {
-      if (__DEV__) console.log("groups : ", await req.text())
-    }
-    await req.text()
-  } catch (error) {
-    if (__DEV__) console.log(error)
-  } finally {
-    if (__DEV__) console.log("updated done!")
-  }
-
-}
-
-const deletedata = async (table_name: string, id: string) => {
-  await fetch(serveur + "/" + table_name + "/" + id, {
-    method: "DELETE",
-    headers: {
-      "Content-type": "application/json"
-    }
-  })
-}
-
-const getOldRecords = (rows: SyncEvent[]) => {
-  // D'abord, trouver les derniers pour chaque clé
-  const latestByKey = rows.reduce((acc, cur) => {
-    const key = `${cur.entityId}_${cur.action}`;
-    if (!acc[key] || new Date(cur.timestamp) > new Date(acc[key].timestamp)) {
-      acc[key] = cur;
-    }
-    return acc;
-  }, {});
-
-  // Ensuite, filtrer pour garder seulement les anciens
-  const latestIds = Object.values(latestByKey).map(row => row.id);
-  const oldRecords = rows.filter(row => !latestIds.includes(row.id));
-
-  return oldRecords;
+export type SyncOutcome = {
+  ok: boolean;
+  skipped?: 'offline' | 'no_session' | 'server_down';
+  pushed?: number;
+  pulled?: number;
+  error?: string;
 };
 
-const deleteSyncData = async () => {
-  try {
-    const rows = await Sync.getAll();
+const deletedata = async (table_name: string, id: string): Promise<boolean> => {
+  const res = await safeFetch(serveur + "/" + table_name + "/" + id, {
+    method: "DELETE",
+    headers: { "Content-type": "application/json" },
+  }, { parse: 'none' });
+  if (!res.ok && __DEV__) console.log('[sync] delete failed', table_name, id, res.error || res.status);
+  return res.ok;
+};
 
-    // Vérifier qu'on a des données
-    if (!rows || rows.length === 0) {
-      if (__DEV__) console.log('Aucune donnée à traiter');
-      return 0;
-    }
-
-    // Garder seulement les dernières opérations par élément et action
-    const latestOps = getOldRecords(rows);
-
-
-    // IDs à garder
-    const idsToKeep = latestOps.map(r => r.id);
-
-    // Éviter la suppression si aucun ID à garder
-    if (idsToKeep.length === 0) {
-      if (__DEV__) console.log('Aucun élément à supprimer');
-      return 0;
-    }
-
-    // Utiliser des paramètres pour éviter l'injection SQL
-    const placeholders = idsToKeep.map(() => '?').join(',');
-    const sql = `DELETE FROM sync_event WHERE id IN (${placeholders})`;
-
-    const result = (await orm.run(sql, idsToKeep)).changes;
-    if (__DEV__) console.log('Données sync supprimées avec succès', result)
-    return result
-  } catch (error) {
-    console.error('Erreur lors de la suppression des données sync:', error);
-    throw error;
+/**
+ * Pull versionne : pour chaque table syncable, recupere les rows dont
+ * sync_state.version > maxKnownVersion local, applique au store local,
+ * met a jour sync_state local via applyServerVersion.
+ */
+const pullTable = async (
+  table: SyncableTable,
+  session: { iduser: string }
+): Promise<number> => {
+  const since = await SyncState.getMaxKnownVersion(table);
+  const url = serveur + "/sync-state/full?table=" + table + "&since=" + since + "&limit=200";
+  const res = await safeFetch<{ rows: any[]; maxVersion: number }>(url);
+  if (!res.ok || !res.data?.rows) {
+    if (__DEV__) console.log('[sync] pull', table, 'failed', res.error || res.status);
+    return 0;
   }
-}
+  let applied = 0;
+  for (const row of res.data.rows) {
+    const elementId = row.element_id as string;
+    const serverVersion = row.version as number;
+    const updatedAt = row.syncUpdatedAt as string;
+    const updatedBy = row.updatedBy as string;
+    const deleted = (row.deleted as 0 | 1) ?? 0;
 
-export const Sync_to_serveur = async () => {
-  const session = await Session.get()
-  const check = await fetch(serveur + "/health")
-  const sync = await fetch(serveur + "/notes/sync/" + session?.iduser + '?lastupdate=' + Date.now())
-  const result = await sync.json()
-  const allnotes = await Notes.getall()
-  const allgroupes = await Groups.getall()
-
-  deleteSyncData()
-  const sync_event = await Sync.getAll()
-
-  if (check.status === 200) {
-    if (result.data.length > 0) {
-      for (let note of sync_event) {
-        if (note.entityType === "notes") {
-          if (note.action === "created" || note.action === "updated") {
-            await senddata(note.entityType, note.entityId)
-            await Sync.markAsSynced(note.id)
-          }
-
-          if (note.action === "deleted") {
-            await deletedata(note.entityType, note.entityId)
-            await Sync.markAsSynced(note.id)
-          }
+    try {
+      if (deleted === 1) {
+        if (table === 'notes') await Notes.deleted(elementId);
+        else if (table === 'groupes') await Groups.deleted(elementId);
+      } else if (row.id) {
+        // upsert local : strategie simple — delete + create. Le sync_state lui
+        // arbitre le dirty bit, on n'ecrase pas une mutation locale plus recente.
+        if (table === 'notes') {
+          try { await Notes.deleted(elementId); } catch {}
+          await Notes.created({
+            id: row.id,
+            body: row.body,
+            html: row.html,
+            grouped: row.grouped,
+            creator: row.creator,
+            archived: row.archived,
+            pinned: row.pinned,
+            created: row.created,
+            modified: row.modified,
+            version: row.version,
+            publishId: row.publishId ?? null,
+          } as any);
+        } else if (table === 'groupes') {
+          try { await Groups.deleted(elementId); } catch {}
+          await Groups.created({
+            id: row.id,
+            name: row.name,
+            created: row.created,
+            modified: row.modified,
+            userid: session.iduser,
+          } as any);
         }
+      }
+      await SyncState.applyServerVersion(table, elementId, serverVersion, updatedAt, updatedBy, deleted);
+      applied++;
+    } catch (e) {
+      if (__DEV__) console.log('[sync] pull row failed', table, elementId, e);
+    }
+  }
+  if (__DEV__ && applied > 0) console.log('[sync] pulled', applied, table);
+  return applied;
+};
 
-        if (note.entityType === "groups") {
-          if (note.action === "created" || note.action === "updated") {
-            await senddata(note.entityType, note.entityId)
-            await Sync.markAsSynced(note.id)
-          }
+/**
+ * Push versionne : pour chaque ligne sync_state.dirty=1, POST vers le serveur
+ * avec _updatedAt + version. Si serveur gagne (LWW), adopte canonical localement.
+ */
+const pushDirty = async (session: { iduser: string }): Promise<number> => {
+  const dirtyRows = await SyncState.getDirty();
+  if (dirtyRows.length === 0) return 0;
+  let pushed = 0;
 
-          if (note.action === "deleted") {
-            await deletedata(note.entityType, note.entityId)
-            await Sync.markAsSynced(note.id)
-          }
+  for (const row of dirtyRows) {
+    const tableClient = row.table_name === 'groupes' ? 'groups' : row.table_name;
+    const elementId = row.element_id;
+    const url = serveur + '/' + tableClient + '/' + elementId;
 
+    try {
+      let payload: any = null;
+      if (row.deleted === 1) {
+        const ok = await deletedata(tableClient, elementId);
+        if (ok) {
+          await SyncState.markClean(row.table_name as SyncableTable, elementId, row.version);
+          pushed++;
         }
-
-
-      }
-    } else if (result.data.length === 0) {
-      for (let note of allnotes) {
-        senddata("notes", note.id)
+        continue;
       }
 
-      for (let groupe of allgroupes) {
-        senddata("groups", groupe.id)
+      if (tableClient === 'notes') {
+        const note = await Notes.get(elementId);
+        if (!note) continue;
+        payload = { ...note, _updatedAt: row.updatedAt };
+      } else if (tableClient === 'groups') {
+        const group = await Groups.get(elementId);
+        if (!group) continue;
+        payload = { ...group, userid: session.iduser, _updatedAt: row.updatedAt };
+      } else {
+        continue;
+      }
+
+      const res = await safeFetch<{ applied?: string; syncVersion?: number; currentVersion?: number; canonical?: any }>(
+        url,
+        {
+          method: 'POST',
+          headers: { 'Content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok || !res.data) {
+        if (__DEV__) console.log('[sync] push failed', tableClient, elementId, res.error || res.status);
+        continue;
+      }
+
+      if (res.data.applied === 'server' && res.data.canonical) {
+        // Serveur gagne : on adopte sa version
+        const c = res.data.canonical;
+        if (tableClient === 'notes') {
+          try { await Notes.deleted(elementId); } catch {}
+          await Notes.created({ ...c } as any);
+        } else if (tableClient === 'groups') {
+          try { await Groups.deleted(elementId); } catch {}
+          await Groups.created({ ...c, userid: session.iduser } as any);
+        }
+        await SyncState.markClean(row.table_name as SyncableTable, elementId, res.data.currentVersion ?? row.version);
+      } else {
+        await SyncState.markClean(row.table_name as SyncableTable, elementId, res.data.syncVersion ?? row.version);
+      }
+      pushed++;
+    } catch (e) {
+      if (__DEV__) console.log('[sync] push exception', tableClient, elementId, e);
+    }
+  }
+  return pushed;
+};
+
+/**
+ * Flow versionne : PULL d'abord (pour eviter d'ecraser une mise a jour serveur
+ * plus recente), PUSH ensuite (LWW serveur tranche au cas par cas).
+ */
+export const pullThenPush = async (): Promise<SyncOutcome> => {
+  if (!(await isOnline())) return { ok: false, skipped: 'offline' };
+  const session = await Session.get();
+  if (!session?.iduser) return { ok: false, skipped: 'no_session' };
+
+  const health = await safeFetch(serveur + '/health', {}, { parse: 'none', timeoutMs: 4000 });
+  if (!health.ok) return { ok: false, skipped: 'server_down' };
+
+  let pulled = 0;
+  pulled += await pullTable('notes', session as { iduser: string });
+  pulled += await pullTable('groupes', session as { iduser: string });
+
+  const pushed = await pushDirty(session as { iduser: string });
+
+  if (__DEV__) console.log('[sync] pullThenPush done — pulled:', pulled, 'pushed:', pushed);
+  return { ok: true, pulled, pushed };
+};
+
+/**
+ * Entree principale — alias historique vers pullThenPush.
+ * Toutes les mutations passent desormais par sync_state (dirty bit) ;
+ * sync_event reste en audit log seul.
+ */
+export const Sync_to_serveur = pullThenPush;
+
+export const first_sync = async (): Promise<SyncOutcome> => {
+  if (!(await isOnline())) {
+    if (__DEV__) console.log('[sync] first_sync skipped: offline');
+    return { ok: false, skipped: 'offline' };
+  }
+
+  const session = await Session.get();
+  if (!session?.iduser) return { ok: false, skipped: 'no_session' };
+
+  const check_sync = await Sync.getAll();
+  const check_notes = await Notes.getall();
+  const check_groups = await Groups.getall();
+
+  let pulled = 0;
+
+  const sync_note = await safeFetch<{ data: NotesType[] }>(
+    serveur + "/notes/" + session.iduser
+  );
+  if (sync_note.ok && sync_note.data?.data && check_sync.length === 0 && check_notes.length === 0) {
+    for (const note of sync_note.data.data) {
+      try {
+        await Notes.created({
+          id: note.id,
+          body: note.body,
+          html: note.html,
+          creator: note.creator,
+          pinned: note.pinned,
+          archived: note.archived,
+          grouped: note.grouped,
+          created: note.created,
+          modified: note.modified,
+          version: note.clientversion,
+          publishId: note.publishId,
+        } as any);
+        pulled++;
+      } catch (e) {
+        if (__DEV__) console.log('[sync] first_sync note insert failed', note.id, e);
       }
     }
-  } else {
-    if (__DEV__) console.log("deconneter")
   }
 
-}
-
-export const first_sync = async () => {
-  const check_sync = await Sync.getAll()
-  const check_notes = await Notes.getall()
-  const check_groups = await Groups.getall()
-  const session = await Session.get()
-
-  // note sync
-  const sync_note = await fetch(serveur + "/notes/" + session?.iduser)
-  const result_note = await sync_note.json() as { data: NotesType[] }
-
-  if (check_sync.length === 0 && check_notes.length === 0) {
-    for (let note of result_note.data) {
-      const n = await Notes.created({
-        id: note.id,
-        body: note.body,
-        html: note.html,
-        creator: note.creator,
-        pinned: note.pinned,
-        archived: note.archived,
-        grouped: note.grouped,
-        created: note.created,
-        modified: note.modified,
-        version: note.clientversion,
-        publishId: note.publishId
-      })
+  const sync_group = await safeFetch<{ data: GroupsType[] }>(
+    serveur + "/groups/" + session.iduser
+  );
+  if (sync_group.ok && sync_group.data?.data && check_sync.length === 0 && check_groups.length === 0) {
+    for (const group of sync_group.data.data) {
+      try {
+        await Groups.created({
+          id: group.id,
+          name: group.name,
+          created: group.created,
+          modified: group.modified,
+        } as any);
+        pulled++;
+      } catch (e) {
+        if (__DEV__) console.log('[sync] first_sync group insert failed', group.id, e);
+      }
     }
   }
 
-  // group sync
-  const sync_group = await fetch(serveur + "/groups/" + session?.iduser)
-  const result_group = await sync_group.json() as { data: GroupsType[] }
-
-  if (check_sync.length === 0 && check_groups.length === 0) {
-    for (let group of result_group.data) {
-      const g = await Groups.created({
-        id: group.id,
-        name: group.name,
-        created: group.created,
-        modified: group.modified,
-      })
-    }
-  }
-}
+  if (__DEV__) console.log('[sync] first_sync done — pulled:', pulled);
+  return { ok: true, pulled };
+};

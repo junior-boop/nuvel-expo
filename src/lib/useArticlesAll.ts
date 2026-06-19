@@ -1,3 +1,5 @@
+import * as LocalStorage from '@/Database/localstorage';
+import { safeFetch } from '@/lib/safeFetch';
 import { useCallback, useEffect, useState } from 'react';
 
 export type User = {
@@ -18,11 +20,11 @@ export type Article = {
   topic: string;
   imageurl: string;
   noteid: string;
-  appreciation: string; // JSON stringifié "[]"
+  appreciation: string;
   version: number;
   createdAt: string;
   updatedAt: string;
-  user?: User; // lien InstantDB
+  user?: User;
 };
 
 export type ArticleStat = {
@@ -35,86 +37,78 @@ export type ArticleStat = {
   updatedAt: string;
   shareCount: number;
   signals: string[];
-  article?: Article; // lien InstantDB
+  article?: Article;
 };
 
 interface UseArticlesAllResult {
   articles: ArticleStat[];
   loading: boolean;
   error: string | null;
+  offline: boolean;
   refresh: () => Promise<void>;
 }
 
-/**
- * Hook pour récupérer tous les articles depuis le serveur
- * 
- * @param apiBase - URL de base de l'API (optionnel)
- * @returns Object contenant articles, loading, error et refresh
- * 
- * @example
- * const { articles, loading, error, refresh } = useArticlesAll();
- * 
- * if (loading) return <ActivityIndicator />;
- * if (error) return <Text>{error}</Text>;
- * 
- * return (
- *   <FlatList
- *     data={articles}
- *     renderItem={({ item }) => <ArticleItem article={item} />}
- *     onRefresh={refresh}
- *   />
- * );
- */
+const CACHE_KEY = 'cache:articles:stats';
+
 export const useArticlesAll = (
   apiBase: string = 'https://nuvelserver.godigital.workers.dev'
 ): UseArticlesAllResult => {
   const [articles, setArticles] = useState<ArticleStat[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [offline, setOffline] = useState<boolean>(false);
 
-  /**
-   * Récupère tous les articles depuis le serveur
-   */
   const fetchArticles = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    setError(null);
 
-      const response = await fetch(`${apiBase}/articles/stats`);
+    const res = await safeFetch<{ stats: ArticleStat[] }>(`${apiBase}/articles/stats`);
 
-      if (!response.ok) {
-        throw new Error(`HTTP Error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      // S'assurer que data est un tableau
-      if (Array.isArray(data.stats)) {
-        setArticles(data.stats);
-        if (__DEV__) console.log(`[useArticlesAll] ✅ ${data.stats.length} articles loaded`);
-      } else {
-        throw new Error('Invalid response format: expected array');
-      }
-
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      setError(message);
-      console.error('[useArticlesAll] ❌ Error:', message);
-    } finally {
+    if (res.offline) {
+      setOffline(true);
       setLoading(false);
+      return;
     }
+
+    setOffline(false);
+
+    if (!res.ok || !Array.isArray(res.data?.stats)) {
+      setError(res.error || `HTTP ${res.status}`);
+      setLoading(false);
+      return;
+    }
+
+    const stats = res.data!.stats;
+    setArticles(stats);
+    setLoading(false);
+    try {
+      await LocalStorage.setItem(CACHE_KEY, JSON.stringify(stats));
+    } catch {}
+    if (__DEV__) console.log(`[useArticlesAll] ✅ ${stats.length} articles loaded`);
   }, [apiBase]);
 
-  /**
-   * Charge les articles au montage du composant
-   */
   useEffect(() => {
-    fetchArticles();
-  }, []);
+    let mounted = true;
+    (async () => {
+      try {
+        const cached = await LocalStorage.getItem(CACHE_KEY);
+        if (cached && mounted) {
+          const parsed = JSON.parse(cached) as ArticleStat[];
+          if (Array.isArray(parsed)) {
+            setArticles(parsed);
+            setLoading(false);
+          }
+        }
+      } catch {}
+      if (mounted) fetchArticles();
+    })();
+    return () => { mounted = false; };
+  }, [fetchArticles]);
 
   return {
     articles,
     loading,
     error,
+    offline,
     refresh: fetchArticles,
   };
 };
