@@ -13,10 +13,10 @@ import { setShareCount, setSignals } from "@/lib/instantdb.articles";
 import { CommentType } from "@/lib/instantdb.init";
 import { useArticle } from "@/lib/useArticles";
 import { ArticleStat } from "@/lib/useArticlesAll";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetTextInput, BottomSheetView } from "@gorhom/bottom-sheet";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Share, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { ActivityIndicator, Alert, Share, StyleSheet, TouchableOpacity } from "react-native";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 
 
@@ -64,7 +64,21 @@ export default function ReaderPage() {
                         ? (<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                             <ActivityIndicator size={'large'} color={"black"} />
                         </View>)
-                        : <ReaderHtml note={articleWhichSaved || A.article} />
+                        : <ReaderHtml
+                            note={articleWhichSaved || A.article}
+                            onAuthorPress={() => {
+                                const authorUser = (articleWhichSaved || A.article)?.user
+                                router.navigate({
+                                    pathname: '/author',
+                                    params: {
+                                        userId: authorUser?.id as string,
+                                        name: authorUser?.name ?? '',
+                                        first_name: authorUser?.first_name ?? '',
+                                        photo: authorUser?.photo ?? '',
+                                    }
+                                })
+                            }}
+                        />
 
                 }
             </>
@@ -136,12 +150,13 @@ const SheetComments = ({ onClose, articleId, creatorName, commentCount, userId }
 
     // Fonction pour envoyer un commentaire
     const handlePostComment = useCallback(async () => {
-
-        if (!commentValue?.trim()) return;
-        const success = await addComment(JSON.parse(creatorName), commentValue.trim());
+        const value = commentValue?.trim();
+        if (!value) return;
+        setCommentValue("");
+        const success = await addComment(JSON.parse(creatorName), value);
         if (__DEV__) console.log('je veux voir')
         if (success) {
-            setCommentValue("");
+            console.log('Commentaire ajouté avec succès !');
             fetchComments();
         }
     }, [commentValue, addComment, creatorName]);
@@ -159,56 +174,54 @@ const SheetComments = ({ onClose, articleId, creatorName, commentCount, userId }
         enableDynamicSizing={false}
         enablePanDownToClose={true}
         enableContentPanningGesture={true}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
         // footerComponent={renderFooter}
         onClose={onClose}
         containerStyle={{ backgroundColor: '#0003' }}
 
     >
-        <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={{ flex: 1 }}
-        >
-            <BottomSheetView style={{ flex: 1, height: '100%' }}>
-                <View style={{ height: convert(42), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
-                    <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>Comments ( {count} )</Text>
+        <BottomSheetView style={{ position: 'relative', flex: 1, height: '100%' }}>
+            <View style={{ height: convert(32), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
+                <Text style={{ fontSize: convert(16), fontWeight: 'bold', color: '#929292' }}>{count < 9 ? `0${count}` : count} - comments</Text>
+            </View>
+            <ScrollView style={{ flex: 1, position: 'relative', height: "100%" }}>
+                <View style={{ gap: convert(24), paddingVertical: convert(16) }}>
+                    {
+                        comments.map((comment, index) => (
+                            <CommentaireItem articleId={articleId} comment={comment} index={index} userId={userId} key={index} />
+                        ))
+                    }
                 </View>
-                <ScrollView style={{ flex: 1, backgroundColor: 'white' }}>
-                    <View style={{ gap: convert(24), paddingVertical: convert(16) }}>
-                        {
-                            comments.map((comment, index) => (
-                                <CommentaireItem articleId={articleId} comment={comment} index={index} userId={userId} key={index} />
-                            ))
-                        }
-                    </View>
-                </ScrollView>
-                <View style={{ bottom: 0, zIndex: 12, width: w, borderTopWidth: 1, borderColor: '#cfdfeeff', paddingHorizontal: convert(16), minHeight: convert(56), paddingTop: convert(8), paddingBottom: convert(12), height: 'auto', maxHeight: convert(150), flexDirection: 'row', gap: 12, alignItems: "flex-end" }}>
-                    <TextInput
-                        multiline={true}
-                        value={commentValue as string}
-                        onChangeText={setCommentValue}
-                        autoFocus={false}
-                        autoCapitalize="sentences"
-                        placeholder="Types your request"
-                        placeholderTextColor={"#a7a7a7ff"}
-                        style={{
-                            minHeight: 40,
-                            height: 'auto',
-                            color: 'black',
-                            flex: 1,
-                            fontSize: convert(16)
-                        }}
-                    />
-                    <View>
-                        <TouchableOpacity
-                            onPress={handlePostComment}
-                            disabled={!commentValue?.trim()}
-                            style={{ width: 40, aspectRatio: 1, borderRadius: 26, alignItems: 'center', justifyContent: "center", backgroundColor: "#238dffff" }}>
-                            <RiSendPlaneLine width={24} height={24} color={"white"} style={{ marginBottom: convert(-5), marginLeft: convert(-5) }} />
-                        </TouchableOpacity>
-                    </View>
+            </ScrollView>
+            <View style={{ position: 'absolute', bottom: 0, left: 16, zIndex: 12, width: w - 32, borderWidth: 1, borderColor: '#cfdfeeff', borderRadius: convert(12), paddingHorizontal: convert(16), minHeight: convert(46), paddingTop: convert(8), paddingBottom: convert(8), height: 'auto', maxHeight: convert(150), flexDirection: 'row', gap: 12, alignItems: "flex-end" }}>
+                <BottomSheetTextInput
+                    multiline={true}
+                    value={commentValue as string}
+                    onChangeText={setCommentValue}
+                    autoFocus={false}
+                    autoCapitalize="sentences"
+                    placeholder="Types your request"
+                    placeholderTextColor={"#a7a7a7ff"}
+                    style={{
+                        minHeight: 24,
+                        height: 'auto',
+                        color: 'black',
+                        flex: 1,
+                        lineHeight: convert(18),
+                        fontSize: convert(18)
+                    }}
+                />
+                <View>
+                    <TouchableOpacity
+                        onPress={handlePostComment}
+                        disabled={!commentValue?.trim()}
+                        style={{ width: 32, aspectRatio: 1, borderRadius: 26, alignItems: 'center', justifyContent: "center" }}>
+                        <RiSendPlaneLine width={24} height={24} color={"#238dffff"} />
+                    </TouchableOpacity>
                 </View>
-            </BottomSheetView>
-        </KeyboardAvoidingView>
+            </View>
+        </BottomSheetView>
     </BottomSheet>)
 }
 

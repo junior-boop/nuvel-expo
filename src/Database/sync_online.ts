@@ -50,8 +50,13 @@ const deletedata = async (table_name: string, id: string): Promise<boolean> => {
     method: "DELETE",
     headers: { "Content-type": "application/json" },
   }, { parse: 'none' });
-  if (!res.ok && __DEV__) console.log('[sync] delete failed', table_name, id, res.error || res.status);
-  return res.ok;
+  // 404 = la ressource n'existe pas/plus cote serveur : DELETE idempotent → on considere succes.
+  if (res.ok || res.status === 404) {
+    if (!res.ok && __DEV__) console.log('[sync] delete', table_name, id, '404 (already gone) — treated as success');
+    return true;
+  }
+  if (__DEV__) console.log('[sync] delete failed', table_name, id, res.error || res.status);
+  return false;
 };
 
 /**
@@ -142,6 +147,8 @@ const pushDirty = async (session: { iduser: string }): Promise<number> => {
         if (ok) {
           await SyncState.markClean(row.table_name as SyncableTable, elementId, row.version);
           pushed++;
+        } else {
+          await SyncState.incrementPushAttempts(row.table_name as SyncableTable, elementId);
         }
         continue;
       }
@@ -169,6 +176,7 @@ const pushDirty = async (session: { iduser: string }): Promise<number> => {
 
       if (!res.ok || !res.data) {
         if (__DEV__) console.log('[sync] push failed', tableClient, elementId, res.error || res.status);
+        await SyncState.incrementPushAttempts(row.table_name as SyncableTable, elementId);
         continue;
       }
 
@@ -189,6 +197,7 @@ const pushDirty = async (session: { iduser: string }): Promise<number> => {
       pushed++;
     } catch (e) {
       if (__DEV__) console.log('[sync] push exception', tableClient, elementId, e);
+      await SyncState.incrementPushAttempts(row.table_name as SyncableTable, elementId);
     }
   }
   return pushed;
@@ -244,6 +253,10 @@ export const first_sync = async (): Promise<SyncOutcome> => {
   if (sync_note.ok && sync_note.data?.data && check_sync.length === 0 && check_notes.length === 0) {
     for (const note of sync_note.data.data) {
       try {
+        // Garde-fou : si une note avec le meme id existe deja (retry, ancien run partiel),
+        // on saute pour eviter le UNIQUE constraint failure.
+        const existing = await Notes.get(note.id);
+        if (existing) continue;
         await Notes.created({
           id: note.id,
           body: note.body,
@@ -270,6 +283,8 @@ export const first_sync = async (): Promise<SyncOutcome> => {
   if (sync_group.ok && sync_group.data?.data && check_sync.length === 0 && check_groups.length === 0) {
     for (const group of sync_group.data.data) {
       try {
+        const existing = await Groups.get(group.id);
+        if (existing) continue;
         await Groups.created({
           id: group.id,
           name: group.name,

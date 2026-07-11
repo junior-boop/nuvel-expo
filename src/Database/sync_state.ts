@@ -40,7 +40,37 @@ export const createTable = async () => {
   await orm.run(
     `CREATE INDEX IF NOT EXISTS idx_sync_state_table ON sync_state(table_name)`
   );
+  // Migration: ajout de pushAttempts pour stopper le spam apres N echecs.
+  try {
+    await orm.run(`ALTER TABLE sync_state ADD COLUMN pushAttempts INTEGER NOT NULL DEFAULT 0`);
+  } catch {
+    // colonne deja presente
+  }
   if (__DEV__) console.log("[sync_state] table prete");
+};
+
+export const MAX_PUSH_ATTEMPTS = 5;
+
+export const incrementPushAttempts = async (
+  table: SyncableTable,
+  elementId: string
+) => {
+  await orm.run(
+    `UPDATE sync_state SET pushAttempts = COALESCE(pushAttempts, 0) + 1
+     WHERE table_name = ? AND element_id = ?`,
+    [table, elementId]
+  );
+};
+
+export const resetPushAttempts = async (
+  table: SyncableTable,
+  elementId: string
+) => {
+  await orm.run(
+    `UPDATE sync_state SET pushAttempts = 0
+     WHERE table_name = ? AND element_id = ?`,
+    [table, elementId]
+  );
 };
 
 export const get = async (
@@ -61,14 +91,15 @@ export const markDirty = async (
   updatedAt: string = new Date().toISOString()
 ) => {
   await orm.run(
-    `INSERT INTO sync_state (table_name, element_id, version, clientVersion, updatedAt, updatedBy, deleted, dirty)
-     VALUES (?, ?, 0, 1, ?, ?, 0, 1)
+    `INSERT INTO sync_state (table_name, element_id, version, clientVersion, updatedAt, updatedBy, deleted, dirty, pushAttempts)
+     VALUES (?, ?, 0, 1, ?, ?, 0, 1, 0)
      ON CONFLICT(table_name, element_id) DO UPDATE SET
        clientVersion = clientVersion + 1,
        updatedAt = excluded.updatedAt,
        updatedBy = excluded.updatedBy,
        deleted = 0,
-       dirty = 1`,
+       dirty = 1,
+       pushAttempts = 0`,
     [table, elementId, updatedAt, updatedBy]
   );
 };
@@ -80,14 +111,15 @@ export const markDirtyDeleted = async (
   updatedAt: string = new Date().toISOString()
 ) => {
   await orm.run(
-    `INSERT INTO sync_state (table_name, element_id, version, clientVersion, updatedAt, updatedBy, deleted, dirty)
-     VALUES (?, ?, 0, 1, ?, ?, 1, 1)
+    `INSERT INTO sync_state (table_name, element_id, version, clientVersion, updatedAt, updatedBy, deleted, dirty, pushAttempts)
+     VALUES (?, ?, 0, 1, ?, ?, 1, 1, 0)
      ON CONFLICT(table_name, element_id) DO UPDATE SET
        clientVersion = clientVersion + 1,
        updatedAt = excluded.updatedAt,
        updatedBy = excluded.updatedBy,
        deleted = 1,
-       dirty = 1`,
+       dirty = 1,
+       pushAttempts = 0`,
     [table, elementId, updatedAt, updatedBy]
   );
 };
@@ -98,7 +130,7 @@ export const markClean = async (
   serverVersion: number
 ) => {
   await orm.run(
-    `UPDATE sync_state SET dirty = 0, version = ?
+    `UPDATE sync_state SET dirty = 0, version = ?, pushAttempts = 0
      WHERE table_name = ? AND element_id = ?`,
     [serverVersion, table, elementId]
   );
@@ -143,12 +175,13 @@ export const getDirty = async (
 ): Promise<SyncStateRow[]> => {
   if (table) {
     return await orm.query<SyncStateRow>(
-      `SELECT * FROM sync_state WHERE dirty = 1 AND table_name = ? ORDER BY updatedAt ASC`,
-      [table]
+      `SELECT * FROM sync_state WHERE dirty = 1 AND table_name = ? AND COALESCE(pushAttempts, 0) < ? ORDER BY updatedAt ASC`,
+      [table, MAX_PUSH_ATTEMPTS]
     );
   }
   return await orm.query<SyncStateRow>(
-    `SELECT * FROM sync_state WHERE dirty = 1 ORDER BY updatedAt ASC`
+    `SELECT * FROM sync_state WHERE dirty = 1 AND COALESCE(pushAttempts, 0) < ? ORDER BY updatedAt ASC`,
+    [MAX_PUSH_ATTEMPTS]
   );
 };
 

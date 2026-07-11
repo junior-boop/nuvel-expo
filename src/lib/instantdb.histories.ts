@@ -27,9 +27,10 @@ export const createdHistoryItem = async (articleId: string, creator: string, con
         const historyId = id();
 
         const check = await getHistoryByArticleId(articleId, creator)
-        if (check) {
-            await updatedHistoryItem(check.data.histories[0].id)
-            return 'sucess'
+        const existing = check?.data?.histories?.[0]
+        if (existing) {
+            await updatedHistoryItem(existing.id)
+            return 'success'
         }
 
         const comment = await historiesDB.transact(historiesDB.tx.histories[historyId].create({
@@ -61,7 +62,7 @@ export const getHistoryForUser = async (userid: string) => {
                 },
             }
         }
-        const data = historiesDB.queryOnce(query)
+        const data = await historiesDB.queryOnce(query)
         return data
     } catch (error) {
         if (__DEV__) console.log("[deleteHistoryItem] Error", error)
@@ -83,7 +84,7 @@ export const getHistoryByArticleId = async (articleId: string, userId: string) =
                 },
             }
         }
-        const data = historiesDB.queryOnce(query)
+        const data = await historiesDB.queryOnce(query)
         return data
     } catch (error) {
         if (__DEV__) console.log("[getHistoryById] Error", error)

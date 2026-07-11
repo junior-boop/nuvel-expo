@@ -208,4 +208,5 @@ export interface SyncStateRow {
   updatedBy: string;        // userid auteur de la mutation
   deleted: 0 | 1;           // tombstone
   dirty: 0 | 1;             // 1 = mutation locale non pushee
+  pushAttempts?: number;    // nb d'echecs push consecutifs (skip apres MAX_PUSH_ATTEMPTS)
 }

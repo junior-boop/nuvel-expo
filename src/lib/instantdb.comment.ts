@@ -1,8 +1,9 @@
 import { id } from '@instantdb/react-native';
+import { notifyServerOfCommentReply } from './notifications';
 import { db } from './instantdb.init';
 
 
-export const createdComment = async (articleId: string, creator: string, content: string) => {
+export const createdComment = async (articleId: string, creator: string, content: string, articleTitle?: string) => {
     try {
         // Générer un seul ID pour éviter les duplications
         const commentId = id();
@@ -18,6 +19,8 @@ export const createdComment = async (articleId: string, creator: string, content
             created: new Date(),
             modified: new Date(),
         }))
+
+        notifyServerOfCommentReply({ articleId, commentId, articleTitle, content })
 
         return comment.clientId
     } catch (error) {

@@ -29,12 +29,26 @@ const schema = i.schema({
             id: i.string().unique().indexed(),
             articleId: i.string(),
             userId: i.string(),
-        })
+        }),
+        notifications: i.entity({
+            id: i.string().unique().indexed(),
+            recipientUserId: i.string().indexed(),
+            type: i.string().indexed(),
+            title: i.string(),
+            body: i.string(),
+            data: i.json(),
+            read: i.boolean().indexed(),
+            actorUserId: i.string().optional(),
+            articleId: i.string().optional(),
+            commentId: i.string().optional(),
+            createdAt: i.date().indexed(),
+        }),
     }
 })
 export type CommentType = InstaQLEntity<typeof schema, 'comments'>
 export type ArticleStatsType = InstaQLEntity<typeof schema, 'articlesStats'>
 export type AppreciationType = InstaQLEntity<typeof schema, 'appreciation'>
+export type NotificationType = InstaQLEntity<typeof schema, 'notifications'>
 
 // Initialisation avec le storage personnalisé pour React Native
 // Cela remplace IndexedDB par SQLite via notre ReactNativeStorage

@@ -43,7 +43,7 @@ export default function NoteEditor() {
     const sheetRef = useRef<BottomSheet>(null);
     const aisheetRef = useRef<BottomSheet>(null)
     // variables
-    const snapPoints = useMemo(() => ["40%"], []);
+    const snapPoints = useMemo(() => ["50%"], []);
     const aisnapPoints = useMemo(() => ['100%'], [])
 
 
@@ -245,6 +245,22 @@ export default function NoteEditor() {
                             flex: 1,
                             paddingHorizontal: convert(16),
                         }}>
+                            {Note && (() => {
+                                let noteTitle = "Untitled";
+                                try {
+                                    const parsed = JSON.parse(Note.body as string);
+                                    if (parsed?.content?.[0]?.type === "heading" && parsed.content[0].content?.[0]?.text) {
+                                        noteTitle = parsed.content[0].content[0].text;
+                                    }
+                                } catch { }
+                                return (
+                                    <View style={{ paddingVertical: convert(12), paddingHorizontal: convert(12), borderBottomWidth: 1, borderColor: '#e2e8f0', gap: convert(2) }}>
+                                        <Text style={{ fontSize: convert(14), fontWeight: '600' }} numberOfLines={2}>{noteTitle}</Text>
+                                        <Text style={{ fontSize: convert(13), color: '#0009' }}>Created on {moment(Note.created).format('MMM D, YYYY')}</Text>
+                                        <Text style={{ fontSize: convert(13), color: '#0009' }}>Last updated {moment(Note.modified).format('MMM D, YYYY [at] HH:mm')}</Text>
+                                    </View>
+                                );
+                            })()}
                             <TouchableOpacity
                                 onPress={onShare}
                                 style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}>

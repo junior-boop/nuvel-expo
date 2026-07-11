@@ -21,7 +21,7 @@ const extensions = [BibleVerset, TextStyleKit, StarterKit, Image, TaskList,
 
 
 
-const ReaderHtml = forwardRef(({ note }: { note: Notes, }, ref) => {
+const ReaderHtml = forwardRef(({ note, onAuthorPress }: { note: Notes, onAuthorPress?: () => void }, ref) => {
     const [content, setContent] = useState(note.body)
     const [readTime, setReadTime] = useState(0)
 
@@ -63,7 +63,7 @@ const ReaderHtml = forwardRef(({ note }: { note: Notes, }, ref) => {
                         <span style={{ fontSize: "1rem", color: "#444", display: 'inline-block', marginTop: '8px', fontWeight: 'normal' }}>{readTime} mins read</span>
                     </div>
                     <p style={{ fontSize: "1.20rem", color: "#444", fontStyle: "italic" }}>{note.description}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => onAuthorPress?.()}>
                         <div style={{ backgroundColor: '#333', width: '42px', aspectRatio: 1, borderRadius: 21, overflow: 'hidden' }}>
                             <img src={`https://${note.user.photo}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>

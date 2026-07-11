@@ -8,7 +8,40 @@ import { TextStyleKit } from '@tiptap/extension-text-style'
 import type { Editor } from '@tiptap/react'
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+
+// --- Helpers --------------------------------------------------------------
+
+/** Parse défensif : body peut être "", null, ou HTML legacy → on retombe sur un doc vide. */
+const safeParseBody = (body: unknown): any => {
+    if (!body || typeof body !== 'string') return { type: 'doc', content: [] };
+    try {
+        return JSON.parse(body);
+    } catch {
+        if (__DEV__) console.log('[Editor] body non-JSON, fallback doc vide');
+        return { type: 'doc', content: [] };
+    }
+};
+
+/** Redimensionne une image (DataURL) à largeur max + qualité JPEG. Réduit le poids du body. */
+const MAX_IMAGE_WIDTH = 1280;
+const IMAGE_QUALITY = 0.8;
+const resizeDataUrl = (dataUrl: string): Promise<string> => new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () => {
+        if (img.width <= MAX_IMAGE_WIDTH) { resolve(dataUrl); return; }
+        const ratio = MAX_IMAGE_WIDTH / img.width;
+        const canvas = document.createElement('canvas');
+        canvas.width = MAX_IMAGE_WIDTH;
+        canvas.height = Math.round(img.height * ratio);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { resolve(dataUrl); return; }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', IMAGE_QUALITY));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+});
 import { BxsBible, FluentAppsList20Filled, FluentArrowEnterLeft24Filled, FluentCode24Regular, FluentCodeBlock32Regular, FluentImageAdd32Regular, FluentLineHorizontal128Regular, FluentTaskList24Filled, FluentTextBold24Regular, FluentTextHeader1Lines24Regular, FluentTextHeader2Lines24Regular, FluentTextHeader3Lines24Regular, FluentTextItalic24Filled, FluentTextNumberList24Regular, FluentTextQuote32Filled, FluentTextStrikethroughS24Regular, IcSharpArrowDownward } from './editor_icons'
 import styles from './styles'
 
@@ -24,7 +57,7 @@ type bibleverst = {
 }[]
 
 const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
-    editor: Editor, biblemetadatState: BibleMetadata[], menubtn?: { teste: () => void }, trie: (data: [book_id: string, book_name: string, chapter: string, vers1?: string, vers2?: string]) => Promise<{
+    editor: Editor | null, biblemetadatState: BibleMetadata[], menubtn?: { teste: () => void }, trie: (data: [book_id: string, book_name: string, chapter: string, vers1?: string, vers2?: string]) => Promise<{
         ref_bible: string;
         content: string;
     } | undefined>
@@ -34,20 +67,45 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
     const [verse, setVerse] = useState<string>("")
 
     const handleImage = ({ target }: { target: HTMLInputElement }) => {
+        if (!target.files || target.files.length === 0) return;
+        const file = target.files[0];
 
-        if (target.files) {
-            const readfile = new FileReader()
-            readfile.onload = () => {
-                editor.chain().focus().setImage({ src: readfile.result as string }).run()
-            }
-            readfile.readAsDataURL(target.files[0])
+        // Garde-fou : refuse > 8 MB (avant resize)
+        const MAX_INPUT_BYTES = 8 * 1024 * 1024;
+        if (file.size > MAX_INPUT_BYTES) {
+            window.alert(`Image trop lourde (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum 8 MB.`);
+            target.value = '';
+            return;
         }
+
+        const readfile = new FileReader()
+        readfile.onload = async () => {
+            const original = readfile.result as string;
+            const resized = await resizeDataUrl(original);
+            if (__DEV__) console.log(`[Editor] image: ${original.length} → ${resized.length} chars`);
+            editor.chain().focus().setImage({ src: resized }).run()
+        }
+        readfile.readAsDataURL(file)
+        target.value = '';
     }
 
     // Read the current editor's state, and re-render the component when it changes
     const editorState = useEditorState({
         editor,
         selector: ctx => {
+            // Garde-fou : editor peut être null le temps que Tiptap se monte
+            if (!ctx.editor) {
+                return {
+                    isBold: false, canBold: false, isItalic: false, canItalic: false,
+                    isStrike: false, canStrike: false, isCode: false, canCode: false,
+                    canClearMarks: false, isParagraph: false,
+                    isHeading1: false, isHeading2: false, isHeading3: false,
+                    isHeading4: false, isHeading5: false, isHeading6: false,
+                    isBulletList: false, isOrderedList: false,
+                    isCodeBlock: false, isBlockquote: false,
+                    canUndo: false, canRedo: false,
+                };
+            }
             return {
                 isBold: ctx.editor.isActive('bold') ?? false,
                 canBold: ctx.editor.can().chain().toggleBold().run() ?? false,
@@ -104,11 +162,11 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
 
     }
 
-    useEffect(() => {
-        if (menubtn) {
-            menubtn.teste = () => editor.chain().focus().toggleBold().run()
-        }
-    }, [])
+    // Pattern muté sur prop retiré (anti-pattern React) — exposé via ref si besoin.
+    void menubtn;
+
+    // Tiptap n'est pas encore monté : ne rien rendre plutôt que crash sur editor.isActive(...)
+    if (!editor) return <div className="control-group" />;
 
 
     return (
@@ -248,19 +306,20 @@ const BibleItem = ({ el, isActived, onClick }: { el: BibleMetadata, onClick: () 
 
 const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubtn }: { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void } }, ref) => {
     const [isFocus, setIsFocus] = useState(false)
-    const [content, setContent] = useState(note !== undefined && JSON.parse(note.body))
+    const [content, setContent] = useState<any>(() => safeParseBody(note?.body))
     const [isTyping, setIsTyping] = useState(false)
-    const [savingState, setSavingState] = useState('Saving...')
+    const [savingState, setSavingState] = useState<'idle' | 'typing' | 'saving' | 'saved'>('idle')
     const [version, setVersion] = useState(0)
     const [html, setHtml] = useState("")
 
+    // Sync sur changement de note (id) — l'ancienne version figeait à []
     const getinitnote = useCallback(async () => {
         if (note) {
             setVersion(note.version)
-            setContent(JSON.parse(note.body))
+            setContent(safeParseBody(note.body))
             setHtml(note.html)
         }
-    }, [])
+    }, [note?.id])
 
     const editor = useEditor({
         extensions,
@@ -276,34 +335,51 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
         getinitnote()
     }, [getinitnote])
 
-
+    // --- AUTOSAVE V2 (actif) -----------------------------------------------
+    // Vrai debounce 800ms : à chaque frappe on passe "typing", on annule le timer
+    // précédent et on en repose un. À l'expiration : "saving" → updateNote → "saved".
+    // La version est incrémentée à chaque save pour que le LWW serveur arbitre correctement.
+    const isFirstRun = useRef(true);
     useEffect(() => {
+        if (isFirstRun.current) { isFirstRun.current = false; return; }
+        setIsTyping(true);
+        setSavingState('typing');
 
-        const t1 = setTimeout(() => {
-            if (__DEV__) console.log("active")
-            updateNote({
+        const t = setTimeout(async () => {
+            if (!note?.id) return;
+            setSavingState('saving');
+            const nextVersion = version + 1;
+            await Promise.resolve(updateNote({
                 id: note.id as string,
                 body: JSON.stringify(content),
-                version: version,
-                html: html
-            })
-            setSavingState("Saved")
-            setIsTyping(false)
-        }, 500)
+                version: nextVersion,
+                html: html,
+            }));
+            setVersion(nextVersion);
+            setSavingState('saved');
+            setIsTyping(false);
+        }, 800);
 
+        return () => clearTimeout(t);
+    }, [content]);
 
-        const t2 = setTimeout(() => {
-            if (__DEV__) console.log("desactive")
-            setSavingState("Saving...")
-        }, 500)
-
-
-        return () => {
-            clearTimeout(t1)
-            clearTimeout(t2)
-        }
-
-    }, [content])
+    // --- AUTOSAVE V1 (inactif, conservé pour comparaison) ------------------
+    // useEffect(() => {
+    //     const t1 = setTimeout(() => {
+    //         updateNote({
+    //             id: note.id as string,
+    //             body: JSON.stringify(content),
+    //             version: version,
+    //             html: html
+    //         })
+    //         setSavingState("Saved")
+    //         setIsTyping(false)
+    //     }, 500)
+    //     const t2 = setTimeout(() => {
+    //         setSavingState("Saving...")
+    //     }, 500)
+    //     return () => { clearTimeout(t1); clearTimeout(t2) }
+    // }, [content])
 
 
     return (
@@ -313,6 +389,7 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
             <div style={{ position: "relative", height: "100svh" }}>
                 <MenuBar editor={editor} biblemetadatState={biblemetadatState} trie={trie} menubtn={menubtn} />
                 <EditorContent editor={editor} onFocus={() => setIsFocus(true)} onBlur={() => setIsFocus(false)} ref={ref} />
+                <div style={{ height: 60 }}></div>
             </div>
         </div>
     )

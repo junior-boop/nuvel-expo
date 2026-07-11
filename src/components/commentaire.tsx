@@ -79,7 +79,10 @@ export const useCommentHooks = (articleId: string) => {
                 getComments(articleId),
             ]);
             setComments(commentsRes?.data.comments || []);
-            setCommentCount(statsRes?.data.articlesStats[0].id, statsRes?.data.articlesStats[0].commentCount);
+            const stat = statsRes?.data?.articlesStats?.[0];
+            if (stat) {
+                setCommentCount(stat.id, stat.commentCount);
+            }
             return addCommentRes
         } catch (err) {
             console.error('[useCommentHooks]', err);

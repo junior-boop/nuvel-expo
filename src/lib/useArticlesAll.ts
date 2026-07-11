@@ -11,16 +11,16 @@ export type User = {
   photo: string;
 };
 
+// Article en mode "liste" : sans body ni appreciation (payload allégé).
+// Le body complet est récupéré via GET /articles/:id côté reader (useArticle).
 export type Article = {
   id: string;
   userid: string;
   title: string;
   description: string;
-  body: string;
   topic: string;
   imageurl: string;
   noteid: string;
-  appreciation: string;
   version: number;
   createdAt: string;
   updatedAt: string;

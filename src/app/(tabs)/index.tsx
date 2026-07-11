@@ -92,13 +92,27 @@ const TopArticles = ({ articles }: { articles: ArticleStat }) => {
 
   }
 
-  return (<TouchableOpacity onPress={handleOpen} style={{ paddingHorizontal: convert(16), gap: convert(12) }}>
+  const handleOpenAuthor = () => {
+    router.navigate({
+      pathname: '/author',
+      params: {
+        userId: articles.article?.user?.id as string,
+        name: articles.article?.user?.name ?? '',
+        first_name: articles.article?.user?.first_name ?? '',
+        photo: articles.article?.user?.photo ?? '',
+      }
+    })
+  }
+
+  return (<View style={{ paddingHorizontal: convert(16), gap: convert(12) }}>
     <View>
-      <Text style={{ fontSize: convert(28), fontWeight: "bold", width: '90%', marginBottom: convert(8) }}>{articles.article?.title}</Text>
-      <Text style={{ fontSize: convert(16), color: '#444', width: '90%', marginBottom: convert(8) }}>{articles.article?.description.substring(0, 120)}...</Text>
-      <View style={{ flexDirection: 'row', gap: convert(8), alignItems: 'center' }}>
+      <TouchableOpacity onPress={handleOpen}>
+        <Text style={{ fontSize: convert(28), fontWeight: "bold", width: '90%', marginBottom: convert(8) }}>{articles.article?.title}</Text>
+        <Text style={{ fontSize: convert(16), color: '#444', width: '90%', marginBottom: convert(8) }}>{articles.article?.description.substring(0, 120)}...</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={handleOpenAuthor} style={{ flexDirection: 'row', gap: convert(8), alignItems: 'center' }}>
         <View style={{ width: convert(32), height: convert(32), backgroundColor: "#444", borderRadius: convert(16), overflow: 'hidden' }}><Image source={{ uri: `https://${articles.article?.user?.photo}` }} style={{ width: '100%', aspectRatio: 1 }} /></View>
-        <View style={{ flexDirection: 'column', gap: convert(2) }}>
+        <View style={{ flexDirection: 'column', gap: convert(4) }}>
           <View style={{ flexDirection: 'row', gap: convert(8), alignItems: 'center' }}>
             <Text style={{ fontSize: convert(13), color: "#444", fontWeight: "bold", marginBottom: convert(-3) }}>{articles.article?.user?.name} {articles.article?.user?.first_name}</Text>
           </View>
@@ -107,11 +121,11 @@ const TopArticles = ({ articles }: { articles: ArticleStat }) => {
             <Text style={{ fontSize: convert(13), color: "#444" }}>• {moment(articles.article?.createdAt).fromNow()}</Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     </View>
-    <View style={{ width: '100%', aspectRatio: 5 / 4, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e2e2ff', borderRadius: convert(7) }}>
+    <TouchableOpacity onPress={handleOpen} style={{ width: '100%', aspectRatio: 5 / 4, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e2e2ff', borderRadius: convert(7) }}>
       <Image source={{ uri: `https://${articles.article?.imageurl}` }} style={{ width: '100%', aspectRatio: 5 / 4 }} />
-    </View>
-  </TouchableOpacity>)
+    </TouchableOpacity>
+  </View>)
 
 }

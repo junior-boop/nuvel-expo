@@ -3,28 +3,30 @@ import { Text, View } from "@/components/Themed";
 import { w } from "@/constants/Colors";
 import { convert } from "@/constants/convert";
 import { useDatabase } from "@/context/database.context";
-import { deleteHistoryItem, getHistoryForUser, HistoryType } from "@/lib/instantdb.histories";
+import { deleteHistoryItem, historiesDB, HistoryType } from "@/lib/instantdb.histories";
 import { router } from "expo-router";
 import moment from "moment";
 import { useCallback, useMemo, useState } from "react";
-import { Alert, Image, RefreshControl, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
+import { Alert, Image, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 
 export default function HistoryPage() {
-    const { historyQuery, session } = useDatabase()
-    const [items, setItems] = useState<HistoryType[]>(historyQuery?.findAll() ?? [])
-    const [refreshing, setRefreshing] = useState(false)
+    const { session } = useDatabase()
     const [query, setQuery] = useState("")
 
-    const reload = useCallback(async () => {
-        if (!session?.iduser) return
-        const res = await getHistoryForUser(session.iduser)
-        setItems((res?.data?.histories ?? []) as HistoryType[])
-    }, [session?.iduser])
+    const { data } = historiesDB.useQuery(
+        session?.iduser
+            ? {
+                histories: {
+                    $: {
+                        where: { userId: session.iduser },
+                        order: { createdAt: 'desc' as const },
+                    },
+                },
+            }
+            : null
+    )
 
-    const onRefresh = useCallback(async () => {
-        setRefreshing(true)
-        try { await reload() } finally { setRefreshing(false) }
-    }, [reload])
+    const items = (data?.histories ?? []) as HistoryType[]
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase()
@@ -37,15 +39,19 @@ export default function HistoryPage() {
 
     const openItem = useCallback((h: HistoryType) => {
         const stub = {
+            id: h.articleId,
             articleId: h.articleId,
             viewCount: 0,
+            shareCount: 0,
+            signals: [] as string[],
+            upvotes: [] as string[],
             article: {
                 id: h.articleId,
                 title: h.content?.title ?? '',
                 imageurl: h.content?.image ?? '',
                 description: '',
                 createdAt: h.content?.createdAt ?? h.createdAt,
-                user: { photo: '' },
+                user: { id: '', photo: '' },
             },
         }
         router.navigate({
@@ -59,7 +65,6 @@ export default function HistoryPage() {
             { text: "Cancel", style: "cancel" },
             {
                 text: "Remove", style: "destructive", onPress: async () => {
-                    setItems(prev => prev.filter(x => x.id !== h.id))
                     try { await deleteHistoryItem(h.id) } catch (e) { console.error('[History] delete error:', e) }
                 }
             },
@@ -70,7 +75,6 @@ export default function HistoryPage() {
         <PageLayout_3>
             <ScrollView
                 contentContainerStyle={{ paddingBottom: 100, paddingTop: convert(16) }}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             >
                 <View style={{ paddingHorizontal: convert(16) }}>
                     <Text style={{ ...styles.title, marginBottom: convert(8) }}>History</Text>

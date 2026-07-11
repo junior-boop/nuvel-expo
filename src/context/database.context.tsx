@@ -439,7 +439,6 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
                 action: "created",
                 synced: 1,
             }
-            if (__DEV__) console.log(user)
             const sync = await Sync.Set(objet)
             if (__DEV__) console.log(`Sync_event created ${result.id}`, sync)
             if (result) { refreshLocalData(); syncToServer(); }

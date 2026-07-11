@@ -31,8 +31,6 @@ export default function TabTwoScreen() {
     }, 2000);
   }, []);
 
-  if (__DEV__) console.log("biblelist", biblemetadatState)
-
   return (
     <PageLayout_3>
 
@@ -122,7 +120,7 @@ const History = () => {
   const histories = historyQuery?.limit(5)
 
   useEffect(() => {
-    if (__DEV__) console.log(histories)
+    if (__DEV__) console.log("histories", histories)
   }, [histories])
   return (
     <ScrollView horizontal contentContainerStyle={{ paddingHorizontal: convert(16), gap: convert(12) }}>
@@ -254,9 +252,9 @@ const HistoryItems = ({ history }: { history: HistoryType }) => {
   return (
     <View style={{ width: convert(150) }}>
       <Image source={{ uri: `https://${history.content.image}` }} style={{ width: convert(150), marginBottom: convert(8), aspectRatio: 1, borderWidth: 1, borderColor: '#eee' }} />
-      <View style={{ gap: convert(8) }}>
-        <Text style={{ color: '#777', fontSize: convert(11), fontWeight: 'bold', textTransform: "uppercase" }}>{moment(history.createdAt).fromNow()}</Text>
+      <View style={{ gap: convert(2) }}>
         <Text style={{ fontSize: convert(16), fontWeight: 'semibold' }}>{history.content.title.length > 48 ? history.content.title.substring(0, 48) + '...' : history.content.title}</Text>
+        <Text style={{ color: '#777', fontSize: convert(11), fontWeight: 'bold', textTransform: "uppercase" }}>{moment(history.createdAt).fromNow()}</Text>
       </View>
     </View>
   )

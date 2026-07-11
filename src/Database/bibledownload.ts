@@ -1,4 +1,9 @@
 import { openDatabaseAsync, type SQLiteDatabase } from "expo-sqlite";
+import * as BibleContent from "./bible.content";
+
+const FETCH_TIMEOUT_MS = 60_000;
+const RETRY_DELAY_MS = 10_000;
+const MAX_RETRIES = 3;
 
 type versets = {
   shortname: string;
@@ -13,11 +18,24 @@ type versets = {
   }[];
 };
 
+type ProgressCb = (progress: { current: number; total: number; percent: number }) => void;
+type DownloadResult = { success: boolean; versesCount: number };
+type QueueJob = {
+  id: string;
+  versionCode: string;
+  book_id: string;
+  onProgress: ProgressCb;
+  resolve: (v: DownloadResult) => void;
+  reject: (e: unknown) => void;
+  attempts: number;
+};
+
 export class BibleDownloader {
   private static instance: BibleDownloader | null = null;
   private db: SQLiteDatabase | null = null;
-  private isDownloading: boolean = false;
   private initPromise: Promise<void> | null = null;
+  private queue: QueueJob[] = [];
+  private processing: boolean = false;
 
   private constructor() {}
 
@@ -84,24 +102,16 @@ export class BibleDownloader {
     if (!this.db) return;
 
     try {
+      // Schéma BibleContent géré par bible.content.ts (source unique).
+      await BibleContent.createTable();
       await this.db.execAsync(`
-        CREATE TABLE IF NOT EXISTS BibleContent (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          book_id TEXT NOT NULL,
-          book_name TEXT NOT NULL,
-          book INTEGER NOT NULL,
-          chapter INTEGER NOT NULL,
-          verse INTEGER NOT NULL,
-          text TEXT NOT NULL
-        );
-        
         CREATE TABLE IF NOT EXISTS downloads (
           version TEXT PRIMARY KEY,
           downloaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           verses_count INTEGER
         );
-        
-        CREATE INDEX IF NOT EXISTS idx_version_book_chapter 
+
+        CREATE INDEX IF NOT EXISTS idx_version_book_chapter
         ON BibleContent(book_id, book, chapter);
       `);
       if (__DEV__) console.log("✅ Tables créées/vérifiées");
@@ -111,28 +121,85 @@ export class BibleDownloader {
     }
   }
 
-  async downloadVersion(
+  /**
+   * Enfile un téléchargement. Si rien n'est en cours, démarre immédiatement.
+   * Sinon, attend son tour (FIFO). Le Promise se résout / rejette selon le job.
+   */
+  downloadVersion(
     versionCode: string,
     book_id: string,
-    onProgress: (progress: {
-      current: number;
-      total: number;
-      percent: number;
-    }) => void
-  ) {
+    onProgress: ProgressCb
+  ): Promise<DownloadResult> {
+    // Déduplication : si déjà en file ou en cours, retourner le même Promise n'est
+    // pas trivial — on autorise l'enfilage multiple, INSERT OR REPLACE rend idempotent.
+    return new Promise<DownloadResult>((resolve, reject) => {
+      this.queue.push({
+        id: `${book_id}:${Date.now()}`,
+        versionCode,
+        book_id,
+        onProgress,
+        resolve,
+        reject,
+        attempts: 0,
+      });
+      if (__DEV__) console.log(`[Queue] +1 (${this.queue.length} en attente) → ${book_id}`);
+      void this.processQueue();
+    });
+  }
+
+  /** Vue lecture-seule de l'état de la file (pour l'UI). */
+  getQueueState() {
+    return {
+      processing: this.processing,
+      pending: this.queue.length,
+      jobs: this.queue.map((j) => ({ id: j.id, book_id: j.book_id })),
+    };
+  }
+
+  private async processQueue() {
+    if (this.processing) return;
+    this.processing = true;
+    try {
+      while (this.queue.length > 0) {
+        const job = this.queue.shift()!;
+        try {
+          const result = await this.runDownload(job);
+          job.resolve(result);
+        } catch (err) {
+          job.attempts += 1;
+          if (job.attempts <= MAX_RETRIES) {
+            if (__DEV__) console.log(
+              `[Queue] ⏳ ${job.book_id} : échec (tentative ${job.attempts}/${MAX_RETRIES}), réessai dans ${RETRY_DELAY_MS / 1000}s`
+            );
+            // Reprogrammer en fin de file après le délai, sans bloquer les autres jobs.
+            setTimeout(() => {
+              this.queue.push(job);
+              void this.processQueue();
+            }, RETRY_DELAY_MS);
+          } else {
+            if (__DEV__) console.log(`[Queue] ❌ ${job.book_id} : abandon après ${MAX_RETRIES} tentatives`);
+            job.reject(err);
+          }
+        }
+      }
+    } finally {
+      this.processing = false;
+    }
+  }
+
+  private async runDownload(job: QueueJob): Promise<DownloadResult> {
+    const { versionCode, book_id, onProgress } = job;
     await this.ensureConnection();
 
-    if (this.isDownloading) {
-      throw new Error("Un téléchargement est déjà en cours");
-    }
-
-    this.isDownloading = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
     try {
       if (__DEV__) console.log(`🔄 Téléchargement de ${book_id}...`);
 
       const response = await fetch(
-        `https://nuvelserver.godigital.workers.dev/bible${versionCode}`
+        `https://nuvelserver.godigital.workers.dev/bible${versionCode}`,
+        { signal: controller.signal }
       );
 
       if (!response.ok) {
@@ -140,27 +207,25 @@ export class BibleDownloader {
       }
 
       const data = (await response.json()) as versets;
+      clearTimeout(timeoutId);
       const verses = this.prepareVerses(book_id, data.content);
 
       if (__DEV__) console.log(`📝 ${verses.length} versets à insérer`);
 
-      await this.insertBatch(verses, onProgress);
-
-      // S'assurer que la connexion est toujours active
-      await this.ensureConnection();
-
-      await this.db!.runAsync(
-        "INSERT OR REPLACE INTO downloads (version, verses_count) VALUES (?, ?)",
-        [book_id, verses.length]
-      );
+      await this.insertBatch(book_id, verses, onProgress);
 
       if (__DEV__) console.log("✅ Téléchargement terminé");
       return { success: true, versesCount: verses.length };
     } catch (error) {
+      // Nettoyage en cas d'échec : éviter un état partiel
+      try {
+        await this.db!.runAsync("DELETE FROM BibleContent WHERE book_id = ?", [book_id]);
+        await this.db!.runAsync("DELETE FROM downloads WHERE version = ?", [book_id]);
+      } catch {}
       console.error("❌ Erreur téléchargement:", error);
       throw error;
     } finally {
-      this.isDownloading = false;
+      clearTimeout(timeoutId);
     }
   }
 
@@ -176,6 +241,7 @@ export class BibleDownloader {
   }
 
   async insertBatch(
+    book_id: string,
     verses: (string | number)[][],
     onProgress: (progress: {
       current: number;
@@ -189,7 +255,7 @@ export class BibleDownloader {
       throw new Error("Aucune donnée à insérer");
     }
 
-    const batchSize = 500; // Taille réduite pour plus de stabilité
+    const batchSize = 500;
     let inserted = 0;
 
     try {
@@ -197,7 +263,7 @@ export class BibleDownloader {
         `🔄 Insertion de ${verses.length} versets par batch de ${batchSize}...`
       );
 
-      // Transaction globale pour toute l'insertion
+      // Transaction unique : versets + marqueur "downloads" → atomicité totale.
       await this.db!.withTransactionAsync(async () => {
         for (let i = 0; i < verses.length; i += batchSize) {
           const batch = verses.slice(i, i + batchSize);
@@ -205,7 +271,7 @@ export class BibleDownloader {
           const values = batch.flat();
 
           await this.db!.runAsync(
-            `INSERT OR REPLACE INTO BibleContent (book_id, book_name, book, chapter, verse, text) 
+            `INSERT OR REPLACE INTO BibleContent (book_id, book_name, book, chapter, verse, text)
              VALUES ${placeholders}`,
             values
           );
@@ -220,12 +286,12 @@ export class BibleDownloader {
               percent: Math.round((current / verses.length) * 100),
             });
           }
-
-          // Petit délai pour laisser respirer l'UI
-          if (i + batchSize < verses.length) {
-            await new Promise((resolve) => setTimeout(resolve, 5));
-          }
         }
+
+        await this.db!.runAsync(
+          "INSERT OR REPLACE INTO downloads (version, verses_count) VALUES (?, ?)",
+          [book_id, verses.length]
+        );
       });
 
       if (__DEV__) console.log(`✅ ${inserted} versets insérés avec succès`);

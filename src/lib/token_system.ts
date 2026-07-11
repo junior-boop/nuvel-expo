@@ -38,7 +38,9 @@ async function refreshAccessToken() {
 
         const data = await response.json();
         accessToken = data.accessToken;
+        refreshToken = data.refreshToken;
         await localStorage.setItem('accessToken', accessToken as string);
+        await localStorage.setItem('refreshToken', refreshToken as string);
         if (__DEV__) console.log('[TokenSystem] ✅ Access token refreshed');
         return accessToken;
     } catch (error) {

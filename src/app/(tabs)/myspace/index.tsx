@@ -1,4 +1,4 @@
-import { Image, Pressable, ScrollView, Text, TouchableOpacity } from 'react-native';
+import { Animated, Image, Pressable, ScrollView, Text, TouchableOpacity } from 'react-native';
 
 import { NewNoteButton } from '@/app/styles/cards';
 import HeaderPage from '@/components/headerpage';
@@ -10,10 +10,11 @@ import { FluentNoteAdd28Regular, FluentSearch32Filled } from "@/constants/icons"
 import { useDatabase } from '@/context/database.context';
 import { Notes } from '@/Database/db';
 import { Stack, router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function TabTwoScreen() {
     const { addNote, notesQuery, session } = useDatabase()
+    const scrollY = useRef(new Animated.Value(0)).current
 
 
     const handleNewNote = async () => {
@@ -43,8 +44,16 @@ export default function TabTwoScreen() {
     return (
         <View style={{ flex: 1 }}>
             <Stack.Screen options={{ headerShown: false }} />
-            <HeaderPage />
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: convert(72) }}>
+            <HeaderPage scrollY={scrollY} />
+            <Animated.ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingBottom: convert(72) }}
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: false }
+                )}
+                scrollEventThrottle={16}
+            >
                 <Pressable style={{ marginBottom: convert(16) }} onPress={() => router.push('/searchnotes')}>
                     <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: convert(16), paddingVertical: convert(12), backgroundColor: "#f6f9ffff", height: 50, borderBottomWidth: 1, borderColor: "#eff2fdff" }}>
                         <FluentSearch32Filled width={20} height={20} color={"black"} />
@@ -54,7 +63,7 @@ export default function TabTwoScreen() {
                 <PublishSqare />
                 <AllNotesPinned />
                 <AllNotesFilters />
-            </ScrollView>
+            </Animated.ScrollView>
             <View style={NewNoteButton.container} >
                 <TouchableOpacity style={NewNoteButton.button} onPress={handleNewNote}>
                     <FluentNoteAdd28Regular width={28} height={28} color={"white"} />
