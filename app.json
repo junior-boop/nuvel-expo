@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "nuvel-twyo-ptbpmwgsox1tafyp",
-    "slug": "nuvel-twyo-ptbpmwgsox1tafyp",
+    "name": "nuvel",
+    "slug": "nuvel",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "nuveltwyoptbpmwgsox1tafyp",
+    "scheme": "nuvel",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
@@ -52,7 +52,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "4d27d024-4c20-4f0e-9afe-73d064adfa64"
+        "projectId": "fc80379a-5a7c-42b8-bf65-bb5096679e67"
       }
     },
     "owner": "junior41"
