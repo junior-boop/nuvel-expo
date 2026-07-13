@@ -4,7 +4,7 @@ import type { AiHistoryType, BibleMetadata, Notes } from "@/Database/db";
 import EditorJS from "@/editor";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Keyboard, KeyboardAvoidingView, Linking, Platform, Pressable, Share, TextInput, TouchableOpacity } from "react-native";
+import { ActivityIndicator, Alert, Animated, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, Share, TextInput, TouchableOpacity } from "react-native";
 
 import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
@@ -19,6 +19,8 @@ import { generateUUID as uuidv4 } from "@/Database/uuid";
 import htmlToWhatsApp from "@/components/bible_component/livre/convert_whatsapp";
 import { QueryForTable } from "@/constants/Queryuilder";
 import * as AiStore from '@/Database/ai';
+import { askAiAgent } from "@/lib/aiAgent";
+import * as Clipboard from 'expo-clipboard';
 import moment from "moment";
 import Markdown from 'react-native-markdown-display';
 
@@ -33,6 +35,8 @@ export default function NoteEditor() {
     const [title, setTitle] = useState<string | null>(null)
     const [inputValue, setInputValue] = useState("");
     const [ai_conversation, setConversation] = useState<AiHistoryType[]>([])
+    const [aiLoading, setAiLoading] = useState(false)
+    const [replyTo, setReplyTo] = useState<AiHistoryType | null>(null)
     const [note_data, set_note_data] = useState<Notes | null>(null)
 
     // menu de modification texte
@@ -147,9 +151,9 @@ export default function NoteEditor() {
     }
 
     const agent = useCallback(async (prompt: string) => {
-        const response = { dance: 'je suis la' }
-        return response;
-    }, [note_body]);
+        const context = note_whatsapp ?? (Note?.html ? htmlToWhatsApp(Note.html as string) : "");
+        return askAiAgent(context, prompt);
+    }, [note_whatsapp, Note]);
 
     const fetch_ai_history = useCallback(async () => {
         const ai_history = await AiStore.get(data.id as string)
@@ -164,16 +168,35 @@ export default function NoteEditor() {
 
 
     const handleAgent = async () => {
+        const question = inputValue.trim();
+        if (!question || aiLoading) return;
+
+        const noteId = data.id as string;
+        const quoted = replyTo?.content;
+
         // Ajouter immédiatement le message de l'utilisateur pour un feedback instantané
-        const userMessage = { role: "user", content: inputValue };
-        const currentHistory = ai_conversation || [];
-        const newMessage = [...currentHistory, userMessage];
-        setConversation(newMessage);
-
-        const response = await agent(inputValue);
-
-        setConversation((el) => [...el, { id: uuidv4(), ...response.history.slice(-1)[0], created: new Date().toISOString(), modified: new Date().toISOString() }]);
+        const userMessage: AiHistoryType = { id: uuidv4(), iduser: noteId, role: "user", content: question, created: new Date().toISOString(), modified: new Date().toISOString() };
+        setConversation((el) => [...el, userMessage]);
         setInputValue("")
+        setReplyTo(null)
+        AiStore.set({ iduser: noteId, role: "user", content: question });
+
+        setAiLoading(true);
+        try {
+            const prompt = quoted ? `En réponse à : "${quoted}"\n\n${question}` : question;
+            const response = await agent(prompt);
+            const answer = response.success && response.answer
+                ? response.answer
+                : "Désolé, je n'ai pas pu générer de réponse. Réessayez plus tard.";
+
+            setConversation((el) => [...el, { id: uuidv4(), iduser: noteId, role: "assistant", content: answer, created: new Date().toISOString(), modified: new Date().toISOString() }]);
+            AiStore.set({ iduser: noteId, role: "assistant", content: answer });
+        } catch (error) {
+            if (__DEV__) console.log('[AI Agent] Erreur:', error);
+            setConversation((el) => [...el, { id: uuidv4(), iduser: noteId, role: "assistant", content: "Une erreur est survenue. Réessayez plus tard.", created: new Date().toISOString(), modified: new Date().toISOString() }]);
+        } finally {
+            setAiLoading(false);
+        }
     };
 
     const handlePublish = async () => {
@@ -327,10 +350,10 @@ export default function NoteEditor() {
                             }}>
                                 <View style={{ flex: 1, }}>
                                     <View style={{ paddingHorizontal: convert(16), height: convert(62), justifyContent: 'center', borderBottomColor: '#cfdfeeff', borderBottomWidth: 1, zIndex: 10 }}>
-                                        <Text style={{ fontSize: convert(16), color: "#0009" }}>Assiatant - Context</Text>
+                                        <Text style={{ fontSize: convert(13), color: "#0009" }}>Assistant</Text>
                                         <Text style={{ fontSize: convert(20), fontWeight: '600' }}>{title?.length > 34 ? `${title?.substring(0, 34)}...` : title}</Text>
                                     </View>
-                                    <ScrollView showsVerticalScrollIndicator={true} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: convert(16), paddingBottom: convert(50), paddingTop: convert(12) }} inverted invertStickyHeaders>
+                                    <ScrollView showsVerticalScrollIndicator={true} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: convert(20), paddingBottom: convert(50), paddingTop: convert(12) }} inverted invertStickyHeaders>
 
                                         <View>
                                             {ai_conversation?.map((item, index) => {
@@ -339,20 +362,32 @@ export default function NoteEditor() {
                                                         <View
 
                                                             key={index}
-                                                            style={{ width: '100%', borderRadius: convert(4), backgroundColor: "#008cff18", paddingHorizontal: convert(12), paddingVertical: convert(8), gap: convert(2) }}
+                                                            style={{ width: '90%', borderRadius: convert(4), backgroundColor: "#008cff08", borderWidth: 1, borderColor: '#008cff18', paddingHorizontal: convert(12), paddingVertical: convert(8), gap: convert(2) }}
                                                         >
                                                             <Text style={{ fontSize: convert(16), fontWeight: '600' }}>{item.content}</Text>
-                                                            <Text style={{ fontSize: convert(12), color: "#0009", textAlign: 'right' }}>{moment(item.created).fromNow()}</Text>
+                                                            {/* <Text style={{ fontSize: convert(12), color: "#0009", textAlign: 'right' }}>{moment(item.created).fromNow()}</Text> */}
                                                         </View>
                                                     )
                                                     : (
-                                                        <Response_Ai item={item} key={index} />
+                                                        <Response_Ai item={item} key={index} onReply={setReplyTo} />
                                                     );
                                             })}
+                                            {aiLoading && <ThinkingIndicator />}
                                         </View>
 
                                     </ScrollView>
                                 </View>
+                                {replyTo && (
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: convert(16), paddingVertical: convert(8), borderTopWidth: 1, borderColor: '#cfdfeeff', backgroundColor: '#f7fafc' }}>
+                                        <View style={{ flex: 1, backgroundColor: '#f7fafc' }}>
+                                            <Text style={{ fontSize: convert(12), color: '#238dffff', fontWeight: '600' }}>Reply to</Text>
+                                            <Text numberOfLines={1} style={{ fontSize: convert(13), color: '#0009' }}>{replyTo.content}</Text>
+                                        </View>
+                                        <Pressable onPress={() => setReplyTo(null)} style={{ paddingLeft: convert(12) }}>
+                                            <FluentDismiss32Filled width={16} height={16} color={'#0009'} />
+                                        </Pressable>
+                                    </View>
+                                )}
                                 <View style={{ bottom: 0, zIndex: 12, width: w, borderTopWidth: 1, borderColor: '#cfdfeeff', paddingHorizontal: convert(16), minHeight: convert(56), paddingTop: convert(8), paddingBottom: convert(12), height: 'auto', maxHeight: convert(150), flexDirection: 'row', gap: 12, alignItems: "flex-end" }}>
                                     <TextInput
                                         multiline={true}
@@ -373,9 +408,11 @@ export default function NoteEditor() {
                                     <View>
                                         <TouchableOpacity
                                             onPress={handleAgent}
-                                            disabled={!inputValue.trim()}
-                                            style={{ width: 40, aspectRatio: 1, borderRadius: 26, alignItems: 'center', justifyContent: "center", backgroundColor: "#238dffff" }}>
-                                            <FluentArrowUp32Filled width={20} height={20} color={"white"} />
+                                            disabled={!inputValue.trim() || aiLoading}
+                                            style={{ width: 40, aspectRatio: 1, borderRadius: 26, alignItems: 'center', justifyContent: "center", backgroundColor: "#238dffff", opacity: aiLoading ? 0.6 : 1 }}>
+                                            {aiLoading
+                                                ? <ActivityIndicator size={'small'} color={'white'} />
+                                                : <FluentArrowUp32Filled width={20} height={20} color={"white"} />}
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -389,42 +426,91 @@ export default function NoteEditor() {
 
 }
 
-function Response_Ai({ item }: { item: AiHistoryType }) {
+function ThinkingIndicator() {
+    const dot1 = useRef(new Animated.Value(0)).current;
+    const dot2 = useRef(new Animated.Value(0)).current;
+    const dot3 = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const animate = (value: Animated.Value, delay: number) => Animated.loop(
+            Animated.sequence([
+                Animated.delay(delay),
+                Animated.timing(value, { toValue: 1, duration: 350, useNativeDriver: true }),
+                Animated.timing(value, { toValue: 0, duration: 350, useNativeDriver: true }),
+            ])
+        );
+
+        const anims = [animate(dot1, 0), animate(dot2, 150), animate(dot3, 300)];
+        anims.forEach((a) => a.start());
+        return () => anims.forEach((a) => a.stop());
+    }, []);
+
+    const dotStyle = (value: Animated.Value) => ({
+        opacity: value.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }),
+        transform: [{ translateY: value.interpolate({ inputRange: [0, 1], outputRange: [0, -3] }) }],
+    });
+
+    return (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: convert(6), paddingTop: convert(8), marginBottom: convert(12) }}>
+            <Text style={{ fontSize: convert(14), color: '#0009', fontStyle: 'italic' }}>Thinking</Text>
+            <View style={{ flexDirection: 'row', gap: 3 }}>
+                <Animated.View style={[{ width: 5, height: 5, borderRadius: 3, backgroundColor: '#0009' }, dotStyle(dot1)]} />
+                <Animated.View style={[{ width: 5, height: 5, borderRadius: 3, backgroundColor: '#0009' }, dotStyle(dot2)]} />
+                <Animated.View style={[{ width: 5, height: 5, borderRadius: 3, backgroundColor: '#0009' }, dotStyle(dot3)]} />
+            </View>
+        </View>
+    );
+}
+
+const markdownSelectableRules = {
+    textgroup: (node: any, children: any, parent: any, styles: any) => (
+        <Text key={node.key} style={styles.textgroup} selectable>
+            {children}
+        </Text>
+    ),
+};
+
+function Response_Ai({ item, onReply }: { item: AiHistoryType, onReply: (item: AiHistoryType) => void }) {
     const [copier, setCopier] = useState<boolean>(false)
+    const [menu, setMenu] = useState<{ x: number, y: number } | null>(null)
 
+    const handleCopy = async () => {
+        await Clipboard.setStringAsync(item.content)
+        setMenu(null)
+    }
 
+    const handleReply = () => {
+        onReply(item)
+        setMenu(null)
+    }
 
     return (
         <>
-            {
-                !copier
-                    ? (<Pressable
-                        onLongPress={() => setCopier(true)}
-                        className="reponse mb-3 px-1"
-                        style={{ paddingTop: convert(8), marginBottom: convert(12) }}
-                    >
-                        <Markdown mergeStyle={true} style={{ body: { color: 'black', fontSize: convert(16) } }}>
-                            {item.content}
-                        </Markdown>
-                    </Pressable>)
-                    : (
-                        <View
-                            style={{ marginBottom: convert(12), borderWidth: 1, borderColor: "#f05", marginTop: convert(12) }}
-                        >
-                            <View style={{ paddingVertical: convert(4), paddingHorizontal: convert(12), backgroundColor: "#f05", flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Text style={{ fontSize: convert(14), fontWeight: '600', color: 'white' }}>Selection box</Text>
-                                <Pressable onPress={() => setCopier(false)}>
-                                    <FluentDismiss32Filled width={15} height={15} color={'white'} />
-                                </Pressable>
-                            </View>
-                            <View style={{ paddingTop: convert(8), paddingHorizontal: convert(12), paddingBottom: convert(12) }}>
-                                <Text style={{ fontSize: convert(16) }} selectable selectionColor={"rgba(255, 5, 5, 0.13)"}>
-                                    {item.content}
-                                </Text>
-                            </View>
+            <Pressable
+                onLongPress={(e) => setMenu({ x: e.nativeEvent.pageX, y: e.nativeEvent.pageY })}
+                className="reponse mb-3 px-1"
+                style={{ paddingTop: convert(8), marginBottom: convert(12) }}
+
+
+            >
+                <Markdown mergeStyle={true} rules={markdownSelectableRules} style={{ body: { color: 'black', fontSize: convert(16), lineHeight: 23 } }}>
+                    {item.content}
+                </Markdown>
+            </Pressable>
+            <Modal visible={!!menu} transparent animationType="fade" onRequestClose={() => setMenu(null)}>
+                <Pressable style={{ flex: 1 }} onPress={() => setMenu(null)}>
+                    {menu && (
+                        <View style={{ position: 'absolute', top: menu.y, left: Math.min(menu.x, w - convert(160)), width: convert(150), backgroundColor: 'white', borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 4, overflow: 'hidden' }}>
+                            <TouchableOpacity onPress={handleCopy} style={{ paddingVertical: convert(12), paddingHorizontal: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0' }}>
+                                <Text style={{ fontSize: convert(15) }}>Copy</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={handleReply} style={{ paddingVertical: convert(12), paddingHorizontal: convert(14) }}>
+                                <Text style={{ fontSize: convert(15) }}>Reply</Text>
+                            </TouchableOpacity>
                         </View>
-                    )
-            }
+                    )}
+                </Pressable>
+            </Modal>
         </>
     )
 }
