@@ -56,15 +56,17 @@ type bibleverst = {
     text: string | undefined;
 }[]
 
-const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
+const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn, correctText }: {
     editor: Editor | null, biblemetadatState: BibleMetadata[], menubtn?: { teste: () => void }, trie: (data: [book_id: string, book_name: string, chapter: string, vers1?: string, vers2?: string]) => Promise<{
         ref_bible: string;
         content: string;
-    } | undefined>
+    } | undefined>,
+    correctText?: (text: string) => Promise<string | null>
 }, ref) => {
     const [bible_id, setBible_id] = useState<string | null>(null)
     const [openBible, setOpenBible] = useState(false)
     const [verse, setVerse] = useState<string>("")
+    const [correcting, setCorrecting] = useState(false)
 
     const handleImage = ({ target }: { target: HTMLInputElement }) => {
         if (!target.files || target.files.length === 0) return;
@@ -104,6 +106,7 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
                     isBulletList: false, isOrderedList: false,
                     isCodeBlock: false, isBlockquote: false,
                     canUndo: false, canRedo: false,
+                    selectionEmpty: true,
                 };
             }
             return {
@@ -129,6 +132,7 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
                 isBlockquote: ctx.editor.isActive('blockquote') ?? false,
                 canUndo: ctx.editor.can().chain().undo().run() ?? false,
                 canRedo: ctx.editor.can().chain().redo().run() ?? false,
+                selectionEmpty: ctx.editor.state.selection.empty,
             }
         },
     })
@@ -267,6 +271,26 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
                     >
                         <FluentTaskList24Filled width={20} height={20} />
                     </button>
+                    <button
+                        className='long-btn'
+                        disabled={editorState.selectionEmpty || correcting || !correctText}
+                        onClick={async () => {
+                            const { from, to } = editor.state.selection;
+                            const selected = editor.state.doc.textBetween(from, to, ' ');
+                            if (!selected.trim()) return;
+                            setCorrecting(true);
+                            try {
+                                const corrected = await correctText?.(selected);
+                                if (corrected) {
+                                    editor.chain().focus().insertContentAt({ from, to }, corrected).run();
+                                }
+                            } finally {
+                                setCorrecting(false);
+                            }
+                        }}
+                    >
+                        <span>{correcting ? '...' : 'Corriger'}</span>
+                    </button>
                 </div>
             </div>
             {
@@ -304,7 +328,7 @@ const BibleItem = ({ el, isActived, onClick }: { el: BibleMetadata, onClick: () 
 // }
 
 
-const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubtn }: { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void } }, ref) => {
+const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubtn, correctText }: { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void }, correctText?: (text: string) => Promise<string | null> }, ref) => {
     const [isFocus, setIsFocus] = useState(false)
     const [content, setContent] = useState<any>(() => safeParseBody(note?.body))
     const [isTyping, setIsTyping] = useState(false)
@@ -387,7 +411,7 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
         <div style={{ width: '100vw' }}>
             <style dangerouslySetInnerHTML={{ __html: styles }}></style>
             <div style={{ position: "relative", height: "100svh" }}>
-                <MenuBar editor={editor} biblemetadatState={biblemetadatState} trie={trie} menubtn={menubtn} />
+                <MenuBar editor={editor} biblemetadatState={biblemetadatState} trie={trie} menubtn={menubtn} correctText={correctText} />
                 <EditorContent editor={editor} onFocus={() => setIsFocus(true)} onBlur={() => setIsFocus(false)} ref={ref} />
                 <div style={{ height: 60 }}></div>
             </div>

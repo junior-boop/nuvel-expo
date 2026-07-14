@@ -10,7 +10,7 @@ import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
 import { w } from "@/constants/Colors";
 import { convert } from "@/constants/convert";
-import { FluentArrowUp32Filled, FluentDelete32Regular, FluentDismiss32Filled, FluentFolderLink32Regular, FluentGlobeArrowForward32Regular, FluentMoreVertical32Filled, FluentShare32Regular, FluentSparkle32Regular, IcBaselineArrowBack, IcTwotoneWhatsapp } from "@/constants/icons";
+import { FluentArrowUp32Filled, FluentCheckmark28Filled, FluentDelete32Regular, FluentDismiss32Filled, FluentFolderLink32Regular, FluentGlobeArrowForward32Regular, FluentMoreVertical32Filled, FluentShare32Regular, FluentSparkle32Regular, IcBaselineArrowBack, IcTwotoneWhatsapp } from "@/constants/icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 
@@ -19,7 +19,8 @@ import { generateUUID as uuidv4 } from "@/Database/uuid";
 import htmlToWhatsApp from "@/components/bible_component/livre/convert_whatsapp";
 import { QueryForTable } from "@/constants/Queryuilder";
 import * as AiStore from '@/Database/ai';
-import { askAiAgent } from "@/lib/aiAgent";
+import { askAiAgent, correctText } from "@/lib/aiAgent";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useBottomSheetBackHandler } from "@/lib/useBottomSheetBackHandler";
 import { server_url } from "@/constants/server_url";
 import * as Clipboard from 'expo-clipboard';
@@ -49,6 +50,7 @@ export default function NoteEditor() {
     const { notesQuery, updateNote, biblemetadatState, usersQuery } = useDatabase()
     const [isOpen, setIsOpen] = useState(false)
     const [aiOpen, setAiOpen] = useState(false)
+    const [groupPickerOpen, setGroupPickerOpen] = useState(false)
     const [title, setTitle] = useState<string | null>(null)
     const [inputValue, setInputValue] = useState("");
     const [ai_conversation, setConversation] = useState<AiHistoryType[]>([])
@@ -140,6 +142,7 @@ export default function NoteEditor() {
 
     useBottomSheetBackHandler(isOpen, () => setIsOpen(false));
     useBottomSheetBackHandler(aiOpen, () => setAiOpen(false));
+    useBottomSheetBackHandler(groupPickerOpen, () => setGroupPickerOpen(false));
 
     useEffect(() => {
         if (!aiOpen) hasScrolledOnOpenRef.current = false;
@@ -181,6 +184,16 @@ export default function NoteEditor() {
         const context = note_whatsapp ?? (Note?.html ? htmlToWhatsApp(Note.html as string) : "");
         return askAiAgent(context, prompt);
     }, [note_whatsapp, Note]);
+
+    const handleCorrectSelection = useCallback(async (text: string) => {
+        try {
+            const result = await correctText(text);
+            return result.success ? result.corrected ?? null : null;
+        } catch (error) {
+            if (__DEV__) console.log('[Correction] Erreur:', error);
+            return null;
+        }
+    }, []);
 
     const fetch_ai_history = useCallback(async () => {
         const ai_history = await AiStore.get(data.id as string)
@@ -278,7 +291,7 @@ export default function NoteEditor() {
                     {
                         Note === undefined
                             ? <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><View style={{ alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size={'large'} color={'black'} /><Text>Page Loading...</Text> </View></View>
-                            : <EditorJS note={Note} updateNote={(data) => handleUpdate(data)} biblemetadatState={bible as BibleMetadata[]} trie={filterBible} menubtn={handleTest} ref={editorRef} />
+                            : <EditorJS note={Note} updateNote={(data) => handleUpdate(data)} biblemetadatState={bible as BibleMetadata[]} trie={filterBible} menubtn={handleTest} correctText={handleCorrectSelection} ref={editorRef} />
                     }
                 </KeyboardAvoidingView>
                 {
@@ -322,7 +335,9 @@ export default function NoteEditor() {
                                 <FluentShare32Regular width={24} height={24} color={'black'} />
                                 <Text style={{ fontSize: convert(18) }}>Share</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}>
+                            <TouchableOpacity
+                                onPress={() => { setIsOpen(false); setGroupPickerOpen(true) }}
+                                style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}>
                                 <FluentFolderLink32Regular width={24} height={24} color={'black'} />
                                 <Text style={{ fontSize: convert(18) }}>Link to group</Text>
                             </TouchableOpacity>
@@ -474,10 +489,83 @@ export default function NoteEditor() {
                         </KeyboardAvoidingView>
                     </BottomSheet>
                 }
+                {
+                    groupPickerOpen && <GroupPicker
+                        noteId={data.id as string}
+                        currentGroup={(Note?.grouped as string | null) ?? null}
+                        onClose={() => setGroupPickerOpen(false)}
+                    />
+                }
             </GestureHandlerRootView>
         </PageLayout_3>
     )
 
+}
+
+function GroupPicker({ noteId, currentGroup, onClose }: { noteId: string, currentGroup: string | null, onClose: () => void }) {
+    const sheetRef = useRef<BottomSheet>(null);
+    const { groupsQuery, addGroup, addNotetoGroup, session } = useDatabase()
+    const [value, setValue] = useState('')
+
+    useBottomSheetBackHandler(true, () => onClose?.());
+
+    const handleSelect = async (groupId: string | null) => {
+        await addNotetoGroup({ id: noteId, grouped: groupId, creator: session?.iduser })
+        onClose?.()
+    }
+
+    const handleCreate = async () => {
+        const name = value.trim()
+        if (!name || !session?.iduser) return
+        const created = await addGroup({ name }, session.iduser)
+        if (created?.id) {
+            setValue('')
+            await handleSelect(created.id)
+        }
+    }
+
+    return (
+        <BottomSheet
+            ref={sheetRef}
+            snapPoints={[400]}
+            enableDynamicSizing={false}
+            enablePanDownToClose={true}
+            containerStyle={{ backgroundColor: '#0003' }}
+            onClose={onClose}
+        >
+            <BottomSheetView style={{ flex: 1, height: '100%', position: 'relative' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: convert(20), paddingVertical: convert(12), gap: convert(8), borderBottomWidth: 1, borderColor: '#cfdfeeff' }}>
+                    <TextInput
+                        value={value}
+                        onChangeText={setValue}
+                        placeholder="New group name"
+                        placeholderTextColor={"#8fa0acff"}
+                        style={{ flex: 1, fontSize: convert(16), color: 'black' }}
+                    />
+                    <TouchableOpacity onPress={handleCreate} style={{ padding: convert(8) }}>
+                        <MaterialIcons name="add" size={24} color="#0083ff" />
+                    </TouchableOpacity>
+                </View>
+                <ScrollView showsVerticalScrollIndicator={true} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: convert(20), paddingBottom: convert(50), paddingTop: convert(12) }}>
+                    {currentGroup && (
+                        <TouchableOpacity onPress={() => handleSelect(null)} style={{ paddingVertical: convert(12), borderBottomWidth: 1, borderBottomColor: '#cfdfeeff' }}>
+                            <Text style={{ fontSize: convert(16), color: '#c0392b' }}>No group</Text>
+                        </TouchableOpacity>
+                    )}
+                    {(groupsQuery?.findAll() ?? []).map((group: { id: string, name: string }) => (
+                        <TouchableOpacity
+                            key={group.id}
+                            onPress={() => handleSelect(group.id)}
+                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: convert(12), borderBottomWidth: 1, borderBottomColor: '#cfdfeeff' }}
+                        >
+                            <Text style={{ fontSize: convert(16) }}>{group.name}</Text>
+                            {currentGroup === group.id && <FluentCheckmark28Filled width={18} height={18} color={'#0083ff'} />}
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </BottomSheetView>
+        </BottomSheet>
+    )
 }
 
 function ThinkingIndicator() {
