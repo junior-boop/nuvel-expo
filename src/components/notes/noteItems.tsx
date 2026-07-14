@@ -33,9 +33,10 @@ export default function NoteItems({ note }: { note: NotesType }) {
 
         return t
     }, [data])
-    const Blocks_talks = useMemo(() => {
-        const t = data.content.filter((el) => el.type === 'taskList')
-        if (t.length !== 0) return t;
+    const tasksCount = useMemo(() => {
+        return data.content
+            .filter((el) => el.type === 'taskList')
+            .reduce((acc, el) => acc + (el.content?.length ?? 0), 0)
     }, [data])
 
     const block_text = () => {
@@ -139,9 +140,17 @@ export default function NoteItems({ note }: { note: NotesType }) {
 
                 </View>
             </TouchableOpacity>
-            {Blocks_reference !== null && Blocks_reference !== undefined && (<ScrollView horizontal={true} contentContainerStyle={{ paddingHorizontal: 14, gap: 8, paddingTop: 12 }} showsHorizontalScrollIndicator={false}>
-                {Blocks_reference.map((el, key) => (<Text style={styles.ref} key={key}>{el.attrs.ref_bible}</Text>))}
-            </ScrollView>)}
+            {(tasksCount > 0 || (Blocks_reference !== null && Blocks_reference !== undefined && Blocks_reference.length > 0)) && (
+                <ScrollView horizontal={true} contentContainerStyle={{ paddingHorizontal: 14, gap: 8, paddingTop: 12 }} showsHorizontalScrollIndicator={false}>
+                    {tasksCount > 0 && (
+                        <View style={styles.taskBadge}>
+                            <MaterialCommunityIcons name="checkbox-marked-outline" size={13} color="#fff" />
+                            <Text style={styles.taskBadgeText}>{tasksCount}</Text>
+                        </View>
+                    )}
+                    {Blocks_reference !== null && Blocks_reference !== undefined && Blocks_reference.map((el, key) => (<Text style={styles.ref} key={key}>{el.attrs.ref_bible}</Text>))}
+                </ScrollView>
+            )}
         </View>
     )
 }
@@ -181,5 +190,20 @@ const styles = StyleSheet.create({
         fontSize: convert(13),
         backgroundColor: '#e2e8f0',
         width: 'auto'
+    },
+    taskBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: convert(4),
+        paddingHorizontal: convert(8),
+        paddingVertical: convert(4),
+        borderRadius: (1),
+        backgroundColor: '#0083ff',
+        width: 'auto'
+    },
+    taskBadgeText: {
+        color: '#fff',
+        fontSize: convert(13),
+        fontWeight: '600'
     }
 })

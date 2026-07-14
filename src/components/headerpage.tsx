@@ -34,7 +34,7 @@ export default function HeaderPage({ scrollY }: { scrollY?: Animated.Value }) {
             </Animated.View>
             <View style={{ height: 32, borderBottomWidth: 1, borderBottomColor: '#eee', paddingHorizontal: 14, flexDirection: "row", gap: 20, alignItems: "flex-start", marginTop: 12 }}>
                 <Onglet title="Notes" url="/myspace" />
-                <Onglet title="Groupes" url="/myspace/group" />
+                <Onglet title="Groups" url="/myspace/group" />
                 <Onglet title="Archives" url="/myspace/archives" />
             </View>
         </>

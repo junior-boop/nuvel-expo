@@ -23,6 +23,7 @@ import { askAiAgent, correctText } from "@/lib/aiAgent";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useBottomSheetBackHandler } from "@/lib/useBottomSheetBackHandler";
 import { server_url } from "@/constants/server_url";
+import { apiRequest } from "@/lib/token_system";
 import * as Clipboard from 'expo-clipboard';
 import moment from "moment";
 import Markdown from 'react-native-markdown-display';
@@ -47,7 +48,7 @@ export default function NoteEditor() {
     const [note_whatsapp, set_note_whatsapp] = useState<string | null>(null)
     const [note_body, set_note_body] = useState<string | null>(null)
     const data = useLocalSearchParams()
-    const { notesQuery, updateNote, biblemetadatState, usersQuery } = useDatabase()
+    const { notesQuery, updateNote, biblemetadatState, usersQuery, deleteNote, session } = useDatabase()
     const [isOpen, setIsOpen] = useState(false)
     const [aiOpen, setAiOpen] = useState(false)
     const [groupPickerOpen, setGroupPickerOpen] = useState(false)
@@ -263,6 +264,81 @@ export default function NoteEditor() {
         }
     }
 
+    const handleUpdateArticle = () => {
+        const note = notesQuery?.findById(data.id as string)
+        if (!note || !note.publishId) return
+        try {
+            const { articleid } = JSON.parse(note.publishId as string) as { articleid: string }
+            const obj_article = {
+                mode: "edit",
+                articleid,
+                title: JSON.parse(note.body as string).content[0].content[0].text,
+                html: note.html as string,
+                body: note.body as string,
+                creator: note.creator as string,
+                version: note.version,
+                noteid: note.id
+            }
+
+            router.navigate({
+                pathname: "/newarticle",
+                params: obj_article
+            })
+        } catch (error) {
+            if (__DEV__) console.log('[Publish] Erreur parsing publishId:', error)
+        }
+    }
+
+    const handleDeleteArticleAndNote = () => {
+        const note = notesQuery?.findById(data.id as string)
+        if (!note || !note.publishId) return
+
+        Alert.alert(
+            "Delete note and article?",
+            "This will permanently delete the note and its published article. This cannot be undone.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            const { articleid } = JSON.parse(note.publishId as string) as { articleid: string }
+                            await apiRequest(`${server_url}/articles/${session?.iduser}/doc/${articleid}`, { method: 'DELETE' })
+                        } catch (error) {
+                            if (__DEV__) console.log('[Publish] Erreur suppression article:', error)
+                        }
+                        await deleteNote(note.id)
+                        setIsOpen(false)
+                        router.back()
+                    }
+                }
+            ]
+        )
+    }
+
+    const handleDeleteNoteOnly = () => {
+        const note = notesQuery?.findById(data.id as string)
+        if (!note) return
+
+        Alert.alert(
+            "Delete this note?",
+            "This cannot be undone.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        await deleteNote(note.id)
+                        setIsOpen(false)
+                        router.back()
+                    }
+                }
+            ]
+        )
+    }
+
     return (
         <PageLayout_3>
             <GestureHandlerRootView style={{
@@ -350,7 +426,7 @@ export default function NoteEditor() {
                             </TouchableOpacity>
                             {
                                 Note.publishId ? (
-                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handlePublish}>
+                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handleUpdateArticle}>
                                         <FluentGlobeArrowForward32Regular width={24} height={24} color={'black'} />
                                         <Text style={{ fontSize: convert(18) }}>Updated the article</Text>
                                     </TouchableOpacity>
@@ -363,12 +439,12 @@ export default function NoteEditor() {
                             }
                             {
                                 Note.publishId ? (
-                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handlePublish}>
+                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handleDeleteArticleAndNote}>
                                         <FluentDelete32Regular width={24} height={24} color={'black'} />
                                         <Text style={{ fontSize: convert(18) }}>Deleted the note and article</Text>
                                     </TouchableOpacity>
                                 ) : (
-                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}>
+                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handleDeleteNoteOnly}>
                                         <FluentDelete32Regular width={24} height={24} color={'black'} />
                                         <Text style={{ fontSize: convert(18) }}>Deleted this note</Text>
                                     </TouchableOpacity>

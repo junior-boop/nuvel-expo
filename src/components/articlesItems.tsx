@@ -51,7 +51,7 @@ export default function ArticlesItems({ article }: { article: ArticleStat }) {
                     <Text style={{ fontSize: convert(12), color: "#444" }}>•  {moment(article.article?.createdAt).fromNow()}</Text>
                 </TouchableOpacity>
             </View>
-            <View style={{ borderWidth: 1, borderColor: "#e2e2e2ff", borderRadius: convert(4), overflow: 'hidden', marginTop: convert(8) }}>
+            <View style={{ borderWidth: 1, borderColor: "#e2e2e2ff", borderRadius: convert(8), overflow: 'hidden', marginTop: convert(8) }}>
                 <Image source={{ uri: `https://${article.article?.imageurl}` }} style={{ width: 80, height: 80 }} />
             </View>
 

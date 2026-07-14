@@ -123,7 +123,7 @@ const TopArticles = ({ articles }: { articles: ArticleStat }) => {
         </View>
       </TouchableOpacity>
     </View>
-    <TouchableOpacity onPress={handleOpen} style={{ width: '100%', aspectRatio: 5 / 4, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e2e2ff', borderRadius: convert(7) }}>
+    <TouchableOpacity onPress={handleOpen} style={{ width: '100%', aspectRatio: 5 / 4, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e2e2ff', borderRadius: convert(12) }}>
       <Image source={{ uri: `https://${articles.article?.imageurl}` }} style={{ width: '100%', aspectRatio: 5 / 4 }} />
     </TouchableOpacity>
   </View>)
