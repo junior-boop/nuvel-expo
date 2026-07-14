@@ -14,7 +14,10 @@
         "gradleCommand": ":app:assembleRelease",
         "distribution": "internal"
       },
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "ORG_GRADLE_PROJECT_reactNativeArchitectures": "arm64-v8a"
+      }
     },
     "production": {
       "autoIncrement": true
