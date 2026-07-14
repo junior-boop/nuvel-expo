@@ -18,7 +18,18 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.junior41.nuveltwyoptbpmwgsox1tafyp"
+      "package": "com.junior41.nuveltwyoptbpmwgsox1tafyp",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "nuvelserver.godigital.workers.dev", "pathPrefix": "/notes/view" },
+            { "scheme": "https", "host": "nuvelserver.godigital.workers.dev", "pathPrefix": "/articles" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "output": "static",
