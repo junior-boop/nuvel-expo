@@ -13,6 +13,7 @@ import { setShareCount, setSignals } from "@/lib/instantdb.articles";
 import { CommentType } from "@/lib/instantdb.init";
 import { useArticle } from "@/lib/useArticles";
 import { ArticleStat } from "@/lib/useArticlesAll";
+import { useBottomSheetBackHandler } from "@/lib/useBottomSheetBackHandler";
 import BottomSheet, { BottomSheetTextInput, BottomSheetView } from "@gorhom/bottom-sheet";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -147,6 +148,8 @@ const SheetComments = ({ onClose, articleId, creatorName, commentCount, userId }
         deleteComment,
         fetchComments
     } = useCommentHooks(articleId);
+
+    useBottomSheetBackHandler(true, onClose);
 
     // Fonction pour envoyer un commentaire
     const handlePostComment = useCallback(async () => {

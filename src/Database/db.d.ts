@@ -86,6 +86,7 @@ export interface AiHistoryType {
   iduser: string;
   role: string;
   content: string;
+  replyContent?: string;
   created: Date | string;
   modified: Date | string;
 }

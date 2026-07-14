@@ -4,7 +4,7 @@ import type { AiHistoryType, BibleMetadata, Notes } from "@/Database/db";
 import EditorJS from "@/editor";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Animated, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, Share, TextInput, TouchableOpacity } from "react-native";
+import { ActivityIndicator, Alert, Animated, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, Share, TextInput, TextStyle, TouchableOpacity } from "react-native";
 
 import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
@@ -20,9 +20,25 @@ import htmlToWhatsApp from "@/components/bible_component/livre/convert_whatsapp"
 import { QueryForTable } from "@/constants/Queryuilder";
 import * as AiStore from '@/Database/ai';
 import { askAiAgent } from "@/lib/aiAgent";
+import { useBottomSheetBackHandler } from "@/lib/useBottomSheetBackHandler";
 import * as Clipboard from 'expo-clipboard';
 import moment from "moment";
 import Markdown from 'react-native-markdown-display';
+
+// Les messages user avec reply sont stockés en JSON ({ question, reply }) dans la colonne `content`
+// pour persister le reply sans migration de schéma. Fallback en texte brut pour les anciennes lignes.
+function parseStoredMessage(item: AiHistoryType): AiHistoryType {
+    if (item.role !== "user") return item;
+    try {
+        const parsed = JSON.parse(item.content);
+        if (parsed && typeof parsed.question === "string") {
+            return { ...item, content: parsed.question, replyContent: parsed.reply };
+        }
+    } catch {
+        // texte brut (ancien format ou question sans reply) -> inchangé
+    }
+    return item;
+}
 
 export default function NoteEditor() {
     const [isKeyboard, setIskeyboard] = useState<{ height: number | string, screenY: number | string, width?: number } | undefined>(undefined)
@@ -46,6 +62,9 @@ export default function NoteEditor() {
     const bible = biblemetadatState?.findAll()
     const sheetRef = useRef<BottomSheet>(null);
     const aisheetRef = useRef<BottomSheet>(null)
+    const chatScrollRef = useRef<ScrollView>(null)
+    const [chatHeight, setChatHeight] = useState(0)
+    const hasScrolledOnOpenRef = useRef(false)
     // variables
     const snapPoints = useMemo(() => ["50%"], []);
     const aisnapPoints = useMemo(() => ['100%'], [])
@@ -78,7 +97,7 @@ export default function NoteEditor() {
 
     const getconversation = useCallback(async () => {
         const result = await AiStore.get(data.id as string)
-        setConversation(result as AiHistoryType[])
+        setConversation((result as AiHistoryType[])?.map(parseStoredMessage))
     }, [Note])
 
     const handleWhatsapp = async () => {
@@ -117,6 +136,13 @@ export default function NoteEditor() {
             setIsOpen(false)
         }
     }, []);
+
+    useBottomSheetBackHandler(isOpen, () => setIsOpen(false));
+    useBottomSheetBackHandler(aiOpen, () => setAiOpen(false));
+
+    useEffect(() => {
+        if (!aiOpen) hasScrolledOnOpenRef.current = false;
+    }, [aiOpen]);
 
     const handleTest = useCallback(() => {
         if (editorRef) {
@@ -158,7 +184,7 @@ export default function NoteEditor() {
     const fetch_ai_history = useCallback(async () => {
         const ai_history = await AiStore.get(data.id as string)
         history_ai.addMany(ai_history)
-        setConversation(history_ai.findAll())
+        setConversation(history_ai.findAll().map(parseStoredMessage))
 
     }, [])
 
@@ -171,15 +197,19 @@ export default function NoteEditor() {
         const question = inputValue.trim();
         if (!question || aiLoading) return;
 
+        Keyboard.dismiss();
+
         const noteId = data.id as string;
         const quoted = replyTo?.content;
 
         // Ajouter immédiatement le message de l'utilisateur pour un feedback instantané
-        const userMessage: AiHistoryType = { id: uuidv4(), iduser: noteId, role: "user", content: question, created: new Date().toISOString(), modified: new Date().toISOString() };
+        const userMessage: AiHistoryType = { id: uuidv4(), iduser: noteId, role: "user", content: question, replyContent: quoted, created: new Date().toISOString(), modified: new Date().toISOString() };
         setConversation((el) => [...el, userMessage]);
         setInputValue("")
         setReplyTo(null)
-        AiStore.set({ iduser: noteId, role: "user", content: question });
+        const storedContent = quoted ? JSON.stringify({ question, reply: quoted }) : question;
+        AiStore.set({ iduser: noteId, role: "user", content: storedContent });
+        requestAnimationFrame(() => chatScrollRef.current?.scrollToEnd({ animated: true }));
 
         setAiLoading(true);
         try {
@@ -191,6 +221,7 @@ export default function NoteEditor() {
 
             setConversation((el) => [...el, { id: uuidv4(), iduser: noteId, role: "assistant", content: answer, created: new Date().toISOString(), modified: new Date().toISOString() }]);
             AiStore.set({ iduser: noteId, role: "assistant", content: answer });
+            requestAnimationFrame(() => chatScrollRef.current?.scrollToEnd({ animated: true }));
         } catch (error) {
             if (__DEV__) console.log('[AI Agent] Erreur:', error);
             setConversation((el) => [...el, { id: uuidv4(), iduser: noteId, role: "assistant", content: "Une erreur est survenue. Réessayez plus tard.", created: new Date().toISOString(), modified: new Date().toISOString() }]);
@@ -353,26 +384,48 @@ export default function NoteEditor() {
                                         <Text style={{ fontSize: convert(13), color: "#0009" }}>Assistant</Text>
                                         <Text style={{ fontSize: convert(20), fontWeight: '600' }}>{title?.length > 34 ? `${title?.substring(0, 34)}...` : title}</Text>
                                     </View>
-                                    <ScrollView showsVerticalScrollIndicator={true} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: convert(20), paddingBottom: convert(50), paddingTop: convert(12) }} inverted invertStickyHeaders>
+                                    <ScrollView
+                                        ref={chatScrollRef}
+                                        showsVerticalScrollIndicator={true}
+                                        style={{ flex: 1 }}
+                                        contentContainerStyle={{ paddingHorizontal: convert(20), paddingBottom: convert(50), paddingTop: convert(12) }}
+                                        onLayout={(e) => setChatHeight(e.nativeEvent.layout.height)}
+                                        onContentSizeChange={() => {
+                                            if (!hasScrolledOnOpenRef.current) {
+                                                hasScrolledOnOpenRef.current = true;
+                                                chatScrollRef.current?.scrollToEnd({ animated: false });
+                                            }
+                                        }}
+                                        inverted invertStickyHeaders
+                                    >
 
                                         <View>
                                             {ai_conversation?.map((item, index) => {
+                                                const isPendingQuestion = item.role === "user" && aiLoading && index === ai_conversation.length - 1;
                                                 return item.role === "user"
                                                     ? (
                                                         <View
-
                                                             key={index}
-                                                            style={{ width: '90%', borderRadius: convert(4), backgroundColor: "#008cff08", borderWidth: 1, borderColor: '#008cff18', paddingHorizontal: convert(12), paddingVertical: convert(8), gap: convert(2) }}
+                                                            style={isPendingQuestion ? { minHeight: chatHeight * .75, justifyContent: 'flex-start' } : undefined}
                                                         >
-                                                            <Text style={{ fontSize: convert(16), fontWeight: '600' }}>{item.content}</Text>
-                                                            {/* <Text style={{ fontSize: convert(12), color: "#0009", textAlign: 'right' }}>{moment(item.created).fromNow()}</Text> */}
+                                                            <View
+                                                                style={{ width: '90%', borderRadius: convert(4), backgroundColor: "#008cff08", borderWidth: 1, borderColor: '#008cff18' }}
+                                                            >
+                                                                {item.replyContent && (
+                                                                    <View style={{ paddingLeft: convert(8), backgroundColor: '#008cff18' }}>
+                                                                        <Text numberOfLines={2} style={{ fontSize: convert(13), color: '#0009', paddingVertical: convert(5) }}>{item.replyContent}</Text>
+                                                                    </View>
+                                                                )}
+                                                                <Text style={{ fontSize: convert(16), fontWeight: '500', paddingHorizontal: convert(12), paddingVertical: convert(8), lineHeight: convert(20) }}>{item.content}</Text>
+                                                                {/* <Text style={{ fontSize: convert(12), color: "#0009", textAlign: 'right' }}>{moment(item.created).fromNow()}</Text> */}
+                                                            </View>
+                                                            {isPendingQuestion && <ThinkingIndicator />}
                                                         </View>
                                                     )
                                                     : (
                                                         <Response_Ai item={item} key={index} onReply={setReplyTo} />
                                                     );
                                             })}
-                                            {aiLoading && <ThinkingIndicator />}
                                         </View>
 
                                     </ScrollView>
@@ -462,16 +515,125 @@ function ThinkingIndicator() {
     );
 }
 
-const markdownSelectableRules = {
-    textgroup: (node: any, children: any, parent: any, styles: any) => (
-        <Text key={node.key} style={styles.textgroup} selectable>
-            {children}
-        </Text>
-    ),
+// Styles par type de nœud inline
+const inlineStyles: Record<string, TextStyle> = {
+    strong: { fontWeight: '700' },
+    em: { fontStyle: 'italic' },
+    s: { textDecorationLine: 'line-through' },
+    code_inline: {
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+        backgroundColor: '#f1f5f9',
+        fontSize: convert(14),
+    },
+    link: { color: '#238dff', textDecorationLine: 'underline' },
 };
 
+// Rendu récursif AST -> <Text> imbriqués stylés
+function renderStyledNodes(node: any, inherited: TextStyle[] = []): React.ReactNode {
+    const ownStyle = inlineStyles[node.type];
+    const styles = ownStyle ? [...inherited, ownStyle] : inherited;
+
+    // Nœud feuille avec du texte
+    if (typeof node.content === "string" && node.content !== "") {
+        return (
+            <Text key={node.key} style={{ ...styles, backgroundColor: 'transparent' }}>
+                {node.content}
+            </Text>
+        );
+    }
+
+    // Nœud avec enfants
+    if (Array.isArray(node.children) && node.children.length > 0) {
+        return (
+            <Text key={node.key} style={styles}>
+                {node.children.map((child: any) => renderStyledNodes(child, styles))}
+            </Text>
+        );
+    }
+
+    // Cas particuliers sans children ni content (softbreak, hardbreak)
+    if (node.type === "softbreak" || node.type === "hardbreak") {
+        return <Text key={node.key}>{"\n"}</Text>;
+    }
+
+    return null;
+}
+
+// Flatten ALIGNÉ sur le rendu : même parcours, même ordre, mêmes cas
+function flattenNodeText(node: any): string {
+    if (typeof node.content === "string" && node.content !== "") {
+        return node.content;
+    }
+    if (Array.isArray(node.children) && node.children.length > 0) {
+        return node.children.map(flattenNodeText).join("");
+    }
+    if (node.type === "softbreak" || node.type === "hardbreak") {
+        return "\n";
+    }
+    return "";
+}
+
+function SelectableTextGroup({ node, styles, onReply }: { node: any, styles: any, onReply: (text: string) => void }) {
+    const plainText = flattenNodeText(node);
+    const [selection, setSelection] = useState<{ start: number, end: number }>({ start: 0, end: 0 })
+    const hasSelection = selection.end > selection.start
+
+    const handleCopy = async () => {
+        await Clipboard.setStringAsync(plainText.substring(selection.start, selection.end))
+        setSelection({ start: 0, end: 0 })
+    }
+
+    const handleReply = () => {
+        onReply(plainText.substring(selection.start, selection.end))
+        setSelection({ start: 0, end: 0 })
+    }
+
+    // Android efface la sélection native dès qu'il n'y a plus d'ActionMode (contextMenuHidden).
+    // On ignore les évènements qui la collapsent pour garder Copy/Reply actifs sur la dernière plage sélectionnée.
+    const handleSelectionChange = (e: { nativeEvent: { selection: { start: number, end: number } } }) => {
+        const next = e.nativeEvent.selection
+        if (next.end > next.start) setSelection(next)
+    }
+
+    const textLayoutStyle = [styles.textgroup, { padding: 0, margin: 0, lineHeight: 24, fontSize: convert(16) }];
+
+    return (
+        <View key={node.key} style={{ position: 'relative' }}>
+            <TextInput
+                multiline
+                editable
+                caretHidden
+                showSoftInputOnFocus={false}
+                // contextMenuHidden
+                onChangeText={() => { }}
+                onSelectionChange={handleSelectionChange}
+                onBlur={() => setSelection({ start: 0, end: 0 })}
+                selectionColor={"rgba(35, 141, 255, 0.25)"}
+                style={[textLayoutStyle, { color: 'black' }]}
+            >
+                {renderStyledNodes(node)}
+            </TextInput>
+            {hasSelection && (
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: convert(4), marginBottom: convert(4) }}>
+                    <TouchableOpacity onPress={handleCopy} style={{ paddingVertical: convert(4), paddingHorizontal: convert(10), backgroundColor: '#eef4ff', borderRadius: 2 }}>
+                        <Text style={{ fontSize: convert(12), color: '#238dffff', fontWeight: '600' }}>Copy</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleReply} style={{ paddingVertical: convert(4), paddingHorizontal: convert(10), backgroundColor: '#238dffff', borderRadius: 2 }}>
+                        <Text style={{ fontSize: convert(12), color: 'white', fontWeight: '600' }}>Reply</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+        </View>
+    );
+}
+
+const getMarkdownRules = (onReply: (text: string) => void) => ({
+    textgroup: (node: any, children: any, parent: any, styles: any) => (
+        <SelectableTextGroup key={node.key} node={node} styles={styles} onReply={onReply} />
+    ),
+});
+
 function Response_Ai({ item, onReply }: { item: AiHistoryType, onReply: (item: AiHistoryType) => void }) {
-    const [copier, setCopier] = useState<boolean>(false)
     const [menu, setMenu] = useState<{ x: number, y: number } | null>(null)
 
     const handleCopy = async () => {
@@ -484,6 +646,8 @@ function Response_Ai({ item, onReply }: { item: AiHistoryType, onReply: (item: A
         setMenu(null)
     }
 
+    const handleInlineReply = (text: string) => onReply({ ...item, content: text })
+
     return (
         <>
             <Pressable
@@ -493,7 +657,7 @@ function Response_Ai({ item, onReply }: { item: AiHistoryType, onReply: (item: A
 
 
             >
-                <Markdown mergeStyle={true} rules={markdownSelectableRules} style={{ body: { color: 'black', fontSize: convert(16), lineHeight: 23 } }}>
+                <Markdown mergeStyle={true} rules={getMarkdownRules(handleInlineReply)} style={{ body: { color: 'black', fontSize: convert(16), lineHeight: 23 } }}>
                     {item.content}
                 </Markdown>
             </Pressable>

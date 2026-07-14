@@ -6,6 +6,7 @@ import { w } from '@/constants/Colors';
 import { convert } from '@/constants/convert';
 import { FluentChevronDown24Filled, FluentImageAdd32Regular } from '@/constants/icons';
 import useTakeUserInfos from '@/lib/useAddUserInfos';
+import { useBottomSheetBackHandler } from '@/lib/useBottomSheetBackHandler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -135,6 +136,9 @@ const CountryPicker = ({ onClose, onChange }: { onClose?: () => void, onChange?:
     useEffect(() => {
         countryfetch()
     }, [])
+
+    useBottomSheetBackHandler(true, () => onClose?.());
+
     return (
         <BottomSheet
             ref={sheetRef}
@@ -182,6 +186,9 @@ const ChurchRulePicker = ({ onClose, onChange }: { onClose?: () => void, onChang
         { id: 4, name: "Elder" },
         { id: 5, name: "Pastor" },
     ]
+
+    useBottomSheetBackHandler(true, () => onClose?.());
+
     return (
         <BottomSheet
             ref={sheetRef}
