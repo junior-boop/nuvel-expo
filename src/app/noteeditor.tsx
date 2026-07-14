@@ -21,6 +21,7 @@ import { QueryForTable } from "@/constants/Queryuilder";
 import * as AiStore from '@/Database/ai';
 import { askAiAgent } from "@/lib/aiAgent";
 import { useBottomSheetBackHandler } from "@/lib/useBottomSheetBackHandler";
+import { server_url } from "@/constants/server_url";
 import * as Clipboard from 'expo-clipboard';
 import moment from "moment";
 import Markdown from 'react-native-markdown-display';
@@ -157,7 +158,7 @@ export default function NoteEditor() {
     const onShare = async () => {
         try {
             const result = await Share.share({
-                message: "partage depuis android"
+                message: `${server_url}/notes/view/${data.id}`
             })
 
             if (result.action === Share.sharedAction) {

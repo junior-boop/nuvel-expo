@@ -14,6 +14,7 @@ import { CommentType } from "@/lib/instantdb.init";
 import { useArticle } from "@/lib/useArticles";
 import { ArticleStat } from "@/lib/useArticlesAll";
 import { useBottomSheetBackHandler } from "@/lib/useBottomSheetBackHandler";
+import { server_url } from "@/constants/server_url";
 import BottomSheet, { BottomSheetTextInput, BottomSheetView } from "@gorhom/bottom-sheet";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -256,7 +257,7 @@ const ShareButton = ({ articleId, Count }: { articleId: string, Count: number })
     const onShare = useCallback(async () => {
         try {
             const result = await Share.share({
-                message: "https://www.nuvel.cc/a/" + articleId
+                message: `${server_url}/articles/${articleId}`
             })
 
             if (__DEV__) console.log(result)
