@@ -656,4 +656,34 @@ control-groupe .button-group bottom.is-active {
     border-radius : 5px
 }
 
+.spell-error {
+    text-decoration: underline;
+    text-decoration-color: #ff3b30;
+    text-decoration-style: wavy;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+}
+
+.floating-correct-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 16px;
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 999px;
+    background-color: #ff3b30;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.floating-correct-btn:disabled {
+    opacity: 0.6;
+}
+
 `;

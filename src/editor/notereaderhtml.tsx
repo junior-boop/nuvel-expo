@@ -23,7 +23,7 @@ const NoteReaderHtml = forwardRef(({ note }: { note: Notes }, ref) => {
 
     const editor = useEditor({
         extensions,
-        content: content,
+        content: JSON.parse(content),
         editable: false,
     })
 
@@ -31,14 +31,14 @@ const NoteReaderHtml = forwardRef(({ note }: { note: Notes }, ref) => {
         <div style={{ width: '100vw' }}>
             <style dangerouslySetInnerHTML={{ __html: styles }}></style>
             <div style={{ position: "relative", minHeight: "100svh", backgroundColor: 'white' }}>
-                <div style={{ padding: "24px" }}>
-                    <span style={{ fontSize: "1rem", color: "#444", fontStyle: "italic" }}>
-                        Modifié {moment(note.modified).fromNow()}
-                    </span>
-                </div>
 
                 <EditorContent editor={editor} />
                 <div style={{ height: 50 }} />
+                <div style={{ padding: "5px 20px", position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTop: '1px solid #ccc', textAlign: 'center' }}>
+                    <span style={{ fontSize: ".8rem", color: "#444" }}>
+                        Last modification : {moment(note.modified).fromNow()}
+                    </span>
+                </div>
             </div>
         </div>
     )

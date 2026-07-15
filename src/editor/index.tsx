@@ -43,12 +43,17 @@ const resizeDataUrl = (dataUrl: string): Promise<string> => new Promise((resolve
     img.src = dataUrl;
 });
 import { BxsBible, FluentAppsList20Filled, FluentArrowEnterLeft24Filled, FluentCode24Regular, FluentCodeBlock32Regular, FluentImageAdd32Regular, FluentLineHorizontal128Regular, FluentTaskList24Filled, FluentTextBold24Regular, FluentTextHeader1Lines24Regular, FluentTextHeader2Lines24Regular, FluentTextHeader3Lines24Regular, FluentTextItalic24Filled, FluentTextNumberList24Regular, FluentTextQuote32Filled, FluentTextStrikethroughS24Regular, IcSharpArrowDownward } from './editor_icons'
+import SpellcheckExtension from './spellcheckExtension'
+import { computeSpellHunks, getTextWithPositions, SpellHunk } from './spellcheckDiff'
 import styles from './styles'
 
 const extensions = [BibleVerset, TextStyleKit, StarterKit, Image, TaskList,
     TaskItem.configure({
         nested: true,
-    })]
+    }), SpellcheckExtension]
+
+// Vérification orthographe/grammaire déclenchée 30s après la dernière frappe.
+const SPELLCHECK_DELAY = 30000
 
 
 type bibleverst = {
@@ -56,17 +61,15 @@ type bibleverst = {
     text: string | undefined;
 }[]
 
-const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn, correctText }: {
+const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
     editor: Editor | null, biblemetadatState: BibleMetadata[], menubtn?: { teste: () => void }, trie: (data: [book_id: string, book_name: string, chapter: string, vers1?: string, vers2?: string]) => Promise<{
         ref_bible: string;
         content: string;
     } | undefined>,
-    correctText?: (text: string) => Promise<string | null>
 }, ref) => {
     const [bible_id, setBible_id] = useState<string | null>(null)
     const [openBible, setOpenBible] = useState(false)
     const [verse, setVerse] = useState<string>("")
-    const [correcting, setCorrecting] = useState(false)
 
     const handleImage = ({ target }: { target: HTMLInputElement }) => {
         if (!target.files || target.files.length === 0) return;
@@ -271,26 +274,6 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn, correctT
                     >
                         <FluentTaskList24Filled width={20} height={20} />
                     </button>
-                    <button
-                        className='long-btn'
-                        disabled={editorState.selectionEmpty || correcting || !correctText}
-                        onClick={async () => {
-                            const { from, to } = editor.state.selection;
-                            const selected = editor.state.doc.textBetween(from, to, ' ');
-                            if (!selected.trim()) return;
-                            setCorrecting(true);
-                            try {
-                                const corrected = await correctText?.(selected);
-                                if (corrected) {
-                                    editor.chain().focus().insertContentAt({ from, to }, corrected).run();
-                                }
-                            } finally {
-                                setCorrecting(false);
-                            }
-                        }}
-                    >
-                        <span>{correcting ? '...' : 'Corriger'}</span>
-                    </button>
                 </div>
             </div>
             {
@@ -335,6 +318,7 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
     const [savingState, setSavingState] = useState<'idle' | 'typing' | 'saving' | 'saved'>('idle')
     const [version, setVersion] = useState(0)
     const [html, setHtml] = useState("")
+    const [spellHunks, setSpellHunks] = useState<SpellHunk[]>([])
 
     // Sync sur changement de note (id) — l'ancienne version figeait à []
     const getinitnote = useCallback(async () => {
@@ -387,6 +371,49 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
         return () => clearTimeout(t);
     }, [content]);
 
+    // --- CORRECTION AUTOMATIQUE (30s après la dernière frappe) -------------
+    // À chaque changement, on efface les soulignements en cours (positions plus
+    // fiables) et on repose un timer. À l'expiration : texte complet envoyé à l'IA,
+    // diff mot à mot vs. l'original pour localiser les segments fautifs, soulignés
+    // en rouge via l'extension `spellcheck`. Le bouton flottant applique ensuite
+    // les mêmes segments (`spellHunks`) sans jamais réécrire tout le document.
+    const isFirstSpellRun = useRef(true);
+    useEffect(() => {
+        if (isFirstSpellRun.current) { isFirstSpellRun.current = false; return; }
+        if (!editor || !correctText) return;
+
+        editor.commands.clearSpellErrors();
+        setSpellHunks([]);
+
+        const t = setTimeout(async () => {
+            const { text, map } = getTextWithPositions(editor.state.doc);
+            if (!text.trim()) return;
+            try {
+                const corrected = await correctText(text);
+                if (!corrected) return;
+                const hunks = computeSpellHunks(text, corrected, map);
+                editor.commands.setSpellErrors(hunks.map(h => ({ from: h.from, to: h.to })));
+                setSpellHunks(hunks);
+            } catch (error) {
+                if (__DEV__) console.log('[Spellcheck] Erreur:', error);
+            }
+        }, SPELLCHECK_DELAY);
+
+        return () => clearTimeout(t);
+    }, [content]);
+
+    const applyAllCorrections = () => {
+        if (!editor || spellHunks.length === 0) return;
+        const sorted = [...spellHunks].sort((a, b) => b.from - a.from);
+        let chain = editor.chain().focus();
+        sorted.forEach(h => {
+            chain = chain.insertContentAt({ from: h.from, to: h.to }, h.replacement);
+        });
+        chain.run();
+        editor.commands.clearSpellErrors();
+        setSpellHunks([]);
+    };
+
     // --- AUTOSAVE V1 (inactif, conservé pour comparaison) ------------------
     // useEffect(() => {
     //     const t1 = setTimeout(() => {
@@ -411,9 +438,14 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
         <div style={{ width: '100vw' }}>
             <style dangerouslySetInnerHTML={{ __html: styles }}></style>
             <div style={{ position: "relative", height: "100svh" }}>
-                <MenuBar editor={editor} biblemetadatState={biblemetadatState} trie={trie} menubtn={menubtn} correctText={correctText} />
+                <MenuBar editor={editor} biblemetadatState={biblemetadatState} trie={trie} menubtn={menubtn} />
                 <EditorContent editor={editor} onFocus={() => setIsFocus(true)} onBlur={() => setIsFocus(false)} ref={ref} />
                 <div style={{ height: 60 }}></div>
+                {spellHunks.length > 0 && (
+                    <button className="floating-correct-btn" onClick={applyAllCorrections}>
+                        <span>Corriger ({spellHunks.length})</span>
+                    </button>
+                )}
             </div>
         </div>
     )
