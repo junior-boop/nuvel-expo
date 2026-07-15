@@ -180,7 +180,7 @@ export const useAuthDB = (): UseAuthDBResult => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(credentials),
-            });
+            }, { skipOnlineCheck: true });
 
             // Fallback offline / serveur injoignable : si un utilisateur local correspond
             // à l'email fourni, autoriser la connexion à partir des données locales.
