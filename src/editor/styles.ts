@@ -657,11 +657,73 @@ control-groupe .button-group bottom.is-active {
 }
 
 .spell-error {
-    text-decoration: underline;
-    text-decoration-color: #ff3b30;
-    text-decoration-style: wavy;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 3px;
+    background-color: rgba(255, 59, 48, 0.15);
+    border-bottom: 2px solid #ff3b30;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+.spell-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 30;
+}
+
+.spell-popup {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    width: min(320px, 85vw);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.spell-popup-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #ff3b30;
+    margin-bottom: 10px;
+}
+
+.spell-popup-suggestion {
+    font-size: 17px;
+    font-weight: 600;
+    color: #111;
+    background-color: rgba(255, 59, 48, 0.08);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    word-break: break-word;
+}
+
+.spell-popup-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.spell-popup-actions button {
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.spell-popup-apply {
+    background-color: #ff3b30;
+    color: white;
+}
+
+.spell-popup-close {
+    background-color: #f3f4f6;
+    color: #374151;
 }
 
 .floating-correct-btn {

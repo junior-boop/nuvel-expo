@@ -8,7 +8,7 @@ import { TextStyleKit } from '@tiptap/extension-text-style'
 import type { Editor } from '@tiptap/react'
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 
 // --- Helpers --------------------------------------------------------------
 
@@ -43,17 +43,9 @@ const resizeDataUrl = (dataUrl: string): Promise<string> => new Promise((resolve
     img.src = dataUrl;
 });
 import { BxsBible, FluentAppsList20Filled, FluentArrowEnterLeft24Filled, FluentCode24Regular, FluentCodeBlock32Regular, FluentImageAdd32Regular, FluentLineHorizontal128Regular, FluentTaskList24Filled, FluentTextBold24Regular, FluentTextHeader1Lines24Regular, FluentTextHeader2Lines24Regular, FluentTextHeader3Lines24Regular, FluentTextItalic24Filled, FluentTextNumberList24Regular, FluentTextQuote32Filled, FluentTextStrikethroughS24Regular, IcSharpArrowDownward } from './editor_icons'
-import SpellcheckExtension from './spellcheckExtension'
+import SpellcheckExtension, { SpellErrorClickInfo } from './spellcheckExtension'
 import { computeSpellHunks, getTextWithPositions, SpellHunk } from './spellcheckDiff'
 import styles from './styles'
-
-const extensions = [BibleVerset, TextStyleKit, StarterKit, Image, TaskList,
-    TaskItem.configure({
-        nested: true,
-    }), SpellcheckExtension]
-
-// Vérification orthographe/grammaire déclenchée 30s après la dernière frappe.
-const SPELLCHECK_DELAY = 30000
 
 
 type bibleverst = {
@@ -319,6 +311,9 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
     const [version, setVersion] = useState(0)
     const [html, setHtml] = useState("")
     const [spellHunks, setSpellHunks] = useState<SpellHunk[]>([])
+    const [spellPopup, setSpellPopup] = useState<SpellHunk | null>(null)
+    const [isChecking, setIsChecking] = useState(false)
+    const onErrorClickRef = useRef<(info: SpellErrorClickInfo) => void>(() => { })
 
     // Sync sur changement de note (id) — l'ancienne version figeait à []
     const getinitnote = useCallback(async () => {
@@ -326,8 +321,18 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
             setVersion(note.version)
             setContent(safeParseBody(note.body))
             setHtml(note.html)
+            setSpellHunks([])
+            setSpellPopup(null)
+            editor?.commands.clearSpellErrors()
         }
     }, [note?.id])
+
+    const extensions = useMemo(() => [BibleVerset, TextStyleKit, StarterKit, Image, TaskList,
+        TaskItem.configure({
+            nested: true,
+        }), SpellcheckExtension.configure({
+            onErrorClick: (info: SpellErrorClickInfo) => onErrorClickRef.current(info),
+        })], [])
 
     const editor = useEditor({
         extensions,
@@ -371,36 +376,37 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
         return () => clearTimeout(t);
     }, [content]);
 
-    // --- CORRECTION AUTOMATIQUE (30s après la dernière frappe) -------------
-    // À chaque changement, on efface les soulignements en cours (positions plus
-    // fiables) et on repose un timer. À l'expiration : texte complet envoyé à l'IA,
-    // diff mot à mot vs. l'original pour localiser les segments fautifs, soulignés
-    // en rouge via l'extension `spellcheck`. Le bouton flottant applique ensuite
-    // les mêmes segments (`spellHunks`) sans jamais réécrire tout le document.
-    const isFirstSpellRun = useRef(true);
-    useEffect(() => {
-        if (isFirstSpellRun.current) { isFirstSpellRun.current = false; return; }
-        if (!editor || !correctText) return;
-
-        editor.commands.clearSpellErrors();
-        setSpellHunks([]);
-
-        const t = setTimeout(async () => {
+    // --- CORRECTION À LA DEMANDE (un seul appel serveur par clic) ----------
+    // Le bouton flottant reste au repos ("Correction") tant qu'aucune vérification
+    // n'a été demandée. Au clic : un unique appel au serveur renvoie le texte
+    // corrigé, diffé mot à mot vs. l'original pour localiser les segments fautifs
+    // (encadrés en rouge via l'extension `spellcheck`). Le bouton devient alors
+    // "Fix all (N)" pour une correction globale ; chaque segment reste cliquable
+    // pour une correction indépendante via le popup.
+    const runSpellCheck = async () => {
+        if (!editor || !correctText || isChecking) return;
+        setIsChecking(true);
+        setSpellPopup(null);
+        try {
             const { text, map } = getTextWithPositions(editor.state.doc);
             if (!text.trim()) return;
-            try {
-                const corrected = await correctText(text);
-                if (!corrected) return;
-                const hunks = computeSpellHunks(text, corrected, map);
-                editor.commands.setSpellErrors(hunks.map(h => ({ from: h.from, to: h.to })));
-                setSpellHunks(hunks);
-            } catch (error) {
-                if (__DEV__) console.log('[Spellcheck] Erreur:', error);
-            }
-        }, SPELLCHECK_DELAY);
+            const corrected = await correctText(text);
+            if (!corrected) return;
+            const hunks = computeSpellHunks(text, corrected, map);
+            editor.commands.setSpellErrors(hunks);
+            setSpellHunks(hunks);
+        } catch (error) {
+            if (__DEV__) console.log('[Spellcheck] Erreur:', error);
+        } finally {
+            setIsChecking(false);
+        }
+    };
 
-        return () => clearTimeout(t);
-    }, [content]);
+    // Clic sur un segment souligné : ouvre le popup avec la suggestion correspondante.
+    onErrorClickRef.current = (info: SpellErrorClickInfo) => {
+        const hunk = spellHunks.find(h => h.from === info.from && h.to === info.to);
+        if (hunk) setSpellPopup(hunk);
+    };
 
     const applyAllCorrections = () => {
         if (!editor || spellHunks.length === 0) return;
@@ -412,6 +418,21 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
         chain.run();
         editor.commands.clearSpellErrors();
         setSpellHunks([]);
+        setSpellPopup(null);
+    };
+
+    // Applique uniquement la correction affichée dans le popup, et décale les
+    // positions des autres segments encore en attente en conséquence.
+    const applySingleCorrection = (hunk: SpellHunk) => {
+        if (!editor) return;
+        const delta = hunk.replacement.length - (hunk.to - hunk.from);
+        editor.chain().focus().insertContentAt({ from: hunk.from, to: hunk.to }, hunk.replacement).run();
+        const remaining = spellHunks
+            .filter(h => h !== hunk)
+            .map(h => h.from > hunk.from ? { ...h, from: h.from + delta, to: h.to + delta } : h);
+        editor.commands.setSpellErrors(remaining);
+        setSpellHunks(remaining);
+        setSpellPopup(null);
     };
 
     // --- AUTOSAVE V1 (inactif, conservé pour comparaison) ------------------
@@ -443,11 +464,23 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
                 <div style={{ height: 60 }}></div>
                 <button
                     className="floating-correct-btn"
-                    onClick={applyAllCorrections}
-                    disabled={spellHunks.length === 0}
+                    onClick={spellHunks.length > 0 ? applyAllCorrections : runSpellCheck}
+                    disabled={isChecking}
                 >
-                    <span>Fix ({spellHunks.length})</span>
+                    <span>{isChecking ? 'Checking...' : spellHunks.length > 0 ? `Fix all (${spellHunks.length})` : 'Correction'}</span>
                 </button>
+                {spellPopup && (
+                    <div className="spell-popup-overlay" onClick={() => setSpellPopup(null)}>
+                        <div className="spell-popup" onClick={(e) => e.stopPropagation()}>
+                            <div className="spell-popup-title">Correction</div>
+                            <div className="spell-popup-suggestion">{spellPopup.replacement}</div>
+                            <div className="spell-popup-actions">
+                                <button className="spell-popup-close" onClick={() => setSpellPopup(null)}>Close</button>
+                                <button className="spell-popup-apply" onClick={() => applySingleCorrection(spellPopup)}>Apply</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )
