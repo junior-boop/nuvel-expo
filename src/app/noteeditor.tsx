@@ -610,19 +610,22 @@ function GroupPicker({ noteId, currentGroup, onClose }: { noteId: string, curren
             onClose={onClose}
         >
             <BottomSheetView style={{ flex: 1, height: '100%', position: 'relative' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: convert(20), paddingVertical: convert(12), gap: convert(8), borderBottomWidth: 1, borderColor: '#cfdfeeff' }}>
-                    <TextInput
-                        value={value}
-                        onChangeText={setValue}
-                        placeholder="New group name"
-                        placeholderTextColor={"#8fa0acff"}
-                        style={{ flex: 1, fontSize: convert(16), color: 'black' }}
-                    />
-                    <TouchableOpacity onPress={handleCreate} style={{ padding: convert(8) }}>
-                        <MaterialIcons name="add" size={24} color="#0083ff" />
-                    </TouchableOpacity>
+                <View style={{ paddingHorizontal: convert(20), }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: convert(8), paddingVertical: convert(12), borderRadius: convert(40), backgroundColor: '#f1f5f9' }}>
+                        <TextInput
+                            value={value}
+                            onChangeText={setValue}
+                            placeholder="New group name"
+                            placeholderTextColor={"#8fa0acff"}
+                            style={{ flex: 1, fontSize: convert(18), color: 'black' }}
+                        />
+                        <TouchableOpacity onPress={handleCreate} style={{ padding: convert(12) }}>
+                            <MaterialIcons name="add" size={24} color="#0083ff" />
+                        </TouchableOpacity>
+                    </View>
+
                 </View>
-                <ScrollView showsVerticalScrollIndicator={true} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: convert(20), paddingBottom: convert(50), paddingTop: convert(12) }}>
+                <ScrollView showsVerticalScrollIndicator={true} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: convert(14), paddingBottom: convert(50), paddingTop: convert(12) }}>
                     {currentGroup && (
                         <TouchableOpacity onPress={() => handleSelect(null)} style={{ paddingVertical: convert(12), borderBottomWidth: 1, borderBottomColor: '#cfdfeeff' }}>
                             <Text style={{ fontSize: convert(16), color: '#c0392b' }}>No group</Text>
@@ -632,7 +635,7 @@ function GroupPicker({ noteId, currentGroup, onClose }: { noteId: string, curren
                         <TouchableOpacity
                             key={group.id}
                             onPress={() => handleSelect(group.id)}
-                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: convert(12), borderBottomWidth: 1, borderBottomColor: '#cfdfeeff' }}
+                            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: convert(12), paddingHorizontal: convert(6), borderBottomWidth: 1, borderBottomColor: '#cfdfeeff' }}
                         >
                             <Text style={{ fontSize: convert(16) }}>{group.name}</Text>
                             {currentGroup === group.id && <FluentCheckmark28Filled width={18} height={18} color={'#0083ff'} />}
