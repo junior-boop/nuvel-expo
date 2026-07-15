@@ -6,6 +6,7 @@ import NoteReaderHtml from "@/editor/notereaderhtml";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SharedNotePage() {
     const { id } = useLocalSearchParams();
@@ -53,7 +54,7 @@ export default function SharedNotePage() {
     }
 
     return (
-        <>
+        <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
             <View style={{ height: convert(52), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
                 <TouchableOpacity onPress={() => { router.back() }}>
                     <IcBaselineArrowBack width={24} height={24} color={'black'} />
@@ -61,5 +62,5 @@ export default function SharedNotePage() {
 
             </View>
             <NoteReaderHtml note={note} />;
-        </>)
+        </SafeAreaView>)
 }

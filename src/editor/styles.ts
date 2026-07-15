@@ -680,10 +680,11 @@ control-groupe .button-group bottom.is-active {
     font-size: 15px;
     font-weight: 600;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    opacity: 1;
 }
 
 .floating-correct-btn:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
 }
 
 `;

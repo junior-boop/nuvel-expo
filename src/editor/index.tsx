@@ -441,11 +441,13 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
                 <MenuBar editor={editor} biblemetadatState={biblemetadatState} trie={trie} menubtn={menubtn} />
                 <EditorContent editor={editor} onFocus={() => setIsFocus(true)} onBlur={() => setIsFocus(false)} ref={ref} />
                 <div style={{ height: 60 }}></div>
-                {spellHunks.length > 0 && (
-                    <button className="floating-correct-btn" onClick={applyAllCorrections}>
-                        <span>Corriger ({spellHunks.length})</span>
-                    </button>
-                )}
+                <button
+                    className="floating-correct-btn"
+                    onClick={applyAllCorrections}
+                    disabled={spellHunks.length === 0}
+                >
+                    <span>Fix ({spellHunks.length})</span>
+                </button>
             </div>
         </div>
     )

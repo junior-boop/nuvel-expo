@@ -65,6 +65,15 @@
           "color": "#208AEF",
           "defaultChannel": "default"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
       ]
     ],
     "experiments": {

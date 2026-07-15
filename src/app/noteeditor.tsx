@@ -611,13 +611,13 @@ function GroupPicker({ noteId, currentGroup, onClose }: { noteId: string, curren
         >
             <BottomSheetView style={{ flex: 1, height: '100%', position: 'relative' }}>
                 <View style={{ paddingHorizontal: convert(20), }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: convert(8), paddingVertical: convert(12), borderRadius: convert(40), backgroundColor: '#f1f5f9' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: convert(8), paddingVertical: convert(4), borderRadius: convert(40), backgroundColor: '#f1f5f9' }}>
                         <TextInput
                             value={value}
                             onChangeText={setValue}
                             placeholder="New group name"
                             placeholderTextColor={"#8fa0acff"}
-                            style={{ flex: 1, fontSize: convert(18), color: 'black' }}
+                            style={{ flex: 1, fontSize: convert(18), color: 'black', paddingLeft: convert(12) }}
                         />
                         <TouchableOpacity onPress={handleCreate} style={{ padding: convert(12) }}>
                             <MaterialIcons name="add" size={24} color="#0083ff" />
