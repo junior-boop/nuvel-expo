@@ -195,12 +195,16 @@ export default function useTakeUserInfos() {
             });
 
             if (!result.canceled) {
+                const asset = result.assets[0]
+                // allowsEditing:true renvoie souvent un asset recadré sans fileName/mimeType (surtout iOS)
+                const mimeType = asset.mimeType ?? 'image/jpeg'
+                const extension = mimeType.split('/')[1] ?? 'jpg'
                 setFile({
-                    name: result.assets[0].fileName as string,
-                    mimeType: result.assets[0].mimeType as string,
-                    uri: result.assets[0].uri as string
+                    name: asset.fileName ?? `photo_${Date.now()}.${extension}`,
+                    mimeType,
+                    uri: asset.uri
                 })
-                const imagestring = `data:${result.assets[0].mimeType};base64,${result.assets[0].base64}`;
+                const imagestring = `data:${mimeType};base64,${asset.base64}`;
                 setImage(imagestring);
             }
         } catch (error) {
