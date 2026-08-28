@@ -15,6 +15,7 @@ import { HistoryType } from '@/lib/instantdb.histories';
 import * as Clipboard from 'expo-clipboard';
 import { router } from "expo-router";
 import { StatusBar } from 'expo-status-bar';
+import * as Updates from 'expo-updates';
 import moment from 'moment';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -72,6 +73,9 @@ export default function TabTwoScreen() {
         <View style={{ height: 40, width: 200, paddingHorizontal: convert(16) }} />
         <Text style={{ ...styles.title, marginBottom: convert(16), paddingHorizontal: convert(16) }}>History</Text>
         <History />
+        <View style={{ height: 40, width: 200, paddingHorizontal: convert(16) }} />
+        <Text style={{ ...styles.title, marginBottom: convert(16), paddingHorizontal: convert(16) }}>App</Text>
+        <UpdatesSection />
         <View style={{ height: 40, width: 200, paddingHorizontal: convert(16) }} />
         <Text style={{ ...styles.title, marginBottom: convert(16), paddingHorizontal: convert(16) }}>Data</Text>
         <DataSection />
@@ -143,6 +147,84 @@ const stripHtml = (html: string) =>
 const noteTitle = (n: NotesType) => {
   const text = stripHtml(n.html || n.body || '')
   return text ? text.slice(0, 60) : 'Untitled'
+}
+
+type UpdateStatus = 'idle' | 'checking' | 'up-to-date' | 'downloading' | 'ready' | 'error'
+
+const UpdatesSection = () => {
+  const [status, setStatus] = useState<UpdateStatus>('idle')
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  const currentInfo = Updates.isEmbeddedLaunch
+    ? 'Version intégrée au build (aucune mise à jour OTA appliquée pour le moment).'
+    : Updates.createdAt
+      ? `Mise à jour installée le ${moment(Updates.createdAt).format('DD/MM/YYYY [à] HH:mm')}.`
+      : 'Version actuelle inconnue.'
+
+  const handleCheck = async () => {
+    if (!Updates.isEnabled) {
+      Alert.alert('Indisponible', "Les mises à jour OTA ne sont pas actives dans cet environnement (build de développement).")
+      return
+    }
+    setErrorMsg(null)
+    setStatus('checking')
+    try {
+      const result = await Updates.checkForUpdateAsync()
+      if (!result.isAvailable) {
+        setStatus('up-to-date')
+        return
+      }
+      setStatus('downloading')
+      await Updates.fetchUpdateAsync()
+      setStatus('ready')
+    } catch (e) {
+      if (__DEV__) console.log('[Updates] erreur vérification:', e)
+      setErrorMsg("Impossible de vérifier les mises à jour. Vérifiez votre connexion.")
+      setStatus('error')
+    }
+  }
+
+  const handleRestart = async () => {
+    try {
+      await Updates.reloadAsync()
+    } catch (e) {
+      if (__DEV__) console.log('[Updates] erreur redémarrage:', e)
+      Alert.alert('Erreur', "Impossible de redémarrer l'application. Redémarrez-la manuellement.")
+    }
+  }
+
+  const subtitle = () => {
+    switch (status) {
+      case 'checking': return 'Vérification en cours...'
+      case 'up-to-date': return "Vous utilisez déjà la dernière version disponible."
+      case 'downloading': return 'Téléchargement de la mise à jour...'
+      case 'ready': return 'Mise à jour téléchargée. Appuyez pour redémarrer et l\'appliquer.'
+      case 'error': return errorMsg ?? 'Une erreur est survenue.'
+      default: return currentInfo
+    }
+  }
+
+  const busy = status === 'checking' || status === 'downloading'
+
+  return (
+    <View style={{ paddingHorizontal: convert(16) }}>
+      <TouchableOpacity
+        disabled={busy}
+        onPress={status === 'ready' ? handleRestart : handleCheck}
+        style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee', flexDirection: 'row', alignItems: 'center', justifyContent: "space-between" }}
+      >
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>{status === 'ready' ? 'Redémarrer pour appliquer' : 'Rechercher une mise à jour'}</Text>
+          <Text style={{ fontSize: convert(14), color: '#777' }}>{subtitle()}</Text>
+        </View>
+        <View style={{ width: convert(20), height: convert(20) }}>
+          {busy
+            ? <ActivityIndicator size={'small'} color={'#048effff'} />
+            : <FluentChevronRight32Regular width={convert(20)} height={convert(20)} />}
+        </View>
+      </TouchableOpacity>
+    </View>
+  )
 }
 
 const DataSection = () => {
