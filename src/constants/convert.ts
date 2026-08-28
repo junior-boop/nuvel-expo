@@ -1,4 +1,5 @@
 import { Dimensions } from "react-native";
+export const H = Dimensions.get("window").height
 
 export const convert = (value: number): number => {
   const fontScale = Dimensions.get("screen").fontScale;

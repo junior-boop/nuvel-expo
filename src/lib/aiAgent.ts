@@ -23,6 +23,7 @@ export interface CorrectTextResponse {
     original?: string;
     corrected?: string;
     message?: string;
+    error?: string;
 }
 
 export async function correctText(text: string): Promise<CorrectTextResponse> {

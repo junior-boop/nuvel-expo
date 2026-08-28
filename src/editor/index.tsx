@@ -8,6 +8,7 @@ import { TextStyleKit } from '@tiptap/extension-text-style'
 import type { Editor } from '@tiptap/react'
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import { useDOMImperativeHandle, type DOMImperativeFactory } from 'expo/dom'
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 
 // --- Helpers --------------------------------------------------------------
@@ -303,7 +304,12 @@ const BibleItem = ({ el, isActived, onClick }: { el: BibleMetadata, onClick: () 
 // }
 
 
-const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubtn, correctText }: { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void }, correctText?: (text: string) => Promise<string | null> }, ref) => {
+export interface EditorJSRef extends DOMImperativeFactory {
+    runSpellCheck: () => void;
+    applyAllCorrections: () => void;
+}
+
+const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void }, correctText?: (text: string) => Promise<string | null>, onSpellStateChange?: (state: { isChecking: boolean; count: number }) => void }>(({ note, updateNote, biblemetadatState, trie, menubtn, correctText, onSpellStateChange }, ref) => {
     const [isFocus, setIsFocus] = useState(false)
     const [content, setContent] = useState<any>(() => safeParseBody(note?.body))
     const [isTyping, setIsTyping] = useState(false)
@@ -408,6 +414,20 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
         if (hunk) setSpellPopup(hunk);
     };
 
+    // Navigation entre fautes depuis le popup : parcourt spellHunks dans l'ordre du texte.
+    const sortedSpellHunks = [...spellHunks].sort((a, b) => a.from - b.from);
+    const spellPopupIndex = spellPopup
+        ? sortedSpellHunks.findIndex(h => h.from === spellPopup.from && h.to === spellPopup.to)
+        : -1;
+
+    const goToRelativeError = (direction: 1 | -1) => {
+        if (!editor || spellPopupIndex === -1 || sortedSpellHunks.length === 0) return;
+        const nextIndex = (spellPopupIndex + direction + sortedSpellHunks.length) % sortedSpellHunks.length;
+        const next = sortedSpellHunks[nextIndex];
+        setSpellPopup(next);
+        editor.chain().setTextSelection({ from: next.from, to: next.to }).scrollIntoView().run();
+    };
+
     const applyAllCorrections = () => {
         if (!editor || spellHunks.length === 0) return;
         const sorted = [...spellHunks].sort((a, b) => b.from - a.from);
@@ -435,6 +455,15 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
         setSpellPopup(null);
     };
 
+    // Expose le déclenchement de la correction au bouton natif du toolbar (hors webview).
+    // useImperativeHandle (React) ne suffit pas pour un composant "use dom" : le ref natif
+    // passe par le pont DOM d'Expo, qui nécessite useDOMImperativeHandle pour être peuplé.
+    useDOMImperativeHandle(ref, () => ({ runSpellCheck, applyAllCorrections }), []);
+
+    useEffect(() => {
+        onSpellStateChange?.({ isChecking, count: spellHunks.length });
+    }, [isChecking, spellHunks.length]);
+
     // --- AUTOSAVE V1 (inactif, conservé pour comparaison) ------------------
     // useEffect(() => {
     //     const t1 = setTimeout(() => {
@@ -458,21 +487,23 @@ const EditorJS = forwardRef(({ note, updateNote, biblemetadatState, trie, menubt
 
         <div style={{ width: '100vw' }}>
             <style dangerouslySetInnerHTML={{ __html: styles }}></style>
-            <div style={{ position: "relative", height: "100svh" }}>
+            <div style={{ position: "relative", height: "100dvh" }}>
                 <MenuBar editor={editor} biblemetadatState={biblemetadatState} trie={trie} menubtn={menubtn} />
-                <EditorContent editor={editor} onFocus={() => setIsFocus(true)} onBlur={() => setIsFocus(false)} ref={ref} />
+                <EditorContent editor={editor} onFocus={() => setIsFocus(true)} onBlur={() => setIsFocus(false)} />
                 <div style={{ height: 60 }}></div>
-                <button
-                    className="floating-correct-btn"
-                    onClick={spellHunks.length > 0 ? applyAllCorrections : runSpellCheck}
-                    disabled={isChecking}
-                >
-                    <span>{isChecking ? 'Checking...' : spellHunks.length > 0 ? `Fix all (${spellHunks.length})` : 'Correction'}</span>
-                </button>
                 {spellPopup && (
                     <div className="spell-popup-overlay" onClick={() => setSpellPopup(null)}>
                         <div className="spell-popup" onClick={(e) => e.stopPropagation()}>
-                            <div className="spell-popup-title">Correction</div>
+                            <div className="spell-popup-header">
+                                <div className="spell-popup-title">Correction</div>
+                                {sortedSpellHunks.length > 1 && (
+                                    <div className="spell-popup-nav">
+                                        <button onClick={() => goToRelativeError(-1)} aria-label="Previous">‹</button>
+                                        <span className="spell-popup-nav-count">{spellPopupIndex + 1} / {sortedSpellHunks.length}</span>
+                                        <button onClick={() => goToRelativeError(1)} aria-label="Next">›</button>
+                                    </div>
+                                )}
+                            </div>
                             <div className="spell-popup-suggestion">{spellPopup.replacement}</div>
                             <div className="spell-popup-actions">
                                 <button className="spell-popup-close" onClick={() => setSpellPopup(null)}>Close</button>

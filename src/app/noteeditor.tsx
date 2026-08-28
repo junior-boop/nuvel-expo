@@ -9,8 +9,8 @@ import { ActivityIndicator, Alert, Animated, Keyboard, KeyboardAvoidingView, Lin
 import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
 import { w } from "@/constants/Colors";
-import { convert } from "@/constants/convert";
-import { FluentArrowUp32Filled, FluentCheckmark28Filled, FluentDelete32Regular, FluentDismiss32Filled, FluentFolderLink32Regular, FluentGlobeArrowForward32Regular, FluentMoreVertical32Filled, FluentShare32Regular, FluentSparkle32Regular, IcBaselineArrowBack, IcTwotoneWhatsapp } from "@/constants/icons";
+import { convert, H } from "@/constants/convert";
+import { FluentArrowUp32Filled, FluentCheckmark28Filled, FluentDelete32Regular, FluentDismiss32Filled, FluentFolderLink32Regular, FluentGlobeArrowForward32Regular, FluentMoreVertical32Filled, FluentShare32Regular, FluentSparkle32Regular, FluentTextProofingToolsAbc16Regular, IcBaselineArrowBack, IcTwotoneWhatsapp } from "@/constants/icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 
@@ -27,6 +27,7 @@ import { apiRequest } from "@/lib/token_system";
 import * as Clipboard from 'expo-clipboard';
 import moment from "moment";
 import Markdown from 'react-native-markdown-display';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Les messages user avec reply sont stockés en JSON ({ question, reply }) dans la colonne `content`
 // pour persister le reply sans migration de schéma. Fallback en texte brut pour les anciennes lignes.
@@ -58,6 +59,7 @@ export default function NoteEditor() {
     const [aiLoading, setAiLoading] = useState(false)
     const [replyTo, setReplyTo] = useState<AiHistoryType | null>(null)
     const [note_data, set_note_data] = useState<Notes | null>(null)
+    const [spellState, setSpellState] = useState<{ isChecking: boolean; count: number }>({ isChecking: false, count: 0 })
 
     // menu de modification texte
     const editorRef = useRef<any | null>(null);
@@ -72,6 +74,9 @@ export default function NoteEditor() {
     // variables
     const snapPoints = useMemo(() => ["50%"], []);
     const aisnapPoints = useMemo(() => ['100%'], [])
+
+
+    const insets = useSafeAreaInsets();
 
 
     const history_ai = new QueryForTable<AiHistoryType>()
@@ -189,9 +194,15 @@ export default function NoteEditor() {
     const handleCorrectSelection = useCallback(async (text: string) => {
         try {
             const result = await correctText(text);
-            return result.success ? result.corrected ?? null : null;
+            if (!result.success) {
+                if (__DEV__) console.log('[Correction] Échec:', result.message ?? result.error ?? result);
+                Alert.alert('Correction indisponible', result.message ?? result.error ?? "Impossible d'obtenir une correction. Réessayez plus tard.");
+                return null;
+            }
+            return result.corrected ?? null;
         } catch (error) {
             if (__DEV__) console.log('[Correction] Erreur:', error);
+            Alert.alert('Correction indisponible', "Impossible d'obtenir une correction. Réessayez plus tard.");
             return null;
         }
     }, []);
@@ -340,240 +351,261 @@ export default function NoteEditor() {
     }
 
     return (
-        <PageLayout_3>
-            <GestureHandlerRootView style={{
-                flex: 1,
-                backgroundColor: 'white',
-                position: 'relative'
-            }}>
-                <Stack.Screen options={{ animation: "fade_from_bottom", headerShown: false }} />
-                <View style={{ height: convert(62), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
-                    <TouchableOpacity onPress={handleBack}>
-                        <IcBaselineArrowBack width={24} height={24} color={'black'} />
-                    </TouchableOpacity>
-                    <View style={{ flexDirection: "row", alignItems: 'center', gap: convert(16), marginRight: convert(4) }}>
-                        <TouchableOpacity onPress={() => handleAiSnapPress(0)}>
-                            <FluentSparkle32Regular width={24} height={24} color={'black'} />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => handleSnapPress(0)}>
-                            <FluentMoreVertical32Filled width={24} height={24} color={'black'} />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    style={{ flex: 1 }}
-                >
-                    {
-                        Note === undefined
-                            ? <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><View style={{ alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size={'large'} color={'black'} /><Text>Page Loading...</Text> </View></View>
-                            : <EditorJS note={Note} updateNote={(data) => handleUpdate(data)} biblemetadatState={bible as BibleMetadata[]} trie={filterBible} menubtn={handleTest} correctText={handleCorrectSelection} ref={editorRef} />
-                    }
-                </KeyboardAvoidingView>
-                {
-                    isOpen && <Pressable onPress={() => setIsOpen(false)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.2)', width: '100%', height: '100%' }}></Pressable>
-                }
-                {
-                    aiOpen && <Pressable onPress={() => setAiOpen(false)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.2)', width: '100%', height: '100%' }}></Pressable>
-                }
-                {
-                    isOpen && <BottomSheet
-                        ref={sheetRef}
-                        snapPoints={snapPoints}
-                        enableDynamicSizing={false}
-                        enablePanDownToClose={true}
-                        onClose={() => setIsOpen(false)}
 
+        <GestureHandlerRootView style={{
+            flex: 1,
+            backgroundColor: 'white',
+            position: 'relative',
+            paddingTop: insets.top,
+
+        }}>
+            <Stack.Screen options={{ animation: "fade_from_bottom", headerShown: false }} />
+            <View style={{ height: convert(62), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
+                <TouchableOpacity onPress={handleBack}>
+                    <IcBaselineArrowBack width={24} height={24} color={'black'} />
+                </TouchableOpacity>
+                <View style={{ flexDirection: "row", alignItems: 'center', gap: convert(16), marginRight: convert(4) }}>
+                    <TouchableOpacity onPress={() => handleAiSnapPress(0)}>
+                        <FluentSparkle32Regular width={24} height={24} color={'black'} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => spellState.count > 0 ? editorRef.current?.applyAllCorrections() : editorRef.current?.runSpellCheck()}
+                        disabled={spellState.isChecking}
+                        style={(spellState.isChecking || spellState.count > 0) ? {
+                            width: 26, height: 26, borderRadius: 13,
+                            backgroundColor: 'rgba(255, 59, 48, 0.15)',
+                            alignItems: 'center', justifyContent: 'center',
+                        } : undefined}
+                    >
+                        {spellState.isChecking ? (
+                            <ActivityIndicator size="small" color="#ff3b30" />
+                        ) : spellState.count > 0 ? (
+                            <Text style={{ color: '#ff3b30', fontWeight: '700', fontSize: 13 }}>{spellState.count}</Text>
+                        ) : (
+                            <FluentTextProofingToolsAbc16Regular width={24} height={24} color={'black'} />
+                        )}
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleSnapPress(0)}>
+                        <FluentMoreVertical32Filled width={24} height={24} color={'black'} />
+                    </TouchableOpacity>
+                </View>
+            </View>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : "height"}
+                style={{
+                    flex: 1
+                }}
+            >
+                {
+                    Note === undefined
+                        ? <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><View style={{ alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size={'large'} color={'black'} /><Text>Page Loading...</Text> </View></View>
+                        : <EditorJS note={Note} updateNote={(data) => handleUpdate(data)} biblemetadatState={bible as BibleMetadata[]} trie={filterBible} correctText={handleCorrectSelection} onSpellStateChange={setSpellState} ref={editorRef} />
+                }
+            </KeyboardAvoidingView>
+
+            {
+                isOpen && <Pressable onPress={() => setIsOpen(false)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.2)', width: '100%', height: '100%' }}></Pressable>
+            }
+            {
+                aiOpen && <Pressable onPress={() => setAiOpen(false)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.2)', width: '100%', height: '100%' }}></Pressable>
+            }
+            {
+                isOpen && <BottomSheet
+                    ref={sheetRef}
+                    snapPoints={snapPoints}
+                    enableDynamicSizing={false}
+                    enablePanDownToClose={true}
+                    onClose={() => setIsOpen(false)}
+
+                >
+                    <BottomSheetView style={{
+                        flex: 1,
+                        paddingHorizontal: convert(16),
+                    }}>
+                        {Note && (() => {
+                            let noteTitle = "Untitled";
+                            try {
+                                const parsed = JSON.parse(Note.body as string);
+                                if (parsed?.content?.[0]?.type === "heading" && parsed.content[0].content?.[0]?.text) {
+                                    noteTitle = parsed.content[0].content[0].text;
+                                }
+                            } catch { }
+                            return (
+                                <View style={{ paddingVertical: convert(12), paddingHorizontal: convert(12), borderBottomWidth: 1, borderColor: '#e2e8f0', gap: convert(2) }}>
+                                    <Text style={{ fontSize: convert(14), fontWeight: '600' }} numberOfLines={2}>{noteTitle}</Text>
+                                    <Text style={{ fontSize: convert(13), color: '#0009' }}>Created on {moment(Note.created).format('MMM D, YYYY')}</Text>
+                                    <Text style={{ fontSize: convert(13), color: '#0009' }}>Last updated {moment(Note.modified).format('MMM D, YYYY [at] HH:mm')}</Text>
+                                </View>
+                            );
+                        })()}
+                        <TouchableOpacity
+                            onPress={onShare}
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}>
+                            <FluentShare32Regular width={24} height={24} color={'black'} />
+                            <Text style={{ fontSize: convert(18) }}>Share</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => { setIsOpen(false); setGroupPickerOpen(true) }}
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}>
+                            <FluentFolderLink32Regular width={24} height={24} color={'black'} />
+                            <Text style={{ fontSize: convert(18) }}>Link to group</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={handleWhatsapp}
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}
+                        >
+                            <IcTwotoneWhatsapp width={24} height={24} color={'black'} />
+                            <Text style={{ fontSize: convert(18) }}>Share on Whatsapp</Text>
+                        </TouchableOpacity>
+                        {
+                            Note.publishId ? (
+                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handleUpdateArticle}>
+                                    <FluentGlobeArrowForward32Regular width={24} height={24} color={'black'} />
+                                    <Text style={{ fontSize: convert(18) }}>Updated the article</Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handlePublish}>
+                                    <FluentGlobeArrowForward32Regular width={24} height={24} color={'black'} />
+                                    <Text style={{ fontSize: convert(18) }}>Publish as article</Text>
+                                </TouchableOpacity>
+                            )
+                        }
+                        {
+                            Note.publishId ? (
+                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handleDeleteArticleAndNote}>
+                                    <FluentDelete32Regular width={24} height={24} color={'black'} />
+                                    <Text style={{ fontSize: convert(18) }}>Deleted the note and article</Text>
+                                </TouchableOpacity>
+                            ) : (
+                                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handleDeleteNoteOnly}>
+                                    <FluentDelete32Regular width={24} height={24} color={'black'} />
+                                    <Text style={{ fontSize: convert(18) }}>Deleted this note</Text>
+                                </TouchableOpacity>
+                            )
+                        }
+                    </BottomSheetView>
+                </BottomSheet>
+            }
+            {
+                aiOpen && <BottomSheet
+                    ref={aisheetRef}
+                    snapPoints={aisnapPoints}
+                    enableDynamicSizing={false}
+                    enablePanDownToClose={true}
+                    onClose={() => setAiOpen(false)}
+
+                >
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === "ios" ? "padding" : "height"}
+                        style={{ flex: 1 }}
                     >
                         <BottomSheetView style={{
                             flex: 1,
-                            paddingHorizontal: convert(16),
+                            height: isKeyboard ? isKeyboard.screenY as number - 50 : '100%',
+                            position: 'relative'
                         }}>
-                            {Note && (() => {
-                                let noteTitle = "Untitled";
-                                try {
-                                    const parsed = JSON.parse(Note.body as string);
-                                    if (parsed?.content?.[0]?.type === "heading" && parsed.content[0].content?.[0]?.text) {
-                                        noteTitle = parsed.content[0].content[0].text;
-                                    }
-                                } catch { }
-                                return (
-                                    <View style={{ paddingVertical: convert(12), paddingHorizontal: convert(12), borderBottomWidth: 1, borderColor: '#e2e8f0', gap: convert(2) }}>
-                                        <Text style={{ fontSize: convert(14), fontWeight: '600' }} numberOfLines={2}>{noteTitle}</Text>
-                                        <Text style={{ fontSize: convert(13), color: '#0009' }}>Created on {moment(Note.created).format('MMM D, YYYY')}</Text>
-                                        <Text style={{ fontSize: convert(13), color: '#0009' }}>Last updated {moment(Note.modified).format('MMM D, YYYY [at] HH:mm')}</Text>
-                                    </View>
-                                );
-                            })()}
-                            <TouchableOpacity
-                                onPress={onShare}
-                                style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}>
-                                <FluentShare32Regular width={24} height={24} color={'black'} />
-                                <Text style={{ fontSize: convert(18) }}>Share</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => { setIsOpen(false); setGroupPickerOpen(true) }}
-                                style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}>
-                                <FluentFolderLink32Regular width={24} height={24} color={'black'} />
-                                <Text style={{ fontSize: convert(18) }}>Link to group</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={handleWhatsapp}
-                                style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}
-                            >
-                                <IcTwotoneWhatsapp width={24} height={24} color={'black'} />
-                                <Text style={{ fontSize: convert(18) }}>Share on Whatsapp</Text>
-                            </TouchableOpacity>
-                            {
-                                Note.publishId ? (
-                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handleUpdateArticle}>
-                                        <FluentGlobeArrowForward32Regular width={24} height={24} color={'black'} />
-                                        <Text style={{ fontSize: convert(18) }}>Updated the article</Text>
-                                    </TouchableOpacity>
-                                ) : (
-                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handlePublish}>
-                                        <FluentGlobeArrowForward32Regular width={24} height={24} color={'black'} />
-                                        <Text style={{ fontSize: convert(18) }}>Publish as article</Text>
-                                    </TouchableOpacity>
-                                )
-                            }
-                            {
-                                Note.publishId ? (
-                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handleDeleteArticleAndNote}>
-                                        <FluentDelete32Regular width={24} height={24} color={'black'} />
-                                        <Text style={{ fontSize: convert(18) }}>Deleted the note and article</Text>
-                                    </TouchableOpacity>
-                                ) : (
-                                    <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handleDeleteNoteOnly}>
-                                        <FluentDelete32Regular width={24} height={24} color={'black'} />
-                                        <Text style={{ fontSize: convert(18) }}>Deleted this note</Text>
-                                    </TouchableOpacity>
-                                )
-                            }
-                        </BottomSheetView>
-                    </BottomSheet>
-                }
-                {
-                    aiOpen && <BottomSheet
-                        ref={aisheetRef}
-                        snapPoints={aisnapPoints}
-                        enableDynamicSizing={false}
-                        enablePanDownToClose={true}
-                        onClose={() => setAiOpen(false)}
-
-                    >
-                        <KeyboardAvoidingView
-                            behavior={Platform.OS === "ios" ? "padding" : "height"}
-                            style={{ flex: 1 }}
-                        >
-                            <BottomSheetView style={{
-                                flex: 1,
-                                height: isKeyboard ? isKeyboard.screenY as number - 50 : '100%',
-                                position: 'relative'
-                            }}>
-                                <View style={{ flex: 1, }}>
-                                    <View style={{ paddingHorizontal: convert(16), height: convert(62), justifyContent: 'center', borderBottomColor: '#cfdfeeff', borderBottomWidth: 1, zIndex: 10 }}>
-                                        <Text style={{ fontSize: convert(13), color: "#0009" }}>Assistant</Text>
-                                        <Text style={{ fontSize: convert(20), fontWeight: '600' }}>{title?.length > 34 ? `${title?.substring(0, 34)}...` : title}</Text>
-                                    </View>
-                                    <ScrollView
-                                        ref={chatScrollRef}
-                                        showsVerticalScrollIndicator={true}
-                                        style={{ flex: 1 }}
-                                        contentContainerStyle={{ paddingHorizontal: convert(20), paddingBottom: convert(50), paddingTop: convert(12) }}
-                                        onLayout={(e) => setChatHeight(e.nativeEvent.layout.height)}
-                                        onContentSizeChange={() => {
-                                            if (!hasScrolledOnOpenRef.current) {
-                                                hasScrolledOnOpenRef.current = true;
-                                                chatScrollRef.current?.scrollToEnd({ animated: false });
-                                            }
-                                        }}
-                                        inverted invertStickyHeaders
-                                    >
-
-                                        <View>
-                                            {ai_conversation?.map((item, index) => {
-                                                const isPendingQuestion = item.role === "user" && aiLoading && index === ai_conversation.length - 1;
-                                                return item.role === "user"
-                                                    ? (
-                                                        <View
-                                                            key={index}
-                                                            style={isPendingQuestion ? { minHeight: chatHeight * .75, justifyContent: 'flex-start' } : undefined}
-                                                        >
-                                                            <View
-                                                                style={{ width: '90%', borderRadius: convert(4), backgroundColor: "#008cff08", borderWidth: 1, borderColor: '#008cff18' }}
-                                                            >
-                                                                {item.replyContent && (
-                                                                    <View style={{ paddingLeft: convert(8), backgroundColor: '#008cff18' }}>
-                                                                        <Text numberOfLines={2} style={{ fontSize: convert(13), color: '#0009', paddingVertical: convert(5) }}>{item.replyContent}</Text>
-                                                                    </View>
-                                                                )}
-                                                                <Text style={{ fontSize: convert(16), fontWeight: '500', paddingHorizontal: convert(12), paddingVertical: convert(8), lineHeight: convert(20) }}>{item.content}</Text>
-                                                                {/* <Text style={{ fontSize: convert(12), color: "#0009", textAlign: 'right' }}>{moment(item.created).fromNow()}</Text> */}
-                                                            </View>
-                                                            {isPendingQuestion && <ThinkingIndicator />}
-                                                        </View>
-                                                    )
-                                                    : (
-                                                        <Response_Ai item={item} key={index} onReply={setReplyTo} />
-                                                    );
-                                            })}
-                                        </View>
-
-                                    </ScrollView>
+                            <View style={{ flex: 1, }}>
+                                <View style={{ paddingHorizontal: convert(16), height: convert(62), justifyContent: 'center', borderBottomColor: '#cfdfeeff', borderBottomWidth: 1, zIndex: 10 }}>
+                                    <Text style={{ fontSize: convert(13), color: "#0009" }}>Assistant</Text>
+                                    <Text style={{ fontSize: convert(20), fontWeight: '600' }}>{title?.length > 34 ? `${title?.substring(0, 34)}...` : title}</Text>
                                 </View>
-                                {replyTo && (
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: convert(16), paddingVertical: convert(8), borderTopWidth: 1, borderColor: '#cfdfeeff', backgroundColor: '#f7fafc' }}>
-                                        <View style={{ flex: 1, backgroundColor: '#f7fafc' }}>
-                                            <Text style={{ fontSize: convert(12), color: '#238dffff', fontWeight: '600' }}>Reply to</Text>
-                                            <Text numberOfLines={1} style={{ fontSize: convert(13), color: '#0009' }}>{replyTo.content}</Text>
-                                        </View>
-                                        <Pressable onPress={() => setReplyTo(null)} style={{ paddingLeft: convert(12) }}>
-                                            <FluentDismiss32Filled width={16} height={16} color={'#0009'} />
-                                        </Pressable>
-                                    </View>
-                                )}
-                                <View style={{ bottom: 0, zIndex: 12, width: w, borderTopWidth: 1, borderColor: '#cfdfeeff', paddingHorizontal: convert(16), minHeight: convert(56), paddingTop: convert(8), paddingBottom: convert(12), height: 'auto', maxHeight: convert(150), flexDirection: 'row', gap: 12, alignItems: "flex-end" }}>
-                                    <TextInput
-                                        multiline={true}
-                                        value={inputValue}
-                                        onChangeText={setInputValue}
-                                        autoFocus={false}
-                                        autoCapitalize="sentences"
-                                        placeholder="Types your request"
-                                        placeholderTextColor={"#a7a7a7ff"}
-                                        style={{
-                                            minHeight: 40,
-                                            height: 'auto',
-                                            color: 'black',
-                                            flex: 1,
-                                            fontSize: convert(16)
-                                        }}
-                                    />
+                                <ScrollView
+                                    ref={chatScrollRef}
+                                    showsVerticalScrollIndicator={true}
+                                    style={{ flex: 1 }}
+                                    contentContainerStyle={{ paddingHorizontal: convert(20), paddingBottom: convert(50), paddingTop: convert(12) }}
+                                    onLayout={(e) => setChatHeight(e.nativeEvent.layout.height)}
+                                    onContentSizeChange={() => {
+                                        if (!hasScrolledOnOpenRef.current) {
+                                            hasScrolledOnOpenRef.current = true;
+                                            chatScrollRef.current?.scrollToEnd({ animated: false });
+                                        }
+                                    }}
+                                    inverted invertStickyHeaders
+                                >
+
                                     <View>
-                                        <TouchableOpacity
-                                            onPress={handleAgent}
-                                            disabled={!inputValue.trim() || aiLoading}
-                                            style={{ width: 40, aspectRatio: 1, borderRadius: 26, alignItems: 'center', justifyContent: "center", backgroundColor: "#238dffff", opacity: aiLoading ? 0.6 : 1 }}>
-                                            {aiLoading
-                                                ? <ActivityIndicator size={'small'} color={'white'} />
-                                                : <FluentArrowUp32Filled width={20} height={20} color={"white"} />}
-                                        </TouchableOpacity>
+                                        {ai_conversation?.map((item, index) => {
+                                            const isPendingQuestion = item.role === "user" && aiLoading && index === ai_conversation.length - 1;
+                                            return item.role === "user"
+                                                ? (
+                                                    <View
+                                                        key={index}
+                                                        style={isPendingQuestion ? { minHeight: chatHeight * .75, justifyContent: 'flex-start' } : undefined}
+                                                    >
+                                                        <View
+                                                            style={{ width: '90%', borderRadius: convert(4), backgroundColor: "#008cff08", borderWidth: 1, borderColor: '#008cff18' }}
+                                                        >
+                                                            {item.replyContent && (
+                                                                <View style={{ paddingLeft: convert(8), backgroundColor: '#008cff18' }}>
+                                                                    <Text numberOfLines={2} style={{ fontSize: convert(13), color: '#0009', paddingVertical: convert(5) }}>{item.replyContent}</Text>
+                                                                </View>
+                                                            )}
+                                                            <Text style={{ fontSize: convert(16), fontWeight: '500', paddingHorizontal: convert(12), paddingVertical: convert(8), lineHeight: convert(20) }}>{item.content}</Text>
+                                                            {/* <Text style={{ fontSize: convert(12), color: "#0009", textAlign: 'right' }}>{moment(item.created).fromNow()}</Text> */}
+                                                        </View>
+                                                        {isPendingQuestion && <ThinkingIndicator />}
+                                                    </View>
+                                                )
+                                                : (
+                                                    <Response_Ai item={item} key={index} onReply={setReplyTo} />
+                                                );
+                                        })}
                                     </View>
+
+                                </ScrollView>
+                            </View>
+                            {replyTo && (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: convert(16), paddingVertical: convert(8), borderTopWidth: 1, borderColor: '#cfdfeeff', backgroundColor: '#f7fafc' }}>
+                                    <View style={{ flex: 1, backgroundColor: '#f7fafc' }}>
+                                        <Text style={{ fontSize: convert(12), color: '#238dffff', fontWeight: '600' }}>Reply to</Text>
+                                        <Text numberOfLines={1} style={{ fontSize: convert(13), color: '#0009' }}>{replyTo.content}</Text>
+                                    </View>
+                                    <Pressable onPress={() => setReplyTo(null)} style={{ paddingLeft: convert(12) }}>
+                                        <FluentDismiss32Filled width={16} height={16} color={'#0009'} />
+                                    </Pressable>
                                 </View>
-                            </BottomSheetView>
-                        </KeyboardAvoidingView>
-                    </BottomSheet>
-                }
-                {
-                    groupPickerOpen && <GroupPicker
-                        noteId={data.id as string}
-                        currentGroup={(Note?.grouped as string | null) ?? null}
-                        onClose={() => setGroupPickerOpen(false)}
-                    />
-                }
-            </GestureHandlerRootView>
-        </PageLayout_3>
+                            )}
+                            <View style={{ bottom: 0, zIndex: 12, width: w, borderTopWidth: 1, borderColor: '#cfdfeeff', paddingHorizontal: convert(16), minHeight: convert(56), paddingTop: convert(8), paddingBottom: convert(12), height: 'auto', maxHeight: convert(150), flexDirection: 'row', gap: 12, alignItems: "flex-end" }}>
+                                <TextInput
+                                    multiline={true}
+                                    value={inputValue}
+                                    onChangeText={setInputValue}
+                                    autoFocus={false}
+                                    autoCapitalize="sentences"
+                                    placeholder="Types your request"
+                                    placeholderTextColor={"#a7a7a7ff"}
+                                    style={{
+                                        minHeight: 40,
+                                        height: 'auto',
+                                        color: 'black',
+                                        flex: 1,
+                                        fontSize: convert(16)
+                                    }}
+                                />
+                                <View>
+                                    <TouchableOpacity
+                                        onPress={handleAgent}
+                                        disabled={!inputValue.trim() || aiLoading}
+                                        style={{ width: 40, aspectRatio: 1, borderRadius: 26, alignItems: 'center', justifyContent: "center", backgroundColor: "#238dffff", opacity: aiLoading ? 0.6 : 1 }}>
+                                        {aiLoading
+                                            ? <ActivityIndicator size={'small'} color={'white'} />
+                                            : <FluentArrowUp32Filled width={20} height={20} color={"white"} />}
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </BottomSheetView>
+                    </KeyboardAvoidingView>
+                </BottomSheet>
+            }
+            {
+                groupPickerOpen && <GroupPicker
+                    noteId={data.id as string}
+                    currentGroup={(Note?.grouped as string | null) ?? null}
+                    onClose={() => setGroupPickerOpen(false)}
+                />
+            }
+        </GestureHandlerRootView >
     )
 
 }

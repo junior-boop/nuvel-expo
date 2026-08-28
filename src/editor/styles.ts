@@ -668,17 +668,24 @@ control-groupe .button-group bottom.is-active {
     inset: 0;
     background-color: rgba(0, 0, 0, 0.4);
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     z-index: 30;
 }
 
 .spell-popup {
     background-color: white;
-    border-radius: 12px;
-    padding: 20px;
-    width: min(320px, 85vw);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border-radius: 16px 16px 0 0;
+    padding: 16px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    width: 100%;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.spell-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
 }
 
 .spell-popup-title {
@@ -687,7 +694,39 @@ control-groupe .button-group bottom.is-active {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: #ff3b30;
-    margin-bottom: 10px;
+}
+
+.spell-popup-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.spell-popup-nav-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.spell-popup-nav button {
+    border: none;
+    background-color: #f3f4f6;
+    color: #374151;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spell-popup-nav button:disabled {
+    opacity: 0.4;
+    cursor: default;
 }
 
 .spell-popup-suggestion {
@@ -724,29 +763,6 @@ control-groupe .button-group bottom.is-active {
 .spell-popup-close {
     background-color: #f3f4f6;
     color: #374151;
-}
-
-.floating-correct-btn {
-    position: fixed;
-    bottom: 24px;
-    right: 16px;
-    z-index: 20;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 18px;
-    border: none;
-    border-radius: 999px;
-    background-color: #ff3b30;
-    color: white;
-    font-size: 15px;
-    font-weight: 600;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-    opacity: 1;
-}
-
-.floating-correct-btn:disabled {
-    opacity: 0.5;
 }
 
 `;
