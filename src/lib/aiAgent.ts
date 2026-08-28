@@ -13,7 +13,7 @@ export async function askAiAgent(content: string, question: string): Promise<AiA
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content, question }),
-    });
+    }, { screen: 'ai/agent' });
 
     return response.json();
 }
@@ -30,7 +30,7 @@ export async function correctText(text: string): Promise<CorrectTextResponse> {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
-    });
+    }, { screen: 'ai/correct' });
 
     return response.json();
 }

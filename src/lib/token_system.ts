@@ -78,28 +78,58 @@ export async function clearTokens() {
 }
 
 // Intercepteur pour les requêtes API
-export async function apiRequest(url: string, options: any = {}) {
+// Signale automatiquement au serveur (table error_logs) les échecs réseau et
+// les réponses 5xx, pour tout appel passant par apiRequest (dont les routes IA).
+export async function apiRequest(url: string, options: any = {}, context?: { screen?: string }) {
     const currentAccessToken = await getAccessToken();
+    const screen = context?.screen || 'apiRequest';
+    const method = options.method || 'GET';
 
-    // Première tentative avec le token actuel
-    let response = await fetch(url, {
-        ...options,
-        headers: {
-            ...options.headers,
-            'Authorization': `Bearer ${currentAccessToken}`
-        }
-    });
+    let response: Response;
+    try {
+        response = await fetch(url, {
+            ...options,
+            headers: {
+                ...options.headers,
+                'Authorization': `Bearer ${currentAccessToken}`
+            }
+        });
+    } catch (error) {
+        const { reportError } = await import('./errorReporter');
+        await reportError(error, { screen, extra: { url, method } });
+        throw error;
+    }
 
     // Si 401 (non autorisé), rafraîchir et réessayer
     if (response.status === 401) {
         const newToken = await refreshAccessToken();
 
-        response = await fetch(url, {
-            ...options,
-            headers: {
-                ...options.headers,
-                'Authorization': `Bearer ${newToken}`
-            }
+        try {
+            response = await fetch(url, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${newToken}`
+                }
+            });
+        } catch (error) {
+            const { reportError } = await import('./errorReporter');
+            await reportError(error, { screen, extra: { url, method, retry: true } });
+            throw error;
+        }
+
+        if (response.status === 401) {
+            const { reportError } = await import('./errorReporter');
+            reportError(`Échec d'authentification persistant sur ${url}`, {
+                screen,
+                extra: { url, method, status: 401 },
+            });
+        }
+    } else if (response.status >= 500) {
+        const { reportError } = await import('./errorReporter');
+        reportError(`HTTP ${response.status} sur ${url}`, {
+            screen,
+            extra: { url, method, status: response.status },
         });
     }
 
