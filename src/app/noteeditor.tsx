@@ -59,7 +59,7 @@ export default function NoteEditor() {
     const [aiLoading, setAiLoading] = useState(false)
     const [replyTo, setReplyTo] = useState<AiHistoryType | null>(null)
     const [note_data, set_note_data] = useState<Notes | null>(null)
-    const [spellState, setSpellState] = useState<{ isChecking: boolean; count: number }>({ isChecking: false, count: 0 })
+    const [spellState, setSpellState] = useState<{ isChecking: boolean; isApplying: boolean; count: number }>({ isChecking: false, isApplying: false, count: 0 })
 
     // menu de modification texte
     const editorRef = useRef<any | null>(null);
@@ -370,14 +370,14 @@ export default function NoteEditor() {
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => spellState.count > 0 ? editorRef.current?.applyAllCorrections() : editorRef.current?.runSpellCheck()}
-                        disabled={spellState.isChecking}
-                        style={(spellState.isChecking || spellState.count > 0) ? {
+                        disabled={spellState.isChecking || spellState.isApplying}
+                        style={(spellState.isChecking || spellState.isApplying || spellState.count > 0) ? {
                             width: 26, height: 26, borderRadius: 13,
                             backgroundColor: 'rgba(255, 59, 48, 0.15)',
                             alignItems: 'center', justifyContent: 'center',
                         } : undefined}
                     >
-                        {spellState.isChecking ? (
+                        {spellState.isChecking || spellState.isApplying ? (
                             <ActivityIndicator size="small" color="#ff3b30" />
                         ) : spellState.count > 0 ? (
                             <Text style={{ color: '#ff3b30', fontWeight: '700', fontSize: 13 }}>{spellState.count}</Text>

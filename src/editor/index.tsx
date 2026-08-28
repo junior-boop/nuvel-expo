@@ -309,7 +309,7 @@ export interface EditorJSRef extends DOMImperativeFactory {
     applyAllCorrections: () => void;
 }
 
-const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void }, correctText?: (text: string) => Promise<string | null>, onSpellStateChange?: (state: { isChecking: boolean; count: number }) => void }>(({ note, updateNote, biblemetadatState, trie, menubtn, correctText, onSpellStateChange }, ref) => {
+const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void }, correctText?: (text: string) => Promise<string | null>, onSpellStateChange?: (state: { isChecking: boolean; isApplying: boolean; count: number }) => void }>(({ note, updateNote, biblemetadatState, trie, menubtn, correctText, onSpellStateChange }, ref) => {
     const [isFocus, setIsFocus] = useState(false)
     const [content, setContent] = useState<any>(() => safeParseBody(note?.body))
     const [isTyping, setIsTyping] = useState(false)
@@ -319,6 +319,7 @@ const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height
     const [spellHunks, setSpellHunks] = useState<SpellHunk[]>([])
     const [spellPopup, setSpellPopup] = useState<SpellHunk | null>(null)
     const [isChecking, setIsChecking] = useState(false)
+    const [isApplying, setIsApplying] = useState(false)
     const onErrorClickRef = useRef<(info: SpellErrorClickInfo) => void>(() => { })
 
     // Sync sur changement de note (id) — l'ancienne version figeait à []
@@ -429,16 +430,22 @@ const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height
     };
 
     const applyAllCorrections = () => {
-        if (!editor || spellHunks.length === 0) return;
-        const sorted = [...spellHunks].sort((a, b) => b.from - a.from);
-        let chain = editor.chain().focus();
-        sorted.forEach(h => {
-            chain = chain.insertContentAt({ from: h.from, to: h.to }, h.replacement);
-        });
-        chain.run();
-        editor.commands.clearSpellErrors();
-        setSpellHunks([]);
-        setSpellPopup(null);
+        if (!editor || spellHunks.length === 0 || isApplying) return;
+        // setTimeout(0) laisse React peindre la phase "isApplying" avant le travail
+        // synchrone de chain.run(), sinon le spinner n'apparaît jamais (même tick JS).
+        setIsApplying(true);
+        setTimeout(() => {
+            const sorted = [...spellHunks].sort((a, b) => b.from - a.from);
+            let chain = editor.chain().focus();
+            sorted.forEach(h => {
+                chain = chain.insertContentAt({ from: h.from, to: h.to }, h.replacement);
+            });
+            chain.run();
+            editor.commands.clearSpellErrors();
+            setSpellHunks([]);
+            setSpellPopup(null);
+            setIsApplying(false);
+        }, 0);
     };
 
     // Applique uniquement la correction affichée dans le popup, et décale les
@@ -461,8 +468,8 @@ const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height
     useDOMImperativeHandle(ref, () => ({ runSpellCheck, applyAllCorrections }), []);
 
     useEffect(() => {
-        onSpellStateChange?.({ isChecking, count: spellHunks.length });
-    }, [isChecking, spellHunks.length]);
+        onSpellStateChange?.({ isChecking, isApplying, count: spellHunks.length });
+    }, [isChecking, isApplying, spellHunks.length]);
 
     // --- AUTOSAVE V1 (inactif, conservé pour comparaison) ------------------
     // useEffect(() => {
