@@ -23,8 +23,19 @@ interface DataType {
     content: contentType[]
 }
 
+// Parse défensif : body peut être malformé (legacy, note en cours de suppression) → fallback doc vide.
+const safeParseBody = (body: unknown): DataType => {
+    if (!body || typeof body !== 'string') return { type: 'doc', content: [] };
+    try {
+        const parsed = JSON.parse(body);
+        return parsed && Array.isArray(parsed.content) ? parsed : { type: 'doc', content: [] };
+    } catch {
+        return { type: 'doc', content: [] };
+    }
+};
+
 export default function NoteItems({ note }: { note: NotesType }) {
-    const data = JSON.parse(note.body) as DataType
+    const data = safeParseBody(note.body)
     const [longSelection, setLongSelection] = useState(false)
     const { deleteNote, toggleNotePinned } = useDatabase()
 
