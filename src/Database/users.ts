@@ -1,5 +1,5 @@
 import type { User as UserType } from "@/Database/db";
-import db from ".";
+import db, { orm } from ".";
 
 const Users = db.createModel<UserType>("users", {
   id: "TEXT PRIMARY KEY NOT NULL",
@@ -13,12 +13,19 @@ const Users = db.createModel<UserType>("users", {
   photo: "TEXT NULL",
   lastlogin: "TEXT NULL",
   lastlogout: "TEXT NULL",
+  language: "TEXT NULL",
   created: "DATETIME DEFAULT CURRENT_TIMESTAMP",
   modified: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
 });
 
 export const createTable = async () => {
   await Users.createTable();
+  // Migration : la colonne language n'existe pas sur les tables locales creees avant son ajout.
+  try {
+    await orm.run(`ALTER TABLE users ADD COLUMN language TEXT NULL`);
+  } catch {
+    // colonne deja presente
+  }
 };
 
 export async function created(user: UserType): Promise<UserType | null> {
@@ -42,6 +49,7 @@ export async function created(user: UserType): Promise<UserType | null> {
       email: user.email,
       lastlogin: user.lastlogin,
       lastlogout: user.lastlogout,
+      language: user.language ?? null,
     });
     return result;
   } catch (e) {

@@ -37,6 +37,20 @@ type GroupsType = {
 
 const serveur = "https://nuvelserver.godigital.workers.dev";
 
+// Serialise toutes les operations de sync (pull/push) : plusieurs mutations locales
+// declenchent chacune un syncToServer() en arriere-plan sans s'attendre entre elles,
+// ce qui pouvait faire courir deux pullTable('groupes', ...) en parallele et dupliquer
+// le travail d'upsert local. Une seule sync s'execute a la fois, les autres attendent leur tour.
+let syncChain: Promise<unknown> = Promise.resolve();
+const withSyncLock = <T,>(fn: () => Promise<T>): Promise<T> => {
+  const run = syncChain.then(fn, fn);
+  syncChain = run.then(
+    () => undefined,
+    () => undefined
+  );
+  return run;
+};
+
 export type SyncOutcome = {
   ok: boolean;
   skipped?: 'offline' | 'no_session' | 'server_down';
@@ -207,7 +221,7 @@ const pushDirty = async (session: { iduser: string }): Promise<number> => {
  * Flow versionne : PULL d'abord (pour eviter d'ecraser une mise a jour serveur
  * plus recente), PUSH ensuite (LWW serveur tranche au cas par cas).
  */
-export const pullThenPush = async (): Promise<SyncOutcome> => {
+const runPullThenPush = async (): Promise<SyncOutcome> => {
   if (!(await isOnline())) return { ok: false, skipped: 'offline' };
   const session = await Session.get();
   if (!session?.iduser) return { ok: false, skipped: 'no_session' };
@@ -225,6 +239,8 @@ export const pullThenPush = async (): Promise<SyncOutcome> => {
   return { ok: true, pulled, pushed };
 };
 
+export const pullThenPush = (): Promise<SyncOutcome> => withSyncLock(runPullThenPush);
+
 /**
  * Entree principale — alias historique vers pullThenPush.
  * Toutes les mutations passent desormais par sync_state (dirty bit) ;
@@ -232,7 +248,7 @@ export const pullThenPush = async (): Promise<SyncOutcome> => {
  */
 export const Sync_to_serveur = pullThenPush;
 
-export const first_sync = async (): Promise<SyncOutcome> => {
+const runFirstSync = async (): Promise<SyncOutcome> => {
   if (!(await isOnline())) {
     if (__DEV__) console.log('[sync] first_sync skipped: offline');
     return { ok: false, skipped: 'offline' };
@@ -301,3 +317,5 @@ export const first_sync = async (): Promise<SyncOutcome> => {
   if (__DEV__) console.log('[sync] first_sync done — pulled:', pulled);
   return { ok: true, pulled };
 };
+
+export const first_sync = (): Promise<SyncOutcome> => withSyncLock(runFirstSync);

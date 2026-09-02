@@ -26,6 +26,7 @@ export type User = {
   modified: Date | string;
   lastlogin: Date | string | null;
   lastlogout: Date | string | null;
+  language: "fr" | "en" | "es" | null;
 };
 
 export type Groups = {

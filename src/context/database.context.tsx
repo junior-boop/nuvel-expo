@@ -426,8 +426,6 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     }, [loadInitialData])
 
     const addGroup = useCallback(async (data: GroupsType, userid: string) => {
-        if (__DEV__) console.log('loadInitialData')
-        loadInitialData()
         clearError();
         try {
             const result = await Groups.created(data);

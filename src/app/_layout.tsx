@@ -7,7 +7,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { Text, View } from '@/components/Themed';
 import { convert } from '@/constants/convert';
 import { AuthProvider, useAuth } from '@/context/auth.context';
-import { DatabaseProvider } from '@/context/database.context';
+import { DatabaseProvider, useDatabase } from '@/context/database.context';
 import * as localStorage from '@/Database/localstorage';
 import { initErrorReporting, reportError } from '@/lib/errorReporter';
 import { syncPushTokenWithServer } from '@/lib/notifications';
@@ -93,6 +93,7 @@ function RootLayoutGate() {
 
 function AuthGate({ children }: { children: ReactNode }) {
   const { user, isAuthenticated, loading } = useAuth();
+  const { biblemetadatState } = useDatabase();
   const segments = useSegments();
 
   useEffect(() => {
@@ -113,7 +114,12 @@ function AuthGate({ children }: { children: ReactNode }) {
     const root = segments[0] as string | undefined;
     const inAuthGroup = root === '(auth)';
     const inOnboardingGroup = root === '(onboarding)';
+    const onboardingStep = segments[1] as string | undefined;
     const profileIncomplete = !!user && (!user.photo || !user.biography);
+    // Case 2 (utilisateur existant) : on verifie l'etat local a chaque lancement — si vide, on
+    // renvoie l'utilisateur vers l'etape correspondante meme s'il a deja termine l'onboarding avant.
+    const bibleIncomplete = !!user && !profileIncomplete && (biblemetadatState?.count() ?? 0) === 0;
+    const languageIncomplete = !!user && !profileIncomplete && !bibleIncomplete && !user.language;
 
     if (!isAuthenticated) {
       if (!inAuthGroup) router.replace('/login' as never);
@@ -123,10 +129,18 @@ function AuthGate({ children }: { children: ReactNode }) {
       if (!inOnboardingGroup) router.replace('/profile' as never);
       return;
     }
-    if (inAuthGroup || (inOnboardingGroup && (segments[1] as string) !== 'sync')) {
+    if (bibleIncomplete) {
+      if (!(inOnboardingGroup && onboardingStep === 'bible')) router.replace('/bible' as never);
+      return;
+    }
+    if (languageIncomplete) {
+      if (!(inOnboardingGroup && onboardingStep === 'language')) router.replace('/language' as never);
+      return;
+    }
+    if (inAuthGroup || (inOnboardingGroup && onboardingStep !== 'sync')) {
       router.replace('/(tabs)');
     }
-  }, [user, isAuthenticated, loading, segments]);
+  }, [user, isAuthenticated, loading, segments, biblemetadatState]);
 
   return <>{children}</>;
 }
