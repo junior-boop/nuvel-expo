@@ -150,6 +150,14 @@ export default function NewArticle() {
 
     const handleSave = async () => {
         if (isSaving) return
+
+        // Verifie qu'une image a bien ete selectionnee AVANT de tenter l'upload —
+        // evite d'afficher "ajoutez une image" quand l'image existe mais que l'upload echoue.
+        if (!file && !existingImageUrl) {
+            Alert.alert('Image requise', "Veuillez ajouter une image avant de publier.")
+            return
+        }
+
         setIsSaving(true)
         const session = await Session.get()
         const userid = session?.iduser as string
@@ -157,65 +165,66 @@ export default function NewArticle() {
         // N'uploader que si une nouvelle image a été choisie, sinon garder l'image existante (mode édition)
         const imageUrl = file ? await uploadNewImage(userid) : existingImageUrl
 
-        if (imageUrl) {
-            const obj_article: Partial<ArticlesType> = {
-                imageurl: imageUrl,
-                userid: userid,
-                noteid: params.noteid as string,
-                body: params.html as string,
-                description: valueDesc,
-                topic: JSON.stringify(selectedTopics),
-                title: params.title as string,
-                version: 1
-            }
-            const articleid = isEditMode ? (existingArticleId as string) : `article_${uuidv4()}`
-            if (__DEV__) console.log(articleid)
-
-            try {
-                const req = await apiRequest(`${server_url}/articles/${userid}/doc/${articleid}`, {
-                    method: isEditMode ? 'PUT' : 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(obj_article),
-                })
-
-                if (!req.ok) {
-                    console.error('Erreur sauvegarde article:', await req.text())
-                    Alert.alert('Erreur', "La publication de l'article a échoué. Réessayez.")
-                    setIsSaving(false)
-                    return
-                }
-
-                const response = await req.json()
-                if (typeof response.status === 'string' && response.status.includes('200 OK')) {
-                    if (!isEditMode) {
-                        const articleStatsId = await createdArticleStats(articleid)
-                        if (__DEV__) console.log(articleStatsId)
-                    }
-
-                    db.publishNote({
-                        id: params.noteid as string,
-                        publishId: JSON.stringify({
-                            articleid: articleid,
-                            title: params.title as string,
-                            imageUrl: imageUrl
-                        }),
-                        version: parseInt(params.version as string)
-                    })
-                    router.back()
-                } else {
-                    Alert.alert('Erreur', "La publication de l'article a échoué. Réessayez.")
-                }
-                setIsSaving(false)
-            } catch (error) {
-                console.error('Erreur sauvegarde article:', error)
-                Alert.alert('Erreur', "Une erreur est survenue. Réessayez.")
-                setIsSaving(false)
-            }
-        } else {
+        if (!imageUrl) {
             console.error('Échec upload image')
-            Alert.alert('Image requise', "Veuillez ajouter une image avant de publier.")
+            Alert.alert('Échec de l\'envoi', "L'envoi de l'image a échoué. Vérifiez votre connexion et réessayez.")
+            setIsSaving(false)
+            return
+        }
+
+        const obj_article: Partial<ArticlesType> = {
+            imageurl: imageUrl,
+            userid: userid,
+            noteid: params.noteid as string,
+            body: params.html as string,
+            description: valueDesc,
+            topic: JSON.stringify(selectedTopics),
+            title: params.title as string,
+            version: 1
+        }
+        const articleid = isEditMode ? (existingArticleId as string) : `article_${uuidv4()}`
+        if (__DEV__) console.log(articleid)
+
+        try {
+            const req = await apiRequest(`${server_url}/articles/${userid}/doc/${articleid}`, {
+                method: isEditMode ? 'PUT' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(obj_article),
+            })
+
+            if (!req.ok) {
+                console.error('Erreur sauvegarde article:', await req.text())
+                Alert.alert('Erreur', "La publication de l'article a échoué. Réessayez.")
+                setIsSaving(false)
+                return
+            }
+
+            const response = await req.json()
+            if (typeof response.status === 'string' && response.status.includes('200 OK')) {
+                if (!isEditMode) {
+                    const articleStatsId = await createdArticleStats(articleid)
+                    if (__DEV__) console.log(articleStatsId)
+                }
+
+                db.publishNote({
+                    id: params.noteid as string,
+                    publishId: JSON.stringify({
+                        articleid: articleid,
+                        title: params.title as string,
+                        imageUrl: imageUrl
+                    }),
+                    version: parseInt(params.version as string)
+                })
+                router.back()
+            } else {
+                Alert.alert('Erreur', "La publication de l'article a échoué. Réessayez.")
+            }
+            setIsSaving(false)
+        } catch (error) {
+            console.error('Erreur sauvegarde article:', error)
+            Alert.alert('Erreur', "Une erreur est survenue. Réessayez.")
             setIsSaving(false)
         }
     }
