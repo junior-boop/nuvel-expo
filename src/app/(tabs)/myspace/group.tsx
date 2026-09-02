@@ -14,13 +14,16 @@ import { useEffect, useState } from 'react';
 
 export default function TabTwoScreen() {
     const [value, onChangeText] = useState<string>('')
-    const { addGroup, groupsQuery, session } = useDatabase();
+    const { addGroup, groupsQuery, notesQuery, session } = useDatabase();
     const [groups, setGroups] = useState<Groups[]>([]);
 
     if (__DEV__) console.log("Session", session)
 
+    const isNewGroupValid = value.trim().length > 0;
+
     const handleNewGroup = async () => {
-        const newGroup = await addGroup({ name: value }, session?.iduser);
+        if (!isNewGroupValid) return;
+        const newGroup = await addGroup({ name: value.trim() }, session?.iduser);
         onChangeText('');
     }
 
@@ -35,25 +38,28 @@ export default function TabTwoScreen() {
             <View style={styles.container}>
                 <View style={{ backgroundColor: '#f6f9ffff', paddingHorizontal: 11, borderBottomWidth: 1, borderColor: "#eff2fdff", height: 50, flexDirection: 'row', alignItems: 'center' }}>
                     <TextInput value={value} onChangeText={onChangeText} placeholderTextColor={"#8fa0acff"} placeholder="Ajouter un groupe" style={{ color: "#333", fontSize: 16, flex: 1, fontWeight: "bold" }} />
-                    <TouchableOpacity style={{ padding: 8 }} onPress={handleNewGroup}>
+                    <TouchableOpacity style={{ padding: 8, opacity: isNewGroupValid ? 1 : 0.4 }} disabled={!isNewGroupValid} onPress={handleNewGroup}>
                         <MaterialIcons name="add" size={28} color="#007AFF" />
                     </TouchableOpacity>
                 </View>
                 <ScrollView>
                     {
-                        groups.map((group) => (
-                            <Link href={{
-                                pathname: "/groupeitems",
-                                params: {
-                                    id: group.id.toString()
-                                }
-                            }} style={{ padding: 14, borderBottomWidth: 1, borderColor: "#eee" }} key={group.id}>
-                                <View>
-                                    <Text style={{ fontSize: 18, marginBottom: 5, fontWeight: "bold", color: "#333", width: (w * 85 / 100), lineHeight: 25 }}>{group.name}</Text>
-                                    <Text style={{ fontSize: 16, color: "#666", marginBottom: 5 }}>Créé le {moment(group.created).format('LL')}</Text>
-                                </View>
-                            </Link>
-                        ))
+                        groups.map((group) => {
+                            const notesCount = notesQuery?.where((note) => note.grouped === group.id).length || 0;
+                            return (
+                                <Link href={{
+                                    pathname: "/groupeitems",
+                                    params: {
+                                        id: group.id.toString()
+                                    }
+                                }} style={{ padding: 14, borderBottomWidth: 1, borderColor: "#eee" }} key={group.id}>
+                                    <View>
+                                        <Text style={{ fontSize: 18, marginBottom: 5, fontWeight: "bold", color: "#333", width: (w * 85 / 100), lineHeight: 25 }}>{group.name}</Text>
+                                        <Text style={{ fontSize: 16, color: "#666", marginBottom: 5 }}>Créé le {moment(group.created).format('LL')} · {notesCount} note{notesCount > 1 ? 's' : ''}</Text>
+                                    </View>
+                                </Link>
+                            )
+                        })
                     }
                     {
                         groups.length === 0 && (<View style={{ height: "100%", width: w, paddingHorizontal: 14, alignItems: "center", marginTop: 40 }}>

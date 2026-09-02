@@ -30,10 +30,11 @@ export const created = async (data: Partial<GroupeType>) => {
   const items = Groups;
 
   return await items.create({
-    id: uuidv4(),
+    // Préserve l'id du serveur quand il est fourni (pull/first_sync), sinon en génère un nouveau (création locale).
+    id: data.id ?? uuidv4(),
     name: data.name,
-    created: new Date().toISOString(),
-    modified: new Date().toISOString(),
+    created: data.created ?? new Date().toISOString(),
+    modified: data.modified ?? new Date().toISOString(),
   });
 };
 

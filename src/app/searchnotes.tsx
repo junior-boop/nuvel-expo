@@ -13,7 +13,19 @@ import { ScrollView, TextInput, TouchableOpacity } from "react-native";
 // search notes
 // L'objectif est d'avoir une page de recherche de notes
 // la recherhche sera faitre uniquement sur les titre des notes pour le moment
-// 
+//
+
+// Parse défensif : body peut être malformé ou d'une forme inattendue → pas de texte exploitable.
+const safeExtractText = (body: unknown): string => {
+    if (!body || typeof body !== 'string') return '';
+    try {
+        const parsed = JSON.parse(body);
+        return parsed?.content?.[0]?.content?.[0]?.text ?? '';
+    } catch {
+        return '';
+    }
+}
+
 export default function SearchNotes() {
     const [value, setValue] = useState('');
     const [search, setSearch] = useState<Notes[] | null>(null)
@@ -25,7 +37,7 @@ export default function SearchNotes() {
     const searchResult = useCallback(() => {
         const escapedValue = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(escapedValue, 'i')
-        return notesQuery?.where((item) => regex.test(JSON.parse(item.body).content[0].content[0].text))
+        return notesQuery?.where((item) => regex.test(safeExtractText(item.body)))
     }, [value])
 
 
