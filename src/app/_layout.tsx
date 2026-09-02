@@ -133,6 +133,13 @@ function AuthGate({ children }: { children: ReactNode }) {
       if (!(inOnboardingGroup && onboardingStep === 'bible')) router.replace('/bible' as never);
       return;
     }
+    if (inOnboardingGroup && onboardingStep === 'bible') {
+      // L'utilisateur est sur l'ecran de telechargement de Bible : ne pas le
+      // rediriger automatiquement des qu'une Bible finit de telecharger
+      // (biblemetadatState.count() passe a 1 et re-declenche cet effet).
+      // Seul le bouton "Continuer"/"Passer" de cet ecran doit faire avancer.
+      return;
+    }
     if (languageIncomplete) {
       if (!(inOnboardingGroup && onboardingStep === 'language')) router.replace('/language' as never);
       return;
