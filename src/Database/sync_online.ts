@@ -83,7 +83,7 @@ const pullTable = async (
   session: { iduser: string }
 ): Promise<number> => {
   const since = await SyncState.getMaxKnownVersion(table);
-  const url = serveur + "/sync-state/full?table=" + table + "&since=" + since + "&limit=200";
+  const url = serveur + "/sync-state/full?table=" + table + "&since=" + since + "&userid=" + encodeURIComponent(session.iduser) + "&limit=200";
   const res = await safeFetch<{ rows: any[]; maxVersion: number }>(url);
   if (!res.ok || !res.data?.rows) {
     if (__DEV__) console.log('[sync] pull', table, 'failed', res.error || res.status);
