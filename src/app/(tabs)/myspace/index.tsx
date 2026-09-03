@@ -6,11 +6,13 @@ import AllNotesFilters from '@/components/notes/allnotes';
 import AllNotesPinned from '@/components/notes/notespinned';
 import { View } from '@/components/Themed';
 import { convert } from '@/constants/convert';
-import { FluentNoteAdd28Regular, FluentSearch32Filled } from "@/constants/icons";
+import { FluentChevronRight32Regular, FluentNoteAdd28Regular, FluentSearch32Filled } from "@/constants/icons";
+import { useAuth } from '@/context/auth.context';
 import { useDatabase } from '@/context/database.context';
 import { Notes } from '@/Database/db';
+import { useArticlesAll } from '@/lib/useArticlesAll';
 import { Stack, router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 export default function TabTwoScreen() {
     const { addNote, notesQuery, session } = useDatabase()
@@ -60,7 +62,8 @@ export default function TabTwoScreen() {
                         <Text style={{ fontSize: convert(16), fontWeight: "bold", marginLeft: convert(8) }}>Search a note </Text>
                     </View>
                 </Pressable>
-                <PublishSqare />
+                <MyPublicationsButton />
+
                 <AllNotesPinned />
                 <AllNotesFilters />
             </Animated.ScrollView>
@@ -75,10 +78,50 @@ export default function TabTwoScreen() {
 
 
 
+const MyPublicationsButton = () => {
+    const { user } = useAuth()
+    const { articles } = useArticlesAll()
+
+    const publicationCount = useMemo(
+        () => articles.filter((a) => a.article?.user?.id === user?.id).length,
+        [articles, user?.id]
+    )
+
+    const handlePress = () => {
+        router.push({
+            pathname: '/author',
+            params: {
+                userId: user?.id as string,
+                name: user?.name ?? '',
+                first_name: user?.first_name ?? '',
+                photo: user?.photo ?? '',
+            }
+        })
+    }
+
+    return (
+        <Pressable style={{ marginBottom: convert(16) }} onPress={handlePress}>
+            <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: convert(16), paddingVertical: convert(12), backgroundColor: "#f6f9ffff", height: 64, borderBottomWidth: 1, borderColor: "#eff2fdff" }}>
+                <View style={{ width: convert(36), height: convert(36), borderRadius: convert(18), overflow: 'hidden', backgroundColor: "#c7c7c7ff" }}>
+                    {!!user?.photo && (
+                        <Image source={{ uri: `https://${user.photo}` }} style={{ width: convert(36), height: convert(36) }} />
+                    )}
+                </View>
+                <View style={{ flex: 1, marginLeft: convert(12) }}>
+                    <Text style={{ fontSize: convert(16), fontWeight: "bold" }}>My publications</Text>
+                    <Text style={{ fontSize: convert(13), color: "#797979" }}>{publicationCount} publication{publicationCount > 1 ? 's' : ''}</Text>
+                </View>
+                <FluentChevronRight32Regular width={20} height={20} color={"#797979"} />
+            </View>
+        </Pressable>
+    )
+}
+
 const PublishElement = ({ publishId }: { publishId: string }) => {
 
     const { articleid, imageUrl, title } = JSON.parse(publishId)
 
+    console.log('PublishElement props:', { articleid, imageUrl, title })
     return (<View style={{ width: convert(200), height: convert(200), backgroundColor: "#d3e3f1ff", borderRadius: convert(12), alignItems: "center", justifyContent: "center", position: 'relative' }}>
         <Image source={{ uri: `https://${imageUrl}` }} style={{ width: convert(200), height: convert(200), borderRadius: convert(12), resizeMode: "cover", position: 'absolute', zIndex: 1 }} />
         <View style={{ position: 'absolute', zIndex: 2, width: convert(200), height: convert(200), backgroundColor: "#0000004b", borderRadius: convert(12), padding: convert(16) }}>

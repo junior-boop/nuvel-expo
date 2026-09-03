@@ -25,6 +25,7 @@ import { useBottomSheetBackHandler } from "@/lib/useBottomSheetBackHandler";
 import { server_url } from "@/constants/server_url";
 import { apiRequest } from "@/lib/token_system";
 import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
 import moment from "moment";
 import Markdown from 'react-native-markdown-display';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -205,6 +206,52 @@ export default function NoteEditor() {
             Alert.alert('Correction indisponible', "Impossible d'obtenir une correction. Réessayez plus tard.");
             return null;
         }
+    }, []);
+
+    // Pont natif pour l'insertion d'image dans l'editeur DOM ("use dom").
+    // Un <input type="file"> a l'interieur d'un DOM Component Expo ne declenche pas
+    // le picker natif (limitation de la webview embarquee) : on ouvre la mediatheque
+    // cote RN avec expo-image-picker (deja utilise/linke ailleurs, pas de nouveau
+    // module natif) et on renvoie un data URL base64 que l'editeur insere directement.
+    const pickImage = useCallback(async (): Promise<string | null> => {
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permissionResult.granted) {
+            Alert.alert('Permission required', 'Permission to access the media library is required.');
+            return null;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: false,
+            quality: 1,
+            base64: true,
+        });
+
+        if (result.canceled || !result.assets[0]) return null;
+        const asset = result.assets[0];
+        const mimeType = asset.mimeType ?? 'image/jpeg';
+        if (!asset.base64) return null;
+        return `data:${mimeType};base64,${asset.base64}`;
+    }, []);
+
+    // Un lien clique dans l'editeur ne doit pas naviguer a l'interieur de la webview
+    // (voir editor/index.tsx: preventDefault + handleDOMEvents.click) mais proposer
+    // de quitter l'app pour ouvrir l'URL dans le navigateur ou l'app associee (deep link).
+    const onLinkPress = useCallback((url: string) => {
+        Alert.alert(
+            'Ouvrir le lien',
+            url,
+            [
+                { text: 'Annuler', style: 'cancel' },
+                {
+                    text: 'Ouvrir', onPress: () => {
+                        Linking.openURL(url).catch(() => {
+                            Alert.alert('Erreur', "Impossible d'ouvrir ce lien.");
+                        });
+                    }
+                },
+            ]
+        );
     }, []);
 
     const fetch_ai_history = useCallback(async () => {
@@ -399,7 +446,7 @@ export default function NoteEditor() {
                 {
                     Note === undefined
                         ? <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><View style={{ alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size={'large'} color={'black'} /><Text>Page Loading...</Text> </View></View>
-                        : <EditorJS note={Note} updateNote={(data) => handleUpdate(data)} biblemetadatState={bible as BibleMetadata[]} trie={filterBible} correctText={handleCorrectSelection} onSpellStateChange={setSpellState} ref={editorRef} />
+                        : <EditorJS note={Note} updateNote={(data) => handleUpdate(data)} biblemetadatState={bible as BibleMetadata[]} trie={filterBible} correctText={handleCorrectSelection} onSpellStateChange={setSpellState} pickImage={pickImage} onLinkPress={onLinkPress} ref={editorRef} />
                 }
             </KeyboardAvoidingView>
 

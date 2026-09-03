@@ -3,10 +3,13 @@
 import BibleVerset from '@/components/bible_component/extension'
 import { BibleMetadata, Notes } from '@/Database/db'
 import Image from '@tiptap/extension-image'
+import Link from '@tiptap/extension-link'
 import { TaskItem, TaskList } from '@tiptap/extension-list'
 import { TextStyleKit } from '@tiptap/extension-text-style'
+import Underline from '@tiptap/extension-underline'
 import type { Editor } from '@tiptap/react'
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
+import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
 import { useDOMImperativeHandle, type DOMImperativeFactory } from 'expo/dom'
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
@@ -43,7 +46,7 @@ const resizeDataUrl = (dataUrl: string): Promise<string> => new Promise((resolve
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;
 });
-import { BxsBible, FluentAppsList20Filled, FluentArrowEnterLeft24Filled, FluentCode24Regular, FluentCodeBlock32Regular, FluentImageAdd32Regular, FluentLineHorizontal128Regular, FluentTaskList24Filled, FluentTextBold24Regular, FluentTextHeader1Lines24Regular, FluentTextHeader2Lines24Regular, FluentTextHeader3Lines24Regular, FluentTextItalic24Filled, FluentTextNumberList24Regular, FluentTextQuote32Filled, FluentTextStrikethroughS24Regular, IcSharpArrowDownward } from './editor_icons'
+import { BxsBible, FluentAppsList20Filled, FluentArrowEnterLeft24Filled, FluentArrowUndo16Regular, FluentChevronDown12Filled, FluentCode24Regular, FluentCodeBlock32Regular, FluentImageAdd32Regular, FluentLineHorizontal128Regular, FluentLinkAdd20Filled, FluentTaskList24Filled, FluentTextBold24Regular, FluentTextHeader1Lines24Regular, FluentTextHeader2Lines24Regular, FluentTextHeader3Lines24Regular, FluentTextItalic24Filled, FluentTextNumberList24Regular, FluentTextQuote32Filled, FluentTextStrikethroughS24Regular, FluentTextUnderlineCharacterU16Filled, IcSharpArrowDownward } from './editor_icons'
 import SpellcheckExtension, { SpellErrorClickInfo } from './spellcheckExtension'
 import { computeSpellHunks, getTextWithPositions, SpellHunk } from './spellcheckDiff'
 import styles from './styles'
@@ -54,37 +57,51 @@ type bibleverst = {
     text: string | undefined;
 }[]
 
-const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
+const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn, pickImage }: {
     editor: Editor | null, biblemetadatState: BibleMetadata[], menubtn?: { teste: () => void }, trie: (data: [book_id: string, book_name: string, chapter: string, vers1?: string, vers2?: string]) => Promise<{
         ref_bible: string;
         content: string;
     } | undefined>,
+    pickImage?: () => Promise<string | null>,
 }, ref) => {
     const [bible_id, setBible_id] = useState<string | null>(null)
     const [openBible, setOpenBible] = useState(false)
     const [verse, setVerse] = useState<string>("")
+    const [isPickingImage, setIsPickingImage] = useState(false)
+    const [headingMenuOpen, setHeadingMenuOpen] = useState(false)
+    const [headingMenuPos, setHeadingMenuPos] = useState({ top: 0, left: 0 })
+    const headingBtnRef = useRef<HTMLButtonElement>(null)
 
-    const handleImage = ({ target }: { target: HTMLInputElement }) => {
-        if (!target.files || target.files.length === 0) return;
-        const file = target.files[0];
-
-        // Garde-fou : refuse > 8 MB (avant resize)
-        const MAX_INPUT_BYTES = 8 * 1024 * 1024;
-        if (file.size > MAX_INPUT_BYTES) {
-            window.alert(`Image trop lourde (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum 8 MB.`);
-            target.value = '';
-            return;
+    // .control-group scrolle horizontalement (overflow-x) et coupe donc tout ce qui
+    // depasse en position absolute/relative classique. On mesure la position reelle du
+    // bouton a l'ouverture et on affiche le menu en position fixed (coordonnees viewport),
+    // ce qui echappe au clipping de l'ancetre scrollable.
+    const toggleHeadingMenu = () => {
+        if (!headingMenuOpen && headingBtnRef.current) {
+            const rect = headingBtnRef.current.getBoundingClientRect();
+            setHeadingMenuPos({ top: rect.bottom, left: rect.left });
         }
+        setHeadingMenuOpen(!headingMenuOpen);
+    }
 
-        const readfile = new FileReader()
-        readfile.onload = async () => {
-            const original = readfile.result as string;
-            const resized = await resizeDataUrl(original);
-            if (__DEV__) console.log(`[Editor] image: ${original.length} → ${resized.length} chars`);
-            editor.chain().focus().setImage({ src: resized }).run()
+    // <input type="file"> a l'interieur de ce DOM Component ("use dom") ne declenche
+    // pas le picker natif : la webview embarquee par Expo DOM Components ne supporte
+    // pas l'ouverture du selecteur de fichiers cote OS. On delegue donc la selection
+    // a la couche RN (expo-image-picker, deja utilisee/linkee ailleurs dans l'app) via
+    // la prop `pickImage`, qui renvoie un data URL base64 insere directement ici.
+    const handlePickImage = async () => {
+        if (!editor || !pickImage || isPickingImage) return;
+        setIsPickingImage(true);
+        try {
+            const dataUrl = await pickImage();
+            if (!dataUrl) return;
+            const resized = await resizeDataUrl(dataUrl);
+            editor.chain().focus().setImage({ src: resized }).run();
+        } catch (error) {
+            if (__DEV__) console.log('[Editor] pickImage error:', error);
+        } finally {
+            setIsPickingImage(false);
         }
-        readfile.readAsDataURL(file)
-        target.value = '';
     }
 
     // Read the current editor's state, and re-render the component when it changes
@@ -168,6 +185,19 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
     // Tiptap n'est pas encore monté : ne rien rendre plutôt que crash sur editor.isActive(...)
     if (!editor) return <div className="control-group" />;
 
+    // Icone affichee sur le bouton deroulant : H1/H3 si actif, H2 par defaut sinon
+    // (y compris quand aucun heading n'est actif ou que H2 est deja actif).
+    const activeHeadingLevel = editorState?.isHeading1 ? 1 : editorState?.isHeading3 ? 3 : 2;
+    const HeadingIcon = activeHeadingLevel === 1
+        ? FluentTextHeader1Lines24Regular
+        : activeHeadingLevel === 3
+            ? FluentTextHeader3Lines24Regular
+            : FluentTextHeader2Lines24Regular;
+
+    const selectHeading = (level: 1 | 2 | 3) => {
+        editor.chain().focus().toggleHeading({ level }).run();
+        setHeadingMenuOpen(false);
+    };
 
     return (
         <div className="control-group">
@@ -202,24 +232,35 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
                         <FluentCode24Regular width={20} height={20} />
                     </button>
 
-                    <button
-                        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                        className={editorState.isHeading1 ? 'is-active' : ''}
-                    >
-                        <FluentTextHeader1Lines24Regular width={20} height={20} />
-                    </button>
-                    <button
-                        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                        className={editorState.isHeading2 ? 'is-active' : ''}
-                    >
-                        <FluentTextHeader2Lines24Regular width={20} height={20} />
-                    </button>
-                    <button
-                        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                        className={editorState.isHeading3 ? 'is-active' : ''}
-                    >
-                        <FluentTextHeader3Lines24Regular width={20} height={20} />
-                    </button>
+                    <div style={{ position: 'relative' }}>
+                        <button
+                            ref={headingBtnRef}
+                            onClick={toggleHeadingMenu}
+                            className={editorState?.isHeading1 || editorState?.isHeading2 || editorState?.isHeading3 ? 'is-active' : ''}
+                        >
+                            <HeadingIcon width={20} height={20} />
+                            <FluentChevronDown12Filled width={12} height={18} />
+                        </button>
+                        {headingMenuOpen && (
+                            <>
+                                <div className="heading-dropdown-overlay" onClick={() => setHeadingMenuOpen(false)} />
+                                <div className="heading-dropdown" style={{ top: headingMenuPos.top, left: headingMenuPos.left }}>
+                                    <button className={editorState?.isHeading1 ? 'is-active' : ''} onClick={() => selectHeading(1)} style={{ height: 35 }}>
+                                        <FluentTextHeader1Lines24Regular width={18} height={18} />
+                                        <span>Heading 1</span>
+                                    </button>
+                                    <button className={editorState?.isHeading2 ? 'is-active' : ''} onClick={() => selectHeading(2)} style={{ height: 35 }}>
+                                        <FluentTextHeader2Lines24Regular width={18} height={18} />
+                                        <span>Heading 2</span>
+                                    </button>
+                                    <button className={editorState?.isHeading3 ? 'is-active' : ''} onClick={() => selectHeading(3)} style={{ height: 35 }}>
+                                        <FluentTextHeader3Lines24Regular width={18} height={18} />
+                                        <span>Heading 3</span>
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
                     <button
                         onClick={() => editor.chain().focus().toggleBulletList().run()}
                         className={editorState.isBulletList ? 'is-active' : ''}
@@ -231,6 +272,12 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
                         className={editorState.isOrderedList ? 'is-active' : ''}
                     >
                         <FluentTextNumberList24Regular width={20} height={20} />
+                    </button>
+                    <button
+                        onClick={() => editor.chain().focus().toggleTaskList().run()}
+                        className={editor.isActive('taskList') ? 'is-active' : ''}
+                    >
+                        <FluentTaskList24Filled width={20} height={20} />
                     </button>
                     <button
                         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
@@ -248,25 +295,26 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn }: {
                     <button onClick={() => editor.chain().focus().setHardBreak().run()}>
                         <FluentArrowEnterLeft24Filled width={20} height={20} />
                     </button>
+                    <span style={{ width: 2, height: 25, backgroundColor: '#00000033', margin: '0 5px', borderRadius: 5 }}></span>
                     <div style={{ position: 'relative' }}>
-                        <button onClick={() => setOpenBible(!openBible)}>
+                        <button className='long-btn' onClick={() => setOpenBible(!openBible)} style={{ backgroundColor: 'white' }}>
                             <BxsBible width={20} height={20} />
+                            <span>Bible</span>
                         </button>
-
                     </div>
                     <div style={{ position: 'relative' }}>
-                        <input type='file' className='inputImage' onChange={handleImage} />
-                        <button className='long-btn'>
+                        <button className='long-btn' style={{ backgroundColor: 'white' }} onClick={handlePickImage} disabled={isPickingImage}>
                             <FluentImageAdd32Regular width={20} height={20} />
                             <span>Image</span>
                         </button>
                     </div>
-                    <button
-                        onClick={() => editor.chain().focus().toggleTaskList().run()}
-                        className={editor.isActive('taskList') ? 'is-active' : ''}
-                    >
-                        <FluentTaskList24Filled width={20} height={20} />
-                    </button>
+                    <div style={{ position: 'relative' }}>
+                        <button className='long-btn' style={{ backgroundColor: 'white' }} onClick={() => editor.chain().focus().undo().run()} disabled={!editorState?.canUndo}>
+                            <FluentArrowUndo16Regular width={20} height={20} />
+                            <span>Undo</span>
+                        </button>
+                    </div>
+
                 </div>
             </div>
             {
@@ -299,6 +347,94 @@ const BibleItem = ({ el, isActived, onClick }: { el: BibleMetadata, onClick: () 
     return (<button onClick={onClick} style={{ backgroundColor: isActived ? "rgba(0, 153, 255, 0.14)" : "white", color: isActived ? "rgb(16, 83, 170)" : 'black' }}>{el.name}</button>)
 }
 
+// Menu flottant qui n'apparait que lorsqu'une selection de texte non vide existe
+// (comportement par defaut du plugin BubbleMenu). Regroupe souligner / gras / lien.
+const SelectionBubbleMenu = ({ editor }: { editor: Editor | null }) => {
+    const [linkMenuOpen, setLinkMenuOpen] = useState(false)
+    const [linkUrl, setLinkUrl] = useState('')
+
+    const editorState = useEditorState({
+        editor,
+        selector: ctx => {
+            if (!ctx.editor) return { isBold: false, isItalic: false, isUnderline: false, isStrike: false, isBlockquote: false, isLink: false }
+            return {
+                isBold: ctx.editor.isActive('bold') ?? false,
+                isItalic: ctx.editor.isActive('italic') ?? false,
+                isUnderline: ctx.editor.isActive('underline') ?? false,
+                isStrike: ctx.editor.isActive('strike') ?? false,
+                isBlockquote: ctx.editor.isActive('blockquote') ?? false,
+                isLink: ctx.editor.isActive('link') ?? false,
+            }
+        },
+    })
+
+    useEffect(() => {
+        if (!editor) return;
+        const closeLinkInput = () => setLinkMenuOpen(false);
+        editor.on('selectionUpdate', closeLinkInput);
+        return () => { editor.off('selectionUpdate', closeLinkInput); };
+    }, [editor])
+
+    if (!editor) return null
+
+    const handleLinkClick = () => {
+        if (editorState?.isLink) {
+            editor.chain().focus().extendMarkRange('link').unsetLink().run();
+            return;
+        }
+        setLinkUrl('');
+        setLinkMenuOpen(true);
+    }
+
+    const applyLink = () => {
+        const url = linkUrl.trim();
+        if (url) {
+            editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+        }
+        setLinkMenuOpen(false);
+        setLinkUrl('');
+    }
+
+    return (
+        <BubbleMenu editor={editor} className="selection-bubble-menu">
+            {linkMenuOpen ? (
+                <div className="bubble-link-input">
+                    <input
+                        autoFocus
+                        value={linkUrl}
+                        onChange={(e) => setLinkUrl(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') applyLink(); if (e.key === 'Escape') setLinkMenuOpen(false) }}
+                        placeholder="https://..."
+                        type="text"
+                    />
+                    <button onClick={applyLink}><IcSharpArrowDownward width={16} height={16} /></button>
+                </div>
+            ) : (
+                <>
+                    <button className={editorState?.isBold ? 'is-active' : ''} onClick={() => editor.chain().focus().toggleBold().run()}>
+                        <FluentTextBold24Regular width={18} height={18} />
+                    </button>
+                    <button className={editorState?.isItalic ? 'is-active' : ''} onClick={() => editor.chain().focus().toggleItalic().run()}>
+                        <FluentTextItalic24Filled width={18} height={18} />
+                    </button>
+                    <button className={editorState?.isUnderline ? 'is-active' : ''} onClick={() => editor.chain().focus().toggleUnderline().run()}>
+                        <FluentTextUnderlineCharacterU16Filled width={18} height={18} />
+                    </button>
+                    <button className={editorState?.isStrike ? 'is-active' : ''} onClick={() => editor.chain().focus().toggleStrike().run()}>
+                        <FluentTextStrikethroughS24Regular width={18} height={18} />
+                    </button>
+                    <button className={editorState?.isBlockquote ? 'is-active' : ''} onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+                        <FluentTextQuote32Filled width={18} height={18} />
+                    </button>
+                    <button className={editorState?.isLink ? 'is-active' : ''} onClick={handleLinkClick}>
+                        <FluentLinkAdd20Filled width={18} height={18} />
+                    </button>
+                </>
+            )}
+        </BubbleMenu>
+    )
+}
+
 // export default function EditorJS({ note, updateNote, biblemetadatState, trie, menubtn }: { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void } }) {
 
 // }
@@ -309,7 +445,7 @@ export interface EditorJSRef extends DOMImperativeFactory {
     applyAllCorrections: () => void;
 }
 
-const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void }, correctText?: (text: string) => Promise<string | null>, onSpellStateChange?: (state: { isChecking: boolean; isApplying: boolean; count: number }) => void }>(({ note, updateNote, biblemetadatState, trie, menubtn, correctText, onSpellStateChange }, ref) => {
+const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void }, correctText?: (text: string) => Promise<string | null>, onSpellStateChange?: (state: { isChecking: boolean; isApplying: boolean; count: number }) => void, pickImage?: () => Promise<string | null>, onLinkPress?: (url: string) => void }>(({ note, updateNote, biblemetadatState, trie, menubtn, correctText, onSpellStateChange, pickImage, onLinkPress }, ref) => {
     const [isFocus, setIsFocus] = useState(false)
     const [content, setContent] = useState<any>(() => safeParseBody(note?.body))
     const [isTyping, setIsTyping] = useState(false)
@@ -321,6 +457,7 @@ const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height
     const [isChecking, setIsChecking] = useState(false)
     const [isApplying, setIsApplying] = useState(false)
     const onErrorClickRef = useRef<(info: SpellErrorClickInfo) => void>(() => { })
+    const onLinkPressRef = useRef<(url: string) => void>(() => { })
 
     // Sync sur changement de note (id) — l'ancienne version figeait à []
     const getinitnote = useCallback(async () => {
@@ -334,7 +471,11 @@ const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height
         }
     }, [note?.id])
 
-    const extensions = useMemo(() => [BibleVerset, TextStyleKit, StarterKit, Image, TaskList,
+    const extensions = useMemo(() => [BibleVerset, TextStyleKit, StarterKit, Image, TaskList, Underline,
+        Link.configure({
+            openOnClick: false,
+            autolink: true,
+        }),
         TaskItem.configure({
             nested: true,
         }), SpellcheckExtension.configure({
@@ -349,6 +490,27 @@ const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height
             setHtml(data.editor.getHTML())
         }
     })
+
+    // Un <a> reste un lien natif dans la webview : le laisser suivre son comportement par
+    // defaut la ferait naviguer DANS la webview (l'utilisateur "lit" le lien sur place) au
+    // lieu de proposer de sortir de l'app. On ecoute en phase de capture, avant que
+    // ProseMirror/le navigateur ne traitent le clic, pour couper court a toute navigation
+    // et déclencher directement le popup de confirmation.
+    useEffect(() => {
+        if (!editor) return;
+        const dom = editor.view.dom;
+        const handleAnchorClick = (event: MouseEvent) => {
+            const target = event.target as HTMLElement | null;
+            const anchor = target?.closest?.('a');
+            if (anchor?.href) {
+                event.preventDefault();
+                event.stopPropagation();
+                onLinkPressRef.current(anchor.href);
+            }
+        };
+        dom.addEventListener('click', handleAnchorClick, true);
+        return () => dom.removeEventListener('click', handleAnchorClick, true);
+    }, [editor])
 
 
     useEffect(() => {
@@ -413,6 +575,12 @@ const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height
     onErrorClickRef.current = (info: SpellErrorClickInfo) => {
         const hunk = spellHunks.find(h => h.from === info.from && h.to === info.to);
         if (hunk) setSpellPopup(hunk);
+    };
+
+    // Clic sur un lien : on empeche la navigation dans la webview (voir editorProps.handleDOMEvents
+    // plus bas) et on delegue a la couche RN qui proposera d'ouvrir l'URL dans le navigateur/l'app.
+    onLinkPressRef.current = (url: string) => {
+        onLinkPress?.(url);
     };
 
     // Navigation entre fautes depuis le popup : parcourt spellHunks dans l'ordre du texte.
@@ -495,8 +663,9 @@ const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height
         <div style={{ width: '100vw' }}>
             <style dangerouslySetInnerHTML={{ __html: styles }}></style>
             <div style={{ position: "relative", height: "100dvh" }}>
-                <MenuBar editor={editor} biblemetadatState={biblemetadatState} trie={trie} menubtn={menubtn} />
+                <MenuBar editor={editor} biblemetadatState={biblemetadatState} trie={trie} menubtn={menubtn} pickImage={pickImage} />
                 <EditorContent editor={editor} onFocus={() => setIsFocus(true)} onBlur={() => setIsFocus(false)} />
+                <SelectionBubbleMenu editor={editor} />
                 <div style={{ height: 60 }}></div>
                 {spellPopup && (
                     <div className="spell-popup-overlay" onClick={() => setSpellPopup(null)}>

@@ -120,28 +120,40 @@ export default function NewArticle() {
     }, [])
 
     const uploadNewImage = async (userid: string): Promise<string | null> => {
+        if (!file?.uri) return null
+
         const formData = new FormData()
         // React Native FormData nécessite un objet avec uri, type, name
         formData.append('images', {
-            uri: file?.uri,
-            type: file?.mimeType,
-            name: file?.name
+            uri: file.uri,
+            type: file.mimeType,
+            name: file.name
         } as any)
 
         try {
-            const post_req = await fetch(`${server_url}/image/${userid}`, {
-                method: 'POST',
-                // Ne pas définir Content-Type, fetch le fait automatiquement pour FormData
-                body: formData
+            // Expo SDK 56 remplace le `fetch` global par son propre runtime ("winter"),
+            // qui ne sait plus envoyer l'objet proprietaire RN { uri, type, name } dans
+            // un FormData ("Unsupported FormDataPart implementation"). XMLHttpRequest,
+            // lui, passe toujours par le pont natif historique de React Native qui gere
+            // ce format nativement — pas besoin d'un nouveau module natif / dev build.
+            const response = await new Promise<{ ok: boolean; status: number; body: string }>((resolve, reject) => {
+                const xhr = new XMLHttpRequest()
+                xhr.open('POST', `${server_url}/image/${userid}`)
+                xhr.onload = () => {
+                    resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, body: xhr.responseText })
+                }
+                xhr.onerror = () => reject(new Error('Network request failed'))
+                xhr.send(formData)
             })
 
-            if (!post_req.ok) {
-                console.error('Erreur upload image:', await post_req.text())
+            if (!response.ok) {
+                console.error('Erreur upload image:', response.body)
                 return null
             }
 
-            const response = await post_req.json()
-            return response.url
+            const data = JSON.parse(response.body)
+            console.log('Upload image response:', data)
+            return data.url
         } catch (error) {
             console.error('Erreur upload:', error)
             return null

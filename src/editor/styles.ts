@@ -572,7 +572,7 @@ p {
     position: absolute;
     top: 0;
     left: 0;
-    background-color: trasparent;
+    background-color: transparent;
     visibility: visible;
     appearance: none;
 }
@@ -644,6 +644,124 @@ p {
 
 control-groupe .button-group bottom.is-active {
     color :rgb(16, 83, 170) ;
+    background-color: rgba(0, 110, 255, 0.096);
+}
+
+.heading-dropdown-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 19;
+    background-color: transparent;
+}
+
+.heading-dropdown {
+    position: fixed;
+    z-index: 20;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #efefef;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    min-width: 150px;
+    overflow: hidden;
+}
+
+.heading-dropdown button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 42px;
+    padding: 0 12px;
+    border: none;
+    background-color: white;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.heading-dropdown button:hover {
+    background-color: #f3f4f6;
+}
+
+.selection-bubble-menu {
+    position: fixed !important;
+    top: auto !important;
+    left: 50% !important;
+    bottom: 15px !important;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #efefef;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+    padding: 4px;
+    gap: 2px;
+    animation: bubbleMenuSlideUp 0.2s ease-out forwards;
+}
+
+@keyframes bubbleMenuSlideUp {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 20px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+.selection-bubble-menu button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 6px;
+    background-color: white;
+}
+
+.selection-bubble-menu button:hover {
+    background-color: #f3f4f6;
+}
+
+.selection-bubble-menu button.is-active {
+    color: rgb(16, 83, 170);
+    background-color: rgba(0, 110, 255, 0.096);
+}
+
+.bubble-link-input {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.bubble-link-input input {
+    height: 34px;
+    width: 200px;
+    padding: 0 8px;
+    border: none;
+    outline: none;
+    font-size: 0.9rem;
+    color: #333;
+    background-color: white;
+}
+
+.bubble-link-input button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 6px;
+    background-color: white;
+    flex-shrink: 0;
+}
+
+.heading-dropdown button.is-active {
+    color: rgb(16, 83, 170);
     background-color: rgba(0, 110, 255, 0.096);
 }
 

@@ -80,6 +80,12 @@ export default function ReaderPage() {
                                     }
                                 })
                             }}
+                            onTopicPress={(topic: string) => {
+                                router.navigate({
+                                    pathname: '/topicarticles',
+                                    params: { topic }
+                                })
+                            }}
                         />
 
                 }

@@ -93,7 +93,7 @@ function RootLayoutGate() {
 
 function AuthGate({ children }: { children: ReactNode }) {
   const { user, isAuthenticated, loading } = useAuth();
-  const { biblemetadatState } = useDatabase();
+  const { biblemetadatState, isLoading: dbLoading } = useDatabase();
   const segments = useSegments();
 
   useEffect(() => {
@@ -109,7 +109,11 @@ function AuthGate({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (loading) return;
+    // Tant que la base locale n'a pas fini de charger, biblemetadatState est encore
+    // null : le traiter comme "0 bible" declenchait un redirect vers /bible au demarrage
+    // meme quand une bible etait deja telechargee lors d'une session precedente. On
+    // attend que le chargement local soit termine avant de decider.
+    if (loading || dbLoading || biblemetadatState === null) return;
 
     const root = segments[0] as string | undefined;
     const inAuthGroup = root === '(auth)';
@@ -118,7 +122,7 @@ function AuthGate({ children }: { children: ReactNode }) {
     const profileIncomplete = !!user && (!user.photo || !user.biography);
     // Case 2 (utilisateur existant) : on verifie l'etat local a chaque lancement — si vide, on
     // renvoie l'utilisateur vers l'etape correspondante meme s'il a deja termine l'onboarding avant.
-    const bibleIncomplete = !!user && !profileIncomplete && (biblemetadatState?.count() ?? 0) === 0;
+    const bibleIncomplete = !!user && !profileIncomplete && biblemetadatState.count() === 0;
     const languageIncomplete = !!user && !profileIncomplete && !bibleIncomplete && !user.language;
 
     if (!isAuthenticated) {
@@ -147,7 +151,7 @@ function AuthGate({ children }: { children: ReactNode }) {
     if (inAuthGroup || (inOnboardingGroup && onboardingStep !== 'sync')) {
       router.replace('/(tabs)');
     }
-  }, [user, isAuthenticated, loading, segments, biblemetadatState]);
+  }, [user, isAuthenticated, loading, dbLoading, segments, biblemetadatState]);
 
   return <>{children}</>;
 }
@@ -172,6 +176,7 @@ function RootLayoutNav() {
         <Stack.Screen name="newarticle" options={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: "#fff" } }} />
         <Stack.Screen name="history" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
         <Stack.Screen name="author" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
+        <Stack.Screen name="topicarticles" options={{ headerShown: true, headerShadowVisible: false, animation: 'slide_from_right', title: "", contentStyle: { backgroundColor: "#fff" } }} />
         <Stack.Screen name="reader" options={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: "#fff" } }} />
       </Stack>
       </AuthGate>
