@@ -1,14 +1,13 @@
 import { w } from "@/constants/Colors";
 import { convert } from "@/constants/convert";
 import { FluentArrowCircleUp20Filled, FluentSubtractCircle12Regular } from "@/constants/icons";
-import { addsignal, addupvote } from "@/lib/instantdb.comment";
-import { CommentType } from "@/lib/instantdb.init";
+import { CommentRow } from "@/lib/comments.api";
+import { useCommentInteractions } from "@/lib/useCommentUpvoteSignal";
 import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
 import { Image, Pressable } from "react-native";
 import { Text, View } from "./Themed";
 
-export default function CommentaireItem({ comment, index, articleId, userId }: { comment: CommentType, index: number, articleId: string, userId: string }) {
+export default function CommentaireItem({ comment, index, articleId, userId }: { comment: CommentRow, index: number, articleId: string, userId: string }) {
     const { name, first_name, photo } = comment.creator
 
     return (
@@ -31,8 +30,8 @@ export default function CommentaireItem({ comment, index, articleId, userId }: {
                 </View>
                 <Text style={{ fontSize: convert(16), color: '#202020ff', width: w * 0.7 }}>{comment.content}</Text>
                 <View style={{ marginTop: convert(8), flexDirection: 'row', alignItems: 'center', gap: convert(24) }}>
-                    <Upvotes id={articleId} commentId={comment.id} userId={userId} comment={comment} />
-                    <Signals id={articleId} commentId={comment.id} userId={userId} comment={comment} />
+                    <Upvotes id={articleId} commentId={comment.id} userId={userId} />
+                    <Signals id={articleId} commentId={comment.id} userId={userId} />
                 </View>
             </View>
 
@@ -40,87 +39,8 @@ export default function CommentaireItem({ comment, index, articleId, userId }: {
     )
 }
 
-export const upVoteHooks = ({ id, commentId, userId, comment }: { id: string, commentId: string, userId: string, comment: CommentType }) => {
-    const [isUpvoted, setIsUpvoted] = useState(false)
-    const [upvotesCount, setUpvotesCount] = useState(0)
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState(null)
-
-    const toggleUpvote = useCallback(async () => {
-        setLoading(true)
-        try {
-
-            if (comment.upvotes.includes(userId)) {
-                const upvotes = comment.upvotes.filter((upvote: string) => upvote !== userId)
-                await addupvote(commentId, upvotes, comment.notes - 1)
-                setIsUpvoted(!isUpvoted)
-                setUpvotesCount(comment.notes - 1)
-            } else {
-                const upvotes = [...comment.upvotes, userId]
-                await addupvote(commentId, upvotes, comment.notes + 1)
-                setIsUpvoted(!isUpvoted)
-                setUpvotesCount(comment.notes + 1)
-            }
-        } catch (error) {
-            setError(error)
-        } finally {
-            setLoading(false)
-        }
-    }, [comment])
-
-    useEffect(() => {
-        setIsUpvoted(comment.upvotes.includes(userId))
-        setUpvotesCount(comment.notes)
-    }, [comment])
-    return {
-        isUpvoted,
-        toggleUpvote,
-        upvotesCount,
-        loading,
-        error
-    }
-}
-
-export const signalHooks = ({ id, commentId, userId, comment }: { id: string, commentId: string, userId: string, comment: CommentType }) => {
-    const [isSignaled, setIsSignaled] = useState(false)
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState(null)
-
-    const toggleSignal = useCallback(async () => {
-        setLoading(true)
-        try {
-
-            if (comment.signals.includes(userId)) {
-                const signals = comment.signals.filter((signal: string) => signal !== userId)
-                await addsignal(commentId, signals)
-                setIsSignaled(!isSignaled)
-            } else {
-                const signals = [...comment.signals, userId]
-                await addsignal(commentId, signals)
-                setIsSignaled(!isSignaled)
-            }
-        } catch (error) {
-            setError(error)
-        } finally {
-            setLoading(false)
-        }
-    }, [comment])
-
-    useEffect(() => {
-        setIsSignaled(comment.signals.includes(userId))
-    }, [comment])
-
-    return {
-        isSignaled,
-        toggleSignal,
-        loading,
-        error
-    }
-}
-
-
-const Upvotes = ({ id, commentId, userId, comment }: { id: string, commentId: string, userId: string, comment: CommentType }) => {
-    const { isUpvoted, toggleUpvote, upvotesCount, loading, error } = upVoteHooks({ id, commentId, userId, comment })
+const Upvotes = ({ id, commentId, userId }: { id: string, commentId: string, userId: string }) => {
+    const { isUpvoted, upvotesCount, toggleUpvote } = useCommentInteractions(id, commentId, userId)
     return (
         <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: convert(5) }} onPress={toggleUpvote}>
             <FluentArrowCircleUp20Filled width={24} height={24} color={isUpvoted ? '#006effff' : '#777'} />
@@ -128,8 +48,8 @@ const Upvotes = ({ id, commentId, userId, comment }: { id: string, commentId: st
         </Pressable>
     )
 }
-const Signals = ({ id, commentId, userId, comment }: { id: string, commentId: string, userId: string, comment: CommentType }) => {
-    const { isSignaled, toggleSignal, loading, error } = signalHooks({ id, commentId, userId, comment })
+const Signals = ({ id, commentId, userId }: { id: string, commentId: string, userId: string }) => {
+    const { isSignaled, toggleSignal } = useCommentInteractions(id, commentId, userId)
     return (
         <Pressable style={{ flexDirection: 'row', alignItems: 'center', gap: convert(5) }} onPress={toggleSignal}>
             <FluentSubtractCircle12Regular width={24} height={24} color={isSignaled ? '#f82a2aff' : '#777'} />

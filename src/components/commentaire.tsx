@@ -2,11 +2,7 @@
 import { convert } from "@/constants/convert";
 import { RiMessageLine } from "@/constants/icons";
 import { User } from "@/Database/db";
-import { checkArticleStats, setCommentCount } from "@/lib/instantdb.articles";
-import { createdComment, getComments } from "@/lib/instantdb.comment";
-import { CommentType } from "@/lib/instantdb.init";
-import { ArticleStat } from "@/lib/useArticlesAll";
-import { useLocalSearchParams } from "expo-router";
+import { CommentRow, deleteComment as deleteCommentApi, getComments, postComment } from "@/lib/comments.api";
 import { useCallback, useEffect, useState } from "react";
 import {
     StyleSheet,
@@ -16,53 +12,19 @@ import { Text } from "./Themed";
 
 
 
-export const useCommentStats = (articleId: string) => {
-    const [count, setCount] = useState(0);
-    const [loading, setLoading] = useState(false);
-    const [connected, setConnected] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    const fetchState = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const [statsRes] = await Promise.all([
-                checkArticleStats(articleId),
-            ]);
-            if (__DEV__) console.log(statsRes?.data.articlesStats[0].commentCount);
-            setCount(statsRes?.data.articlesStats[0].commentCount ?? 0); // adapte selon la forme réelle de statsRes
-        } catch (err) {
-            console.error('[useCommentStats]', err);
-            setError('Erreur lors du chargement.');
-        } finally {
-            setLoading(false);
-        }
-    }, [articleId]);
-
-    useEffect(() => {
-        fetchState();
-        const interval = setInterval(fetchState, 15000);
-        return () => clearInterval(interval);
-    }, [fetchState]);
-
-    return { count, loading, error, connected };
-}
-
-
 export const useCommentHooks = (articleId: string) => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const [comments, setComments] = useState<CommentType[]>([]);
-    const { count } = useCommentStats(articleId);
+    const [comments, setComments] = useState<CommentRow[]>([]);
+    const [count, setCount] = useState(0);
 
     const fetchComments = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
-            const [commentsRes] = await Promise.all([
-                getComments(articleId),
-            ]);
-            setComments(commentsRes?.data.comments || []);
+            const commentsRes = await getComments(articleId);
+            setComments(commentsRes.comments || []);
+            setCount(commentsRes.count ?? 0);
         } catch (err) {
             console.error('[useCommentHooks]', err);
             setError('Erreur lors du chargement des commentaires.');
@@ -72,41 +34,65 @@ export const useCommentHooks = (articleId: string) => {
     }, [articleId]);
 
     const addComment = useCallback(async (creator: User, content: string) => {
+        // Mise à jour optimiste : le commentaire apparait instantanément,
+        // ensuite on reconcilie avec la réponse du serveur (comme YouTube).
+        const tempId = `temp-${Date.now()}`;
+        const optimisticComment: CommentRow = {
+            id: tempId,
+            articleId,
+            creator: {
+                id: creator.id,
+                name: creator.name,
+                first_name: creator.first_name,
+                photo: creator.photo ?? null,
+            },
+            content,
+            notes: 0,
+            upvotes: '[]',
+            signals: '[]',
+            created: new Date().toISOString(),
+            modified: new Date().toISOString(),
+        };
+        setComments(prev => [optimisticComment, ...prev]);
+        setCount(prev => prev + 1);
+
         try {
-            const [addCommentRes, statsRes, commentsRes] = await Promise.all([
-                createdComment(articleId, creator, content),
-                checkArticleStats(articleId),
-                getComments(articleId),
-            ]);
-            setComments(commentsRes?.data.comments || []);
-            const stat = statsRes?.data?.articlesStats?.[0];
-            if (stat) {
-                setCommentCount(stat.id, stat.commentCount);
+            const addCommentRes = await postComment(articleId, creator, content);
+            if (addCommentRes?.success) {
+                await fetchComments();
+                return true;
             }
-            return addCommentRes
+            setComments(prev => prev.filter(c => c.id !== tempId));
+            setCount(prev => Math.max(0, prev - 1));
+            return false;
         } catch (err) {
             console.error('[useCommentHooks]', err);
+            setComments(prev => prev.filter(c => c.id !== tempId));
+            setCount(prev => Math.max(0, prev - 1));
             setError('Erreur lors du chargement des commentaires.');
+            return false;
         } finally {
             setLoading(false);
         }
-    }, [articleId]);
+    }, [articleId, fetchComments]);
 
 
     const deleteComment = useCallback(async (commentId: string) => {
+        const previousComments = comments;
+        setComments(prev => prev.filter(c => c.id !== commentId));
+        setCount(prev => Math.max(0, prev - 1));
+
         try {
-            const [deleteCommentRes, commentsRes] = await Promise.all([
-                deleteComment(commentId),
-                getComments(articleId),
-            ]);
-            setComments(commentsRes?.data.comments || []);
+            await deleteCommentApi(articleId, commentId);
         } catch (err) {
             console.error('[useCommentHooks]', err);
             setError('Erreur lors du chargement des commentaires.');
+            setComments(previousComments);
+            setCount(previousComments.length);
         } finally {
             setLoading(false);
         }
-    }, [articleId]);
+    }, [articleId, comments]);
 
 
     useEffect(() => {
@@ -118,17 +104,12 @@ export const useCommentHooks = (articleId: string) => {
         return () => {
             clearInterval(interval);
         };
-    }, []);
+    }, [fetchComments]);
 
     return { count, loading, error, comments, addComment, deleteComment, fetchComments };
 }
 
-export default function Commentaire({ onPress }: { onPress: () => void }) {
-    const { element } = useLocalSearchParams();
-    const articleStats = JSON.parse(element as string) as ArticleStat;
-
-    const { count, loading, error } = useCommentStats(articleStats?.articleId || '');
-
+export default function Commentaire({ onPress, count }: { onPress: () => void, count: number }) {
     return (
         <>
             {/* Bouton pour ouvrir les commentaires */}

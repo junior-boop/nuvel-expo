@@ -2,7 +2,7 @@
 import * as Session from '@/Database/session';
 import { getAccessToken } from '@/lib/token_system';
 import { useCallback, useEffect, useRef, useState, } from 'react';
-import { checkArticleStats, createdArticleStats, deleteArticleStats, setViewCount } from './instantdb.articles';
+import { incrementViewCount } from './articleStats.api';
 import { createdHistoryItem } from './instantdb.histories';
 
 interface User {
@@ -55,21 +55,6 @@ export const useArticle = (
       setLoading(true);
       setError(null);
 
-
-      const check = await checkArticleStats(articleId)
-      if (__DEV__) console.log("[useArticle] Check:", check);
-
-
-
-      if (check?.data.articlesStats.length === 0) {
-        await createdArticleStats(articleId)
-      }
-
-      if (check?.data.articlesStats.length > 1) {
-        if (__DEV__) console.log("[useArticle] Delete Article Stats", check?.data.articlesStats[0].id)
-        await deleteArticleStats(check?.data.articlesStats[0].id)
-      }
-
       const token = await getAccessToken();
       if (__DEV__) console.log("[useArticle] Token:", token ? 'Present' : 'Not found');
 
@@ -120,16 +105,15 @@ export const useArticle = (
       return;
     }
 
-    const check = await checkArticleStats(articleId)
-
-    if (check?.data.articlesStats.length === 1) {
-      if (__DEV__) console.log("[useArticle] Article Stats", check?.data.articlesStats[0].id)
-      await setViewCount(check?.data.articlesStats[0].id, check?.data.articlesStats[0].viewCount)
-      await createdHistoryItem(articleId, session?.iduser as string, { title: article?.title as string, image: article?.imageurl as string, createdAt: new Date(article?.createdAt as string) })
-
-      // Marquer comme déjà tracké
-      hasTrackedHistory.current = true;
+    try {
+      await incrementViewCount(articleId)
+    } catch (err) {
+      if (__DEV__) console.log("[useArticle] incrementViewCount error", err);
     }
+    await createdHistoryItem(articleId, session?.iduser as string, { title: article?.title as string, image: article?.imageurl as string, createdAt: new Date(article?.createdAt as string) })
+
+    // Marquer comme déjà tracké
+    hasTrackedHistory.current = true;
   }, []);
 
 

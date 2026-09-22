@@ -38,13 +38,21 @@ export const useAppreciationsWebSocket = (
   const checkIfLiked = useCallback((appreciationsList: Appreciation[]) => {
     return appreciationsList.some(a => a.userid === userId);
   }, [userId]);
-  // Toggle like via HTTP
+  // Toggle like via HTTP, avec mise à jour optimiste immédiate
   const toggleLike = useCallback(async () => {
     if (!articleId || !userId) return;
+
+    // Mise à jour optimiste : le state change instantanément au clic,
+    // le WebSocket confirmera/corrigera ensuite automatiquement (comme YouTube).
+    const wasLiked = liked;
+    const previousCount = count;
+    setLiked(!wasLiked);
+    setCount(wasLiked ? Math.max(0, previousCount - 1) : previousCount + 1);
+
     try {
       setLoading(true);
       log('🔄 Toggle like...', 'info');
-      
+
       const response = await fetch(`${apiBase}/appreciations/${articleId}/toggle`, {
         method: 'POST',
         headers: {
@@ -53,21 +61,24 @@ export const useAppreciationsWebSocket = (
         body: JSON.stringify({ userid: userId }),
       });
       const data = await response.json();
-      
+
       if (data.success) {
         log(`✅ Like ${data.action}`, 'success');
-        // Le WebSocket va broadcaster automatiquement
+        // Le WebSocket va broadcaster automatiquement l'état réel
       } else {
         throw new Error(data.message || 'Erreur toggle like');
       }
     } catch (err) {
+      // Revert en cas d'échec
+      setLiked(wasLiked);
+      setCount(previousCount);
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       log(`❌ Erreur: ${message}`, 'error');
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, [articleId, userId, apiBase, log]);
+  }, [articleId, userId, apiBase, log, liked, count]);
   // Connexion WebSocket
   const connectWebSocket = useCallback(() => {
     if (!articleId) return;

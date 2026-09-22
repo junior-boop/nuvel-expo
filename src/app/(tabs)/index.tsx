@@ -12,6 +12,7 @@ import { useCallback, useState } from 'react';
 import { Image, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView, RefreshControl, ScrollView } from 'react-native-gesture-handler';
 import { HeaderStyles } from '../styles/cards';
+import { FluentEyeShow24Filled } from '@/constants/icons';
 
 
 
@@ -117,7 +118,7 @@ const TopArticles = ({ articles }: { articles: ArticleStat }) => {
             <Text style={{ fontSize: convert(13), color: "#444", fontWeight: "bold", marginBottom: convert(-3) }}>{articles.article?.user?.name} {articles.article?.user?.first_name}</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: convert(3), alignItems: 'center' }}>
-            <Text style={{ fontSize: convert(13), color: "#444", fontWeight: "bold", marginBottom: convert(0) }}>{articles.viewCount} Reads</Text>
+            <Text style={{ fontSize: convert(13), color: "#444", fontWeight: "bold", marginBottom: convert(0) }}>{articles.viewCount}  <FluentEyeShow24Filled style={{ width: convert(14), height: convert(14) }} /> </Text>
             <Text style={{ fontSize: convert(13), color: "#444" }}>• {moment(articles.article?.createdAt).fromNow()}</Text>
           </View>
         </View>

@@ -4,12 +4,12 @@ import { w } from '@/constants/Colors';
 import { convert } from '@/constants/convert';
 import { FluentSparkle32Regular, RiMessageLine } from '@/constants/icons';
 import { useDatabase } from '@/context/database.context';
-import { NotificationType } from '@/lib/instantdb.init';
-import { getNotifications, markNotificationRead } from '@/lib/instantdb.notifications';
+import { NotificationRow } from '@/lib/notifications.api';
+import { useNotificationsWebSocket } from '@/lib/useNotifications';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import moment from 'moment';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet } from 'react-native';
 
 const iconForType = (type: string) => {
@@ -17,7 +17,7 @@ const iconForType = (type: string) => {
   return FluentSparkle32Regular;
 };
 
-const NotificationItem = ({ notification, onRead }: { notification: NotificationType; onRead: (id: string) => void }) => {
+const NotificationItem = ({ notification, onRead }: { notification: NotificationRow; onRead: (id: string) => void }) => {
   const Icon = iconForType(notification.type);
 
   return (
@@ -40,33 +40,13 @@ const NotificationItem = ({ notification, onRead }: { notification: Notification
 
 export default function TabTwoScreen() {
   const { session } = useDatabase();
-  const [notifications, setNotifications] = useState<NotificationType[]>([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  const loadNotifications = useCallback(async () => {
-    if (!session?.iduser) return;
-    const data = await getNotifications(session.iduser);
-    setNotifications((data?.notifications ?? []) as NotificationType[]);
-  }, [session?.iduser]);
-
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      await loadNotifications();
-      setLoading(false);
-    })();
-  }, [loadNotifications]);
+  const { notifications, loading, refresh, markRead } = useNotificationsWebSocket(session?.iduser as string);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadNotifications();
+    await refresh();
     setRefreshing(false);
-  };
-
-  const handleRead = async (notificationId: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)));
-    await markNotificationRead(notificationId);
   };
 
   return (
@@ -90,7 +70,7 @@ export default function TabTwoScreen() {
         ) : (
           <View style={{ gap: convert(20) }}>
             {notifications.map((notification) => (
-              <NotificationItem key={notification.id} notification={notification} onRead={handleRead} />
+              <NotificationItem key={notification.id} notification={notification} onRead={markRead} />
             ))}
           </View>
         )}

@@ -7,7 +7,7 @@ import { server_url } from '@/constants/server_url';
 import { useDatabase } from '@/context/database.context';
 import * as Session from '@/Database/session';
 import { generateUUID as uuidv4 } from '@/Database/uuid';
-import { createdArticleStats } from '@/lib/instantdb.articles';
+import { createArticleStats } from '@/lib/articleStats.api';
 import { apiRequest } from '@/lib/token_system';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -216,8 +216,11 @@ export default function NewArticle() {
             const response = await req.json()
             if (typeof response.status === 'string' && response.status.includes('200 OK')) {
                 if (!isEditMode) {
-                    const articleStatsId = await createdArticleStats(articleid)
-                    if (__DEV__) console.log(articleStatsId)
+                    try {
+                        await createArticleStats(articleid)
+                    } catch (err) {
+                        if (__DEV__) console.log(err)
+                    }
                 }
 
                 db.publishNote({

@@ -7,6 +7,7 @@ import moment from "moment";
 import { useCallback } from "react";
 import { Image, Pressable, TouchableOpacity } from "react-native";
 import { Text, View } from "./Themed";
+import { FluentEyeShow24Filled } from "@/constants/icons";
 
 export default function ArticlesItems({ article }: { article: ArticleStat }) {
 
@@ -47,11 +48,11 @@ export default function ArticlesItems({ article }: { article: ArticleStat }) {
                     <View style={{ width: convert(20), height: convert(20), borderRadius: convert(12), overflow: 'hidden', borderColor: "#e2e2e2ff", borderWidth: 1, backgroundColor: "#c7c7c7ff" }}>
                         <Image source={{ uri: `https://${article.article?.user?.photo}` }} style={{ width: convert(20), height: convert(20) }} />
                     </View>
-                    <Text style={{ fontSize: convert(12), color: "#444", fontWeight: "bold", textTransform: "uppercase" }}>{article.viewCount} reads</Text>
+                    <Text style={{ fontSize: convert(12), color: "#444", fontWeight: "bold", textTransform: "uppercase" }}>{article.viewCount} <FluentEyeShow24Filled style={{ width: convert(12), height: convert(12) }} /></Text>
                     <Text style={{ fontSize: convert(12), color: "#444" }}>•  {moment(article.article?.createdAt).fromNow()}</Text>
                 </TouchableOpacity>
             </View>
-            <View style={{ borderWidth: 1, borderColor: "#e2e2e2ff", borderRadius: convert(8), overflow: 'hidden', marginTop: convert(8) }}>
+            <View style={{ borderWidth: 1, borderColor: "#e2e2e2ff", borderRadius: convert(5), overflow: 'hidden', marginTop: convert(8) }}>
                 <Image source={{ uri: `https://${article.article?.imageurl}` }} style={{ width: 80, height: 80 }} />
             </View>
 

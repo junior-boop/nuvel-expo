@@ -71,12 +71,12 @@ const ReaderHtml = forwardRef(({ note, onAuthorPress, onTopicPress }: { note: No
                 <div style={{ padding: "24px" }}>
                     <span style={{ fontSize: "2rem", fontWeight: "bold", color: "black" }}>{note.title}</span>
                     {topics.length > 0 && (
-                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', fontSize: "2rem", marginTop: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '3px', fontSize: "2rem", marginTop: '8px' }}>
                             {topics.map((topic) => (
                                 <span
                                     key={topic}
                                     onClick={() => onTopicPress?.(topic)}
-                                    style={{ fontSize: "0.85rem", color: "#222", fontWeight: 'bold', padding: '4px 10px', borderRadius: '999px', border: '1px solid #ddd', cursor: 'pointer' }}
+                                    style={{ fontSize: "0.85rem", color: "#222", fontWeight: 'bold', padding: '4px 8px', borderRadius: '5px', border: '1px solid #ddd', cursor: 'pointer' }}
                                 >
                                     {topic}
                                 </span>

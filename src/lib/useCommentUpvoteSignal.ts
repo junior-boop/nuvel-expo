@@ -49,8 +49,13 @@ export const useCommentInteractions = (
     loadStats();
   }, [loadStats]);
 
-  // Toggle upvote
+  // Toggle upvote, avec mise à jour optimiste immédiate
   const toggleUpvote = useCallback(async () => {
+    const wasUpvoted = isUpvoted;
+    const previousCount = upvotesCount;
+    setIsUpvoted(!wasUpvoted);
+    setUpvotesCount(wasUpvoted ? Math.max(0, previousCount - 1) : previousCount + 1);
+
     try {
       setLoading(true);
       setError(null);
@@ -70,15 +75,25 @@ export const useCommentInteractions = (
       if (data.success) {
         setUpvotesCount(data.upvotesCount);
         setIsUpvoted(data.action === 'added');
+      } else {
+        setIsUpvoted(wasUpvoted);
+        setUpvotesCount(previousCount);
       }
     } catch (err) {
+      setIsUpvoted(wasUpvoted);
+      setUpvotesCount(previousCount);
       setError(err instanceof Error ? err.message : 'Erreur toggle upvote');
     } finally {
       setLoading(false);
     }
-  }, [articleId, commentId, userId, apiBase]);
-  // Toggle signal
+  }, [articleId, commentId, userId, apiBase, isUpvoted, upvotesCount]);
+  // Toggle signal, avec mise à jour optimiste immédiate
   const toggleSignal = useCallback(async () => {
+    const wasSignaled = isSignaled;
+    const previousCount = signalsCount;
+    setIsSignaled(!wasSignaled);
+    setSignalsCount(wasSignaled ? Math.max(0, previousCount - 1) : previousCount + 1);
+
     try {
       setLoading(true);
       setError(null);
@@ -98,13 +113,18 @@ export const useCommentInteractions = (
       if (data.success) {
         setSignalsCount(data.signalsCount);
         setIsSignaled(data.action === 'added');
+      } else {
+        setIsSignaled(wasSignaled);
+        setSignalsCount(previousCount);
       }
     } catch (err) {
+      setIsSignaled(wasSignaled);
+      setSignalsCount(previousCount);
       setError(err instanceof Error ? err.message : 'Erreur toggle signal');
     } finally {
       setLoading(false);
     }
-  }, [articleId, commentId, userId, apiBase]);
+  }, [articleId, commentId, userId, apiBase, isSignaled, signalsCount]);
   return {
     upvotesCount,
     signalsCount,

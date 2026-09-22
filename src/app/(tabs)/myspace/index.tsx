@@ -100,20 +100,22 @@ const MyPublicationsButton = () => {
     }
 
     return (
-        <Pressable style={{ marginBottom: convert(16) }} onPress={handlePress}>
-            <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: convert(16), paddingVertical: convert(12), backgroundColor: "#f6f9ffff", height: 64, borderBottomWidth: 1, borderColor: "#eff2fdff" }}>
-                <View style={{ width: convert(36), height: convert(36), borderRadius: convert(18), overflow: 'hidden', backgroundColor: "#c7c7c7ff" }}>
-                    {!!user?.photo && (
-                        <Image source={{ uri: `https://${user.photo}` }} style={{ width: convert(36), height: convert(36) }} />
-                    )}
+        <View style={{}}>
+            <Pressable style={{ marginBottom: convert(16) }} onPress={handlePress}>
+                <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: convert(16), paddingVertical: convert(12), backgroundColor: "white", height: 64, }}>
+                    <View style={{ width: convert(36), height: convert(36), borderRadius: convert(18), overflow: 'hidden', backgroundColor: "#c7c7c7ff" }}>
+                        {!!user?.photo && (
+                            <Image source={{ uri: `https://${user.photo}` }} style={{ width: convert(36), height: convert(36) }} />
+                        )}
+                    </View>
+                    <View style={{ flex: 1, marginLeft: convert(12) }}>
+                        <Text style={{ fontSize: convert(16), fontWeight: "bold" }}>My publications</Text>
+                        <Text style={{ fontSize: convert(13), color: "#797979" }}>{publicationCount} publication{publicationCount > 1 ? 's' : ''}</Text>
+                    </View>
+                    <FluentChevronRight32Regular width={20} height={20} color={"#797979"} />
                 </View>
-                <View style={{ flex: 1, marginLeft: convert(12) }}>
-                    <Text style={{ fontSize: convert(16), fontWeight: "bold" }}>My publications</Text>
-                    <Text style={{ fontSize: convert(13), color: "#797979" }}>{publicationCount} publication{publicationCount > 1 ? 's' : ''}</Text>
-                </View>
-                <FluentChevronRight32Regular width={20} height={20} color={"#797979"} />
-            </View>
-        </Pressable>
+            </Pressable>
+        </View>
     )
 }
 

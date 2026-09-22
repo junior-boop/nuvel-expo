@@ -9,15 +9,15 @@ import { FluentSubtractCircle12Regular, IcBaselineArrowBack, RiBookmark3Fill, Ri
 import { useDatabase } from "@/context/database.context";
 import { Articles, Comments } from "@/Database/db";
 import ReaderHtml from "@/editor/readerhtml";
-import { setShareCount, setSignals } from "@/lib/instantdb.articles";
-import { CommentType } from "@/lib/instantdb.init";
+import { incrementShareCount, toggleArticleSignal } from "@/lib/articleStats.api";
+import { CommentRow } from "@/lib/comments.api";
 import { useArticle } from "@/lib/useArticles";
 import { ArticleStat } from "@/lib/useArticlesAll";
 import { useBottomSheetBackHandler } from "@/lib/useBottomSheetBackHandler";
 import { server_url } from "@/constants/server_url";
 import BottomSheet, { BottomSheetTextInput, BottomSheetView } from "@gorhom/bottom-sheet";
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Share, StyleSheet, TouchableOpacity } from "react-native";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
 
@@ -36,6 +36,14 @@ export default function ReaderPage() {
     const userinfo = usersQuery?.findById(session?.iduser as string)
     const A = useArticle(note?.id as string);
     const creatorName = JSON.stringify(userinfo);
+    const {
+        count: commentCount,
+        comments,
+        loading: commentsLoading,
+        addComment,
+        deleteComment,
+        fetchComments
+    } = useCommentHooks(note?.id as string);
 
     const handleBookmark = () => {
         if (!session) return;
@@ -51,47 +59,6 @@ export default function ReaderPage() {
             setBookmark(false)
         }
     }, [articlesQuery])
-
-    const Article = ({ id }: { id: string }) => {
-        const { articlesQuery } = useDatabase()
-        const a = articlesQuery?.findById(id)
-        const articleWhichSaved = a === undefined ? undefined : { ...a, user: JSON.parse(a.user as string) }
-
-
-
-        return (
-            <>
-                {
-                    A.loading || note === undefined
-                        ? (<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            <ActivityIndicator size={'large'} color={"black"} />
-                        </View>)
-                        : <ReaderHtml
-                            note={articleWhichSaved || A.article}
-                            onAuthorPress={() => {
-                                const authorUser = (articleWhichSaved || A.article)?.user
-                                router.navigate({
-                                    pathname: '/author',
-                                    params: {
-                                        userId: authorUser?.id as string,
-                                        name: authorUser?.name ?? '',
-                                        first_name: authorUser?.first_name ?? '',
-                                        photo: authorUser?.photo ?? '',
-                                    }
-                                })
-                            }}
-                            onTopicPress={(topic: string) => {
-                                router.navigate({
-                                    pathname: '/topicarticles',
-                                    params: { topic }
-                                })
-                            }}
-                        />
-
-                }
-            </>
-        )
-    }
 
     return (
         <PageLayout_3>
@@ -110,17 +77,29 @@ export default function ReaderPage() {
                         }
                     </TouchableOpacity>
                 </View>
-                <Article id={note?.id as string} />
+                <ArticleView id={note?.id as string} articleLoading={A.loading} article={A.article} />
                 <View style={{ height: 52, width: w, backgroundColor: 'white', elevation: convert(12), justifyContent: 'center' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: convert(16) }}>
                         <LikeButton articleId={note?.id as string} userId={session?.iduser as string} />
-                        <Commentaire onPress={() => setCommentOpen(true)} />
-                        <ShareButton articleId={articleStats.id as string} Count={articleStats.shareCount as number} />
-                        <SignalButton articleId={articleStats.id as string} signalStat={articleStats.signals as string[]} userId={session?.iduser as string} />
+                        <Commentaire onPress={() => setCommentOpen(true)} count={commentCount} />
+                        <ShareButton articleId={articleStats.articleId as string} Count={articleStats.shareCount as number} />
+                        <SignalButton articleId={articleStats.articleId as string} signalStat={articleStats.signals as string[]} userId={session?.iduser as string} />
                     </View>
                 </View>
                 {
-                    commentOpen && (<SheetComments onClose={() => setCommentOpen(false)} articleId={note?.id as string} creatorName={creatorName} userId={note?.user.id as string} />)
+                    commentOpen && (
+                        <SheetComments
+                            onClose={() => setCommentOpen(false)}
+                            articleId={note?.id as string}
+                            creatorName={creatorName}
+                            userId={note?.user?.id as string}
+                            count={commentCount}
+                            comments={comments}
+                            loading={commentsLoading}
+                            addComment={addComment}
+                            fetchComments={fetchComments}
+                        />
+                    )
                 }
             </GestureHandlerRootView>
         </PageLayout_3>
@@ -129,6 +108,53 @@ export default function ReaderPage() {
 
 
 
+
+type ArticleData = ReturnType<typeof useArticle>['article'];
+
+// Composant stable et mémoïsé : ne se remonte/re-rend plus lorsque le parent
+// (ReaderPage) re-rend pour des raisons sans rapport (ouverture des commentaires,
+// polling du compteur de commentaires, etc.). Ne re-rend que si id/article changent.
+const ArticleView = memo(({ id, articleLoading, article }: { id: string, articleLoading: boolean, article: ArticleData }) => {
+    const { articlesQuery } = useDatabase()
+    const a = articlesQuery?.findById(id)
+    const articleWhichSaved = a === undefined ? undefined : { ...a, user: JSON.parse(a.user as string) }
+
+    const onAuthorPress = useCallback(() => {
+        const authorUser = (articleWhichSaved || article)?.user
+        router.navigate({
+            pathname: '/author',
+            params: {
+                userId: authorUser?.id as string,
+                name: authorUser?.name ?? '',
+                first_name: authorUser?.first_name ?? '',
+                photo: authorUser?.photo ?? '',
+            }
+        })
+    }, [articleWhichSaved, article])
+
+    const onTopicPress = useCallback((topic: string) => {
+        router.navigate({
+            pathname: '/topicarticles',
+            params: { topic }
+        })
+    }, [])
+
+    if (articleLoading || id === undefined) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size={'large'} color={"black"} />
+            </View>
+        )
+    }
+
+    return (
+        <ReaderHtml
+            note={articleWhichSaved || article}
+            onAuthorPress={onAuthorPress}
+            onTopicPress={onTopicPress}
+        />
+    )
+})
 
 export interface CommentsProps {
     id: string;
@@ -142,38 +168,40 @@ export interface CommentsProps {
     modified: string;
 }
 
-const SheetComments = ({ onClose, articleId, creatorName, commentCount, userId }: { onClose: () => void, articleId: string, creatorName: string, commentCount?: number, userId: string }) => {
+const SheetComments = ({
+    onClose,
+    articleId,
+    creatorName,
+    userId,
+    count,
+    comments,
+    loading,
+    addComment,
+    fetchComments
+}: {
+    onClose: () => void,
+    articleId: string,
+    creatorName: string,
+    userId: string,
+    count: number,
+    comments: CommentRow[],
+    loading: boolean,
+    addComment: (creator: any, content: string) => Promise<boolean>,
+    fetchComments: () => Promise<void>
+}) => {
     const sheetRef = useRef<BottomSheet>(null);
     const snapPoints = useMemo(() => ["100%"], []);
     const [commentValue, setCommentValue] = useState<String | null>(null)
-    const [listComments, setListComments] = useState<CommentType[]>([])
-    const {
-        comments,
-        count,
-        loading,
-        addComment,
-        deleteComment,
-        fetchComments
-    } = useCommentHooks(articleId);
 
     useBottomSheetBackHandler(true, onClose);
 
-    // Fonction pour envoyer un commentaire
+    // Fonction pour envoyer un commentaire (mise à jour optimiste gérée dans addComment)
     const handlePostComment = useCallback(async () => {
         const value = commentValue?.trim();
         if (!value) return;
         setCommentValue("");
-        const success = await addComment(JSON.parse(creatorName), value);
-        if (__DEV__) console.log('je veux voir')
-        if (success) {
-            console.log('Commentaire ajouté avec succès !');
-            fetchComments();
-        }
+        await addComment(JSON.parse(creatorName), value);
     }, [commentValue, addComment, creatorName]);
-
-    useEffect(() => {
-        setListComments(comments)
-    }, [comments]);
 
     useEffect(() => {
         fetchComments();
@@ -242,13 +270,16 @@ const useShareHook = ({ articleId, Count }: { articleId: string, Count: number }
 
     const shareArticle = useCallback(async () => {
         if (__DEV__) console.log('shareArticle', articleId, shareCount)
+        const previousCount = shareCount
+        setSharCounts(previousCount + 1)
         try {
             setLoading(true)
-            await setShareCount(articleId, shareCount)
-            setSharCounts(shareCount + 1)
+            setError(null)
+            await incrementShareCount(articleId)
             setLoading(false)
         } catch (error) {
             if (__DEV__) console.log(error)
+            setSharCounts(previousCount)
             setError(error.message)
             setLoading(false)
         }
@@ -304,13 +335,11 @@ const SignalButton = ({ articleId, signalStat, userId }: { articleId: string, si
             setLoading(true)
             if (isSignal) {
                 if (__DEV__) console.log('remove')
-                const newSignalStat = signalStat.filter((id) => id !== userId)
-                await setSignals(articleId, newSignalStat)
+                await toggleArticleSignal(articleId, userId)
                 setIsSignal(false)
             } else {
                 if (__DEV__) console.log('add')
-                const newSignalStat = [...signalStat, userId]
-                await setSignals(articleId, newSignalStat)
+                await toggleArticleSignal(articleId, userId)
                 setIsSignal(true)
             }
             setLoading(false)
