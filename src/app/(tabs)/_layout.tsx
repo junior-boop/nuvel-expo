@@ -1,12 +1,34 @@
+import { NotificationsProvider, useNotificationsContext } from '@/context/notifications.context';
 import { Tabs } from 'expo-router';
+import { ColorValue, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 import { FluentAlert32Filled, FluentAlert32Regular, FluentBookmark32Filled, FluentBookmark32Regular, FluentDocumentFolder32Filled, FluentDocumentFolder32Regular, FluentHome32Filled, FluentHome32Regular, FluentSettings32Filled, FluentSettings32Regular } from '@/constants/icons';
 
 
+const NotificationTabIcon = ({ color, focused, size }: { color: ColorValue, focused: boolean, size: number }) => {
+  const { unreadCount } = useNotificationsContext();
 
-export default function TabLayout() {
+  return (
+    <View>
+      {focused ? <FluentAlert32Filled width={size} height={size} color={color} /> : <FluentAlert32Regular width={size} height={size} color={color} />}
+      {unreadCount > 0 && (
+        <View style={{
+          position: 'absolute',
+          top: -2,
+          right: -2,
+          minWidth: 8,
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: '#ff3b30',
+        }} />
+      )}
+    </View>
+  );
+};
+
+function TabLayout() {
   const frame = useSafeAreaInsets()
 
   return (
@@ -56,8 +78,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="search"
         options={{
-          tabBarIcon: ({ color, focused, size }) => (focused ? <FluentAlert32Filled width={size} height={size} color={color} /> : <FluentAlert32Regular width={size} height={size} color={color} />),
-
+          tabBarIcon: (props) => <NotificationTabIcon {...props} />,
         }}
       />
       <Tabs.Screen
@@ -67,5 +88,13 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+  );
+}
+
+export default function TabLayoutWithNotifications() {
+  return (
+    <NotificationsProvider>
+      <TabLayout />
+    </NotificationsProvider>
   );
 }

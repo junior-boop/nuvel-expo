@@ -9,6 +9,9 @@ import { convert } from '@/constants/convert';
 import { AuthProvider, useAuth } from '@/context/auth.context';
 import { DatabaseProvider, useDatabase } from '@/context/database.context';
 import * as localStorage from '@/Database/localstorage';
+// L'import doit rester au niveau module : defineTask s'exécute au chargement du
+// bundle, y compris quand l'OS relance l'app en headless pour la tâche de fond.
+import { registerHourlyReminder } from '@/lib/backgroundReminder';
 import { initErrorReporting, reportError } from '@/lib/errorReporter';
 import { syncPushTokenWithServer } from '@/lib/notifications';
 import { cleanupAutoRefresh } from '@/lib/token_system';
@@ -98,7 +101,7 @@ function AuthGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (loading || !isAuthenticated) return;
-    syncPushTokenWithServer();
+    syncPushTokenWithServer().then(() => registerHourlyReminder());
   }, [isAuthenticated, loading]);
 
   useEffect(() => {
