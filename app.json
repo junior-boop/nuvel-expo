@@ -2,7 +2,7 @@
   "expo": {
     "name": "nuvel",
     "slug": "nuvel-expo",
-    "version": "0.8.0",
+    "version": "0.9.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "nuvel",
