@@ -7,6 +7,7 @@ import { useDatabase } from '@/context/database.context';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ScrollView, StyleSheet, Text } from 'react-native';
+import IntroPage from '../intro_page';
 
 export default function TabTwoScreen() {
   const { articlesQuery } = useDatabase()
@@ -31,19 +32,20 @@ export default function TabTwoScreen() {
   })
 
   return (
-    <PageLayout_3 addnote={false}>
-      <StatusBar style="dark" />
-      <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView style={styles.container}>
-        <View style={{ justifyContent: 'center', height: convert(32), width: w }}>
+    <IntroPage />
+    // <PageLayout_3 addnote={false}>
+    //   <StatusBar style="dark" />
+    //   <Stack.Screen options={{ headerShown: false }} />
+    //   <ScrollView style={styles.container}>
+    //     <View style={{ justifyContent: 'center', height: convert(32), width: w }}>
 
-        </View>
-        <Text style={{ ...styles.title, marginHorizontal: convert(16), marginBottom: convert(32) }}>Articles saved</Text>
-        <View style={{ gap: convert(16) }}>
-          {stats.map((article) => <ArticlesItems key={article.id} article={article as any} />)}
-        </View>
-      </ScrollView>
-    </PageLayout_3>
+    //     </View>
+    //     <Text style={{ ...styles.title, marginHorizontal: convert(16), marginBottom: convert(32) }}>Articles saved</Text>
+    //     <View style={{ gap: convert(16) }}>
+    //       {stats.map((article) => <ArticlesItems key={article.id} article={article as any} />)}
+    //     </View>
+    //   </ScrollView>
+    // </PageLayout_3>
   );
 }
 

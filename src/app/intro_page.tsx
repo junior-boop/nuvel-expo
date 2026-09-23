@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
         fontSize: convert(16),
         fontWeight: '500',
         color: '#797979',
-        textAlign: 'center',
+        textAlign: 'left',
         lineHeight: convert(24),
         marginTop: convert(24),
         marginBottom: convert(32),

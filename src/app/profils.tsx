@@ -7,6 +7,7 @@ import { server_url } from '@/constants/server_url';
 import { useAuth } from '@/context/auth.context';
 import { useDatabase } from '@/context/database.context';
 import { User as UserType } from '@/Database/db';
+import { compressImageForUpload } from '@/lib/imageCompression';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from 'expo-router';
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
@@ -81,8 +82,9 @@ export default function Profils() {
 
     const uploadPhoto = async (userId: string): Promise<string | null> => {
         if (!file) return null
+        const compressed = await compressImageForUpload(file.uri, file.name)
         const form = new FormData()
-        form.append('images', { uri: file.uri, type: file.mimeType, name: file.name } as any)
+        form.append('images', { uri: compressed.uri, type: compressed.mimeType, name: compressed.name } as any)
         const res = await fetch(`${server_url}/image/${userId}`, { method: 'POST', body: form })
         if (!res.ok) return null
         const json = await res.json()

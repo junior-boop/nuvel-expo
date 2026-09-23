@@ -20,6 +20,7 @@ import htmlToWhatsApp from "@/components/bible_component/livre/convert_whatsapp"
 import { QueryForTable } from "@/constants/Queryuilder";
 import * as AiStore from '@/Database/ai';
 import { askAiAgent, correctText } from "@/lib/aiAgent";
+import { compressImageToDataUrl } from "@/lib/imageCompression";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useBottomSheetBackHandler } from "@/lib/useBottomSheetBackHandler";
 import { server_url } from "@/constants/server_url";
@@ -224,14 +225,11 @@ export default function NoteEditor() {
             mediaTypes: ['images'],
             allowsEditing: false,
             quality: 1,
-            base64: true,
         });
 
         if (result.canceled || !result.assets[0]) return null;
         const asset = result.assets[0];
-        const mimeType = asset.mimeType ?? 'image/jpeg';
-        if (!asset.base64) return null;
-        return `data:${mimeType};base64,${asset.base64}`;
+        return await compressImageToDataUrl(asset.uri);
     }, []);
 
     // Un lien clique dans l'editeur ne doit pas naviguer a l'interieur de la webview

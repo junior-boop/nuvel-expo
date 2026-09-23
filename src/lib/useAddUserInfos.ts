@@ -1,5 +1,6 @@
 import { useDatabase } from "@/context/database.context";
 import { User } from "@/Database/db";
+import { compressImageForUpload } from "@/lib/imageCompression";
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -120,12 +121,16 @@ export default function useTakeUserInfos() {
      */
     const uploadImage = async (): Promise<string | null> => {
         try {
+            if (!file) return null
+
+            const compressed = await compressImageForUpload(file.uri, file.name)
+
             const formData = new FormData()
 
             formData.append('images', {
-                uri: file?.uri,
-                type: file?.mimeType,
-                name: file?.name
+                uri: compressed.uri,
+                type: compressed.mimeType,
+                name: compressed.name
             } as any)
 
             const response = await fetch(`${SERVER_URL}/image/${params.id as string}`, {

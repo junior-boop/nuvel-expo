@@ -8,6 +8,7 @@ import { useDatabase } from '@/context/database.context';
 import * as Session from '@/Database/session';
 import { generateUUID as uuidv4 } from '@/Database/uuid';
 import { createArticleStats } from '@/lib/articleStats.api';
+import { compressImageForUpload } from '@/lib/imageCompression';
 import { apiRequest } from '@/lib/token_system';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -122,12 +123,14 @@ export default function NewArticle() {
     const uploadNewImage = async (userid: string): Promise<string | null> => {
         if (!file?.uri) return null
 
+        const compressed = await compressImageForUpload(file.uri, file.name)
+
         const formData = new FormData()
         // React Native FormData nécessite un objet avec uri, type, name
         formData.append('images', {
-            uri: file.uri,
-            type: file.mimeType,
-            name: file.name
+            uri: compressed.uri,
+            type: compressed.mimeType,
+            name: compressed.name
         } as any)
 
         try {
