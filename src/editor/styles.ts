@@ -765,6 +765,107 @@ control-groupe .button-group bottom.is-active {
     background-color: rgba(0, 110, 255, 0.096);
 }
 
+.link-preview-popover {
+    position: fixed;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid #efefef;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+    padding: 4px;
+}
+
+.link-preview-popover input {
+    height: 36px;
+    width: 220px;
+    padding: 0 8px;
+    border: none;
+    outline: none;
+    font-size: 0.9rem;
+    color: #333;
+    background-color: white;
+}
+
+.link-preview-popover button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 6px;
+    background-color: white;
+    flex-shrink: 0;
+}
+
+.tiptap .link-preview-card {
+    display: block;
+    margin: 1rem 0;
+}
+
+.tiptap .link-preview-card a {
+    display: flex;
+    align-items: stretch;
+    text-decoration: none;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: white;
+    cursor: pointer;
+}
+
+.tiptap .link-preview-card .link-preview-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+
+.tiptap .link-preview-card .link-preview-title {
+    margin: 0;
+    font-family: 'PT Serif', serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #111;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.tiptap .link-preview-card .link-preview-domain {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tiptap .link-preview-card .link-preview-thumb {
+    flex: 0 0 76px;
+    width: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    border-left: 1px solid #e5e7eb;
+}
+
+.tiptap .link-preview-card .link-preview-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 .bible-ref {
     width: 100%;
     height: auto;

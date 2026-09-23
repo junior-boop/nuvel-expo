@@ -21,6 +21,7 @@ import { QueryForTable } from "@/constants/Queryuilder";
 import * as AiStore from '@/Database/ai';
 import { askAiAgent, correctText } from "@/lib/aiAgent";
 import { compressImageToDataUrl } from "@/lib/imageCompression";
+import { fetchLinkPreview as fetchLinkPreviewApi } from "@/lib/linkPreview";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useBottomSheetBackHandler } from "@/lib/useBottomSheetBackHandler";
 import { server_url } from "@/constants/server_url";
@@ -252,6 +253,20 @@ export default function NoteEditor() {
         );
     }, []);
 
+    // Recupere titre/image/domaine (og:*) d'une URL pour la carte d'apercu de lien
+    // inseree dans l'editeur. Renvoie null en cas d'echec : le node affiche alors
+    // un etat "error" (domaine seul, sans image) plutot que de bloquer l'insertion.
+    const fetchLinkPreview = useCallback(async (url: string) => {
+        try {
+            const result = await fetchLinkPreviewApi(url);
+            if (!result.success || !result.preview) return null;
+            return result.preview;
+        } catch (error) {
+            if (__DEV__) console.log('[LinkPreview] Erreur:', error);
+            return null;
+        }
+    }, []);
+
     const fetch_ai_history = useCallback(async () => {
         const ai_history = await AiStore.get(data.id as string)
         history_ai.addMany(ai_history)
@@ -444,7 +459,7 @@ export default function NoteEditor() {
                 {
                     Note === undefined
                         ? <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><View style={{ alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size={'large'} color={'black'} /><Text>Page Loading...</Text> </View></View>
-                        : <EditorJS note={Note} updateNote={(data) => handleUpdate(data)} biblemetadatState={bible as BibleMetadata[]} trie={filterBible} correctText={handleCorrectSelection} onSpellStateChange={setSpellState} pickImage={pickImage} onLinkPress={onLinkPress} ref={editorRef} />
+                        : <EditorJS note={Note} updateNote={(data) => handleUpdate(data)} biblemetadatState={bible as BibleMetadata[]} trie={filterBible} correctText={handleCorrectSelection} onSpellStateChange={setSpellState} pickImage={pickImage} onLinkPress={onLinkPress} fetchLinkPreview={fetchLinkPreview} ref={editorRef} />
                 }
             </KeyboardAvoidingView>
 

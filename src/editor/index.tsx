@@ -1,6 +1,7 @@
 "use dom"
 
 import BibleVerset from '@/components/bible_component/extension'
+import LinkPreview, { LinkPreviewData } from '@/components/link_preview/extension'
 import { BibleMetadata, Notes } from '@/Database/db'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
@@ -46,7 +47,7 @@ const resizeDataUrl = (dataUrl: string): Promise<string> => new Promise((resolve
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;
 });
-import { BxsBible, FluentAppsList20Filled, FluentArrowEnterLeft24Filled, FluentArrowUndo16Regular, FluentChevronDown12Filled, FluentCode24Regular, FluentCodeBlock32Regular, FluentImageAdd32Regular, FluentLineHorizontal128Regular, FluentLinkAdd20Filled, FluentTaskList24Filled, FluentTextBold24Regular, FluentTextHeader1Lines24Regular, FluentTextHeader2Lines24Regular, FluentTextHeader3Lines24Regular, FluentTextItalic24Filled, FluentTextNumberList24Regular, FluentTextQuote32Filled, FluentTextStrikethroughS24Regular, FluentTextUnderlineCharacterU16Filled, IcSharpArrowDownward } from './editor_icons'
+import { BxsBible, FluentAppsList20Filled, FluentArrowEnterLeft24Filled, FluentArrowUndo16Regular, FluentChevronDown12Filled, FluentCode24Regular, FluentCodeBlock32Regular, FluentImageAdd32Regular, FluentLineHorizontal128Regular, FluentLinkAdd20Filled, FluentTaskList24Filled, FluentTextBold24Regular, FluentTextHeader1Lines24Regular, FluentTextHeader2Lines24Regular, FluentTextHeader3Lines24Regular, FluentTextItalic24Filled, FluentTextNumberList24Regular, FluentTextQuote32Filled, FluentTextStrikethroughS24Regular, FluentTextUnderlineCharacterU16Filled, IcSharpArrowDownward, LinkPreviewCardIcon } from './editor_icons'
 import SpellcheckExtension, { SpellErrorClickInfo } from './spellcheckExtension'
 import { computeSpellHunks, getTextWithPositions, SpellHunk } from './spellcheckDiff'
 import styles from './styles'
@@ -71,6 +72,10 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn, pickImag
     const [headingMenuOpen, setHeadingMenuOpen] = useState(false)
     const [headingMenuPos, setHeadingMenuPos] = useState({ top: 0, left: 0 })
     const headingBtnRef = useRef<HTMLButtonElement>(null)
+    const [linkPreviewOpen, setLinkPreviewOpen] = useState(false)
+    const [linkPreviewPos, setLinkPreviewPos] = useState({ top: 0, left: 0 })
+    const [linkPreviewUrl, setLinkPreviewUrl] = useState("")
+    const linkPreviewBtnRef = useRef<HTMLButtonElement>(null)
 
     // .control-group scrolle horizontalement (overflow-x) et coupe donc tout ce qui
     // depasse en position absolute/relative classique. On mesure la position reelle du
@@ -82,6 +87,24 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn, pickImag
             setHeadingMenuPos({ top: rect.bottom, left: rect.left });
         }
         setHeadingMenuOpen(!headingMenuOpen);
+    }
+
+    const toggleLinkPreviewMenu = () => {
+        if (!linkPreviewOpen && linkPreviewBtnRef.current) {
+            const rect = linkPreviewBtnRef.current.getBoundingClientRect();
+            setLinkPreviewPos({ top: rect.bottom, left: rect.left });
+        }
+        setLinkPreviewUrl("");
+        setLinkPreviewOpen(!linkPreviewOpen);
+    }
+
+    const insertLinkPreview = () => {
+        const raw = linkPreviewUrl.trim();
+        if (!raw) return;
+        const url = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+        editor?.chain().focus().setLinkPreview(url).run();
+        setLinkPreviewOpen(false);
+        setLinkPreviewUrl("");
     }
 
     // <input type="file"> a l'interieur de ce DOM Component ("use dom") ne declenche
@@ -295,6 +318,29 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn, pickImag
                     <button onClick={() => editor.chain().focus().setHardBreak().run()}>
                         <FluentArrowEnterLeft24Filled width={20} height={20} />
                     </button>
+                    <div style={{ position: 'relative' }}>
+                        <button ref={linkPreviewBtnRef} onClick={toggleLinkPreviewMenu} className={linkPreviewOpen ? 'is-active' : ''}>
+                            <LinkPreviewCardIcon width={20} height={20} />
+                        </button>
+                        {linkPreviewOpen && (
+                            <>
+                                <div className="heading-dropdown-overlay" onClick={() => setLinkPreviewOpen(false)} />
+                                <div className="link-preview-popover" style={{ top: linkPreviewPos.top, left: linkPreviewPos.left }}>
+                                    <input
+                                        autoFocus
+                                        value={linkPreviewUrl}
+                                        onChange={(e) => setLinkPreviewUrl(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') insertLinkPreview(); if (e.key === 'Escape') setLinkPreviewOpen(false) }}
+                                        placeholder="https://..."
+                                        type="text"
+                                    />
+                                    <button onClick={insertLinkPreview}>
+                                        <IcSharpArrowDownward width={18} height={18} />
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
                     <span style={{ width: 2, height: 25, backgroundColor: '#00000033', margin: '0 5px', borderRadius: 5 }}></span>
                     <div style={{ position: 'relative' }}>
                         <button className='long-btn' onClick={() => setOpenBible(!openBible)} style={{ backgroundColor: 'white' }}>
@@ -445,7 +491,7 @@ export interface EditorJSRef extends DOMImperativeFactory {
     applyAllCorrections: () => void;
 }
 
-const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void }, correctText?: (text: string) => Promise<string | null>, onSpellStateChange?: (state: { isChecking: boolean; isApplying: boolean; count: number }) => void, pickImage?: () => Promise<string | null>, onLinkPress?: (url: string) => void }>(({ note, updateNote, biblemetadatState, trie, menubtn, correctText, onSpellStateChange, pickImage, onLinkPress }, ref) => {
+const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height: number, screenY: number, width: number } | undefined, updateNote: (data: Partial<Notes>) => void, biblemetadatState: BibleMetadata[], trie: (data: any) => any, menubtn?: { teste: () => void }, correctText?: (text: string) => Promise<string | null>, onSpellStateChange?: (state: { isChecking: boolean; isApplying: boolean; count: number }) => void, pickImage?: () => Promise<string | null>, onLinkPress?: (url: string) => void, fetchLinkPreview?: (url: string) => Promise<LinkPreviewData | null> }>(({ note, updateNote, biblemetadatState, trie, menubtn, correctText, onSpellStateChange, pickImage, onLinkPress, fetchLinkPreview }, ref) => {
     const [isFocus, setIsFocus] = useState(false)
     const [content, setContent] = useState<any>(() => safeParseBody(note?.body))
     const [isTyping, setIsTyping] = useState(false)
@@ -458,6 +504,8 @@ const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height
     const [isApplying, setIsApplying] = useState(false)
     const onErrorClickRef = useRef<(info: SpellErrorClickInfo) => void>(() => { })
     const onLinkPressRef = useRef<(url: string) => void>(() => { })
+    const fetchLinkPreviewRef = useRef<(url: string) => Promise<LinkPreviewData | null>>(async () => null)
+    fetchLinkPreviewRef.current = fetchLinkPreview ?? (async () => null)
 
     // Sync sur changement de note (id) — l'ancienne version figeait à []
     const getinitnote = useCallback(async () => {
@@ -475,6 +523,12 @@ const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height
         Link.configure({
             openOnClick: false,
             autolink: true,
+        }),
+        // L'indirection via le ref (meme pattern que onLinkPressRef) permet de garder une
+        // identite d'extension stable dans ce useMemo([]) tout en appelant toujours la
+        // derniere version de la prop fetchLinkPreview passee par le parent.
+        LinkPreview.configure({
+            fetchPreview: (url: string) => fetchLinkPreviewRef.current(url),
         }),
         TaskItem.configure({
             nested: true,

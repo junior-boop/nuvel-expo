@@ -147,3 +147,30 @@ export function FluentLinkAdd20Filled(props: SVGProps<SVGSVGElement>) {
         <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 20" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<path fill="currentColor" d="M18 8a4 4 0 0 0-4-4h-2l-.102.007A.75.75 0 0 0 12 5.5h2l.164.005a2.5 2.5 0 0 1 1.998 3.75c.485.154.941.373 1.358.647A4 4 0 0 0 18 8M8.75 4.75A.75.75 0 0 0 8 4H6l-.2.005A4 4 0 0 0 6 12h2l.102-.007A.75.75 0 0 0 8 10.5H6l-.164-.005A2.5 2.5 0 0 1 6 5.5h2l.102-.007a.75.75 0 0 0 .648-.743m5 2.5h-7.5l-.102.007A.75.75 0 0 0 6.25 8.75h7.5l.102-.007a.75.75 0 0 0-.102-1.493M19 14.5a4.5 4.5 0 1 1-9 0a4.5 4.5 0 0 1 9 0m-4-2a.5.5 0 0 0-1 0V14h-1.5a.5.5 0 0 0 0 1H14v1.5a.5.5 0 0 0 1 0V15h1.5a.5.5 0 0 0 0-1H15z" /></svg>
     )
 }
+
+
+// Icone du bouton toolbar "Apercu de lien" : carte avec lignes de texte + vignette,
+// pour se distinguer visuellement de l'icone "Link" (insertion de lien simple) du bubble menu.
+export function LinkPreviewCardIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" {...props}>
+            <rect x="1.75" y="4.25" width="20.5" height="15.5" rx="2.5" stroke="currentColor" strokeWidth="1.5" />
+            <line x1="4.5" y1="9" x2="13.5" y2="9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            <line x1="4.5" y1="12" x2="13.5" y2="12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            <line x1="4.5" y1="15" x2="10" y2="15" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity="0.55" />
+            <rect x="16" y="8" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
+        </svg>
+    )
+}
+
+
+// Vignette de secours affichee dans la carte d'apercu quand l'URL n'a pas d'image
+// (og:image absente) : glyph "paysage" classique pour signaler l'absence d'image.
+export function ImagePlaceholderIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" {...props}>
+            <circle cx="8.5" cy="8.5" r="1.6" fill="currentColor" opacity="0.55" />
+            <path d="M3.5 16.5l4.6-4.6a1 1 0 0 1 1.4 0l2.3 2.3l3.4-4a1 1 0 0 1 1.55.03l3.75 4.67" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.55" />
+        </svg>
+    )
+}

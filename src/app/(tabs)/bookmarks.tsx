@@ -32,20 +32,20 @@ export default function TabTwoScreen() {
   })
 
   return (
-    <IntroPage />
-    // <PageLayout_3 addnote={false}>
-    //   <StatusBar style="dark" />
-    //   <Stack.Screen options={{ headerShown: false }} />
-    //   <ScrollView style={styles.container}>
-    //     <View style={{ justifyContent: 'center', height: convert(32), width: w }}>
+    // <IntroPage />
+    <PageLayout_3 addnote={false}>
+      <StatusBar style="dark" />
+      <Stack.Screen options={{ headerShown: false }} />
+      <ScrollView style={styles.container}>
+        <View style={{ justifyContent: 'center', height: convert(32), width: w }}>
 
-    //     </View>
-    //     <Text style={{ ...styles.title, marginHorizontal: convert(16), marginBottom: convert(32) }}>Articles saved</Text>
-    //     <View style={{ gap: convert(16) }}>
-    //       {stats.map((article) => <ArticlesItems key={article.id} article={article as any} />)}
-    //     </View>
-    //   </ScrollView>
-    // </PageLayout_3>
+        </View>
+        <Text style={{ ...styles.title, marginHorizontal: convert(16), marginBottom: convert(32) }}>Articles saved</Text>
+        <View style={{ gap: convert(16) }}>
+          {stats.map((article) => <ArticlesItems key={article.id} article={article as any} />)}
+        </View>
+      </ScrollView>
+    </PageLayout_3>
   );
 }
 

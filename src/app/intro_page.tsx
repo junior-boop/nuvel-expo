@@ -8,19 +8,21 @@ import { StyleSheet, TouchableOpacity } from "react-native";
 export default function IntroPage() {
     return (
         <PageLayout_3 addnote={false}>
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: convert(16) }}>
-                <Image source={require("../../assets/images/intro_page.png")} style={{ width: "100%", height: 'auto', }} />
+            <View style={{ flex: 1 }}>
+                <Image source={require("../../assets/images/intro_page.png")} style={{ width: "100%", height: "70%", resizeMode: 'cover' }} />
 
-                <Text style={styles.tagline}>
-                    A quiet place to read, reflect, and grow in your faith — one article at a time.
-                </Text>
+                <View style={{ paddingHorizontal: convert(30) }}>
+                    <Text style={styles.tagline}>
+                        A quiet place to read, reflect, and grow in your faith — one article at a time.
+                    </Text>
 
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => router.replace('/login' as never)}
-                >
-                    <Text style={styles.buttonText}>Get Started</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => router.replace('/login' as never)}
+                    >
+                        <Text style={styles.buttonText}>Get Started</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </PageLayout_3>
     );
