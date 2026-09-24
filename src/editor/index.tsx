@@ -59,7 +59,7 @@ type bibleverst = {
 }[]
 
 const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn, pickImage }: {
-    editor: Editor | null, biblemetadatState: BibleMetadata[], menubtn?: { teste: () => void }, trie: (data: [book_id: string, book_name: string, chapter: string, vers1?: string, vers2?: string]) => Promise<{
+    editor: Editor | null, biblemetadatState: BibleMetadata[], menubtn?: { teste: () => void }, trie: (data: [book_id: string, book_name: string, chapter: string, vers1?: string, vers2?: string, version?: string]) => Promise<{
         ref_bible: string;
         content: string;
     } | undefined>,
@@ -190,7 +190,8 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn, pickImag
         const replace = verse.replace(RegExp(check), ' ')
         const spliter = replace.split(RegExp(/\s+/g)) as [book_name: string, chapter: string, vers1?: string, vers2?: string]
         if (bible_id !== null) {
-            const result = await trie([bible_id, ...spliter])
+            const version = biblemetadatState.find((el) => el.id === bible_id)?.shortname
+            const result = await trie([bible_id, ...spliter, version])
             if (verse.trim() !== "") {
                 if (result !== undefined) {
                     editor?.commands.setVerset(result)

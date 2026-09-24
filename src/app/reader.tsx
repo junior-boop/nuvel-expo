@@ -17,6 +17,7 @@ import { useBottomSheetBackHandler } from "@/lib/useBottomSheetBackHandler";
 import { server_url } from "@/constants/server_url";
 import BottomSheet, { BottomSheetTextInput, BottomSheetView } from "@gorhom/bottom-sheet";
 import { router, useLocalSearchParams } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Share, StyleSheet, TouchableOpacity } from "react-native";
 import { GestureHandlerRootView, ScrollView } from "react-native-gesture-handler";
@@ -119,6 +120,10 @@ const ArticleView = memo(({ id, articleLoading, article }: { id: string, article
     const a = articlesQuery?.findById(id)
     const articleWhichSaved = a === undefined ? undefined : { ...a, user: JSON.parse(a.user as string) }
 
+    const onLinkPress = useCallback((url: string) => {
+        WebBrowser.openBrowserAsync(url);
+    }, []);
+
     const onAuthorPress = useCallback(() => {
         const authorUser = (articleWhichSaved || article)?.user
         router.navigate({
@@ -152,6 +157,7 @@ const ArticleView = memo(({ id, articleLoading, article }: { id: string, article
             note={articleWhichSaved || article}
             onAuthorPress={onAuthorPress}
             onTopicPress={onTopicPress}
+            onLinkPress={onLinkPress}
         />
     )
 })

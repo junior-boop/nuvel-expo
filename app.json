@@ -76,7 +76,8 @@
           }
         }
       ],
-      "expo-background-task"
+      "expo-background-task",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

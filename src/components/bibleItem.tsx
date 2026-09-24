@@ -125,11 +125,7 @@ export const BibleItems = ({ item }: { item: BibleListItem }) => {
                     <Text style={{ fontSize: convert(13), color: "#555", marginTop: 2 }}>
                         {[item.metadata.lang, item.metadata.year, item.metadata.publisher].filter(Boolean).join(' · ')}
                     </Text>
-                    {!!item.metadata.description && (
-                        <Text numberOfLines={2} style={{ fontSize: convert(12), color: "#888", marginTop: convert(4), fontStyle: "italic" }}>
-                            {item.metadata.description}
-                        </Text>
-                    )}
+
                     {activeBadges.length > 0 && (
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: convert(6), marginTop: convert(8) }}>
                             {activeBadges.map(b => (

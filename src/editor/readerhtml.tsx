@@ -11,7 +11,7 @@ import Underline from '@tiptap/extension-underline'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import moment from 'moment'
-import React, { forwardRef, useEffect, useState } from 'react'
+import React, { forwardRef, useEffect, useRef, useState } from 'react'
 import styles from './readerstyle'
 
 
@@ -26,9 +26,11 @@ const extensions = [BibleVerset, TextStyleKit, StarterKit, Image.configure({ all
 
 
 
-const ReaderHtml = forwardRef(({ note, onAuthorPress, onTopicPress }: { note: Notes, onAuthorPress?: () => void, onTopicPress?: (topic: string) => void }, ref) => {
+const ReaderHtml = forwardRef(({ note, onAuthorPress, onTopicPress, onLinkPress }: { note: Notes, onAuthorPress?: () => void, onTopicPress?: (topic: string) => void, onLinkPress?: (url: string) => void }, ref) => {
     const [content, setContent] = useState(note.body)
     const [readTime, setReadTime] = useState(0)
+    const onLinkPressRef = useRef<(url: string) => void>(() => { })
+    onLinkPressRef.current = onLinkPress ?? (() => { })
 
     // note.topic est stocke en JSON.stringify(string[]) (voir newarticle.tsx). Les
     // anciens articles peuvent avoir un topic absent/mal forme (pas un tableau) :
@@ -44,6 +46,26 @@ const ReaderHtml = forwardRef(({ note, onAuthorPress, onTopicPress }: { note: No
         content: content,
         editable: false,
     })
+
+    // Un <a> reste un lien natif dans la webview : le laisser suivre son comportement par
+    // defaut la ferait naviguer DANS la webview au lieu d'ouvrir le navigateur. On ecoute en
+    // phase de capture pour couper court avant que le navigateur ne traite le clic (meme
+    // pattern que editor/index.tsx).
+    useEffect(() => {
+        if (!editor) return;
+        const dom = editor.view.dom;
+        const handleAnchorClick = (event: MouseEvent) => {
+            const target = event.target as HTMLElement | null;
+            const anchor = target?.closest?.('a');
+            if (anchor?.href) {
+                event.preventDefault();
+                event.stopPropagation();
+                onLinkPressRef.current(anchor.href);
+            }
+        };
+        dom.addEventListener('click', handleAnchorClick, true);
+        return () => dom.removeEventListener('click', handleAnchorClick, true);
+    }, [editor])
 
 
     const tempslecture = (text: string) => {

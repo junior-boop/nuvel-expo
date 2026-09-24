@@ -4,9 +4,10 @@ import { server_url } from "@/constants/server_url";
 import { Notes } from "@/Database/db";
 import NoteReaderHtml from "@/editor/notereaderhtml";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as WebBrowser from "expo-web-browser";
 
 export default function SharedNotePage() {
     const { id } = useLocalSearchParams();
@@ -53,6 +54,10 @@ export default function SharedNotePage() {
         );
     }
 
+    const onLinkPress = useCallback((url: string) => {
+        WebBrowser.openBrowserAsync(url);
+    }, []);
+
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
             <View style={{ height: convert(52), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
@@ -61,6 +66,6 @@ export default function SharedNotePage() {
                 </TouchableOpacity>
 
             </View>
-            <NoteReaderHtml note={note} />;
+            <NoteReaderHtml note={note} onLinkPress={onLinkPress} />
         </SafeAreaView>)
 }

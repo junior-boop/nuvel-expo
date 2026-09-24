@@ -28,6 +28,7 @@ import { server_url } from "@/constants/server_url";
 import { apiRequest } from "@/lib/token_system";
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
+import * as WebBrowser from 'expo-web-browser';
 import moment from "moment";
 import Markdown from 'react-native-markdown-display';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -234,23 +235,12 @@ export default function NoteEditor() {
     }, []);
 
     // Un lien clique dans l'editeur ne doit pas naviguer a l'interieur de la webview
-    // (voir editor/index.tsx: preventDefault + handleDOMEvents.click) mais proposer
-    // de quitter l'app pour ouvrir l'URL dans le navigateur ou l'app associee (deep link).
+    // (voir editor/index.tsx: preventDefault + handleDOMEvents.click) mais s'ouvrir
+    // directement dans le navigateur in-app (expo-web-browser).
     const onLinkPress = useCallback((url: string) => {
-        Alert.alert(
-            'Ouvrir le lien',
-            url,
-            [
-                { text: 'Annuler', style: 'cancel' },
-                {
-                    text: 'Ouvrir', onPress: () => {
-                        Linking.openURL(url).catch(() => {
-                            Alert.alert('Erreur', "Impossible d'ouvrir ce lien.");
-                        });
-                    }
-                },
-            ]
-        );
+        WebBrowser.openBrowserAsync(url).catch(() => {
+            Alert.alert('Erreur', "Impossible d'ouvrir ce lien.");
+        });
     }, []);
 
     // Recupere titre/image/domaine (og:*) d'une URL pour la carte d'apercu de lien

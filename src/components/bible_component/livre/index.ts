@@ -474,10 +474,12 @@ export const filterBible = async (
     book_name: string,
     chapter: string,
     vers1?: string,
-    vers2?: string
+    vers2?: string,
+    version?: string
   ]
 ) => {
-  const [book_id, book_name, chapter, vers1, vers2] = data;
+  const [book_id, book_name, chapter, vers1, vers2, version] = data;
+  const versionSuffix = version ? ` (${version})` : "";
 
   const findbook = listBooks.find((el) => el.abr.includes(book_name));
   const ref = {
@@ -502,7 +504,7 @@ export const filterBible = async (
     }
 
     const ref_complet = {
-      ref_bible: `${titre} ${chapter}: ${vers1}-${vers2}`,
+      ref_bible: `${titre} ${chapter}: ${vers1}-${vers2}${versionSuffix}`,
       content: JSON.stringify(arr),
     };
 
@@ -514,7 +516,7 @@ export const filterBible = async (
     const v = find.filter((el) => el.verse === verseStart)[0].text;
 
     const ref_complet = {
-      ref_bible: `${titre} ${chapter}: ${vers1}`,
+      ref_bible: `${titre} ${chapter}: ${vers1}${versionSuffix}`,
       content: JSON.stringify([{ n: verseStart, text: v }]),
     };
     return ref_complet;
@@ -533,7 +535,7 @@ export const filterBible = async (
     }
 
     const ref_complet = {
-      ref_bible: `${titre} ${chapter}`,
+      ref_bible: `${titre} ${chapter}${versionSuffix}`,
       content: JSON.stringify(arr),
     };
 

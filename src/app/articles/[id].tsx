@@ -2,8 +2,9 @@ import { server_url } from "@/constants/server_url";
 import { Articles } from "@/Database/db";
 import ReaderHtml from "@/editor/readerhtml";
 import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
+import * as WebBrowser from "expo-web-browser";
 
 export default function SharedArticlePage() {
     const { id } = useLocalSearchParams();
@@ -49,5 +50,9 @@ export default function SharedArticlePage() {
         );
     }
 
-    return <ReaderHtml note={article} />;
+    const onLinkPress = useCallback((url: string) => {
+        WebBrowser.openBrowserAsync(url);
+    }, []);
+
+    return <ReaderHtml note={article} onLinkPress={onLinkPress} />;
 }
