@@ -6,7 +6,7 @@ import { Stack } from 'expo-router';
 
 import { PageLayout_3 } from '@/components/page';
 import { w } from '@/constants/Colors';
-import { BxsBible, FluentChevronRight32Regular } from '@/constants/icons';
+import { BxsBible, FluentChevronRight32Regular, LineMdCloseSmall } from '@/constants/icons';
 import { useDatabase } from "@/context/database.context";
 import type { Notes as NotesType } from '@/Database/db';
 import * as SyncMetadata from '@/Database/sync_metadata';
@@ -20,10 +20,11 @@ import moment from 'moment';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function TabTwoScreen() {
-  const { usersQuery, session, biblemetadatState } = useDatabase()
+  const { usersQuery, session, biblemetadatState, deletedBible } = useDatabase()
   const userinfo = usersQuery?.findById(session?.iduser as string)
   const biblelist = biblemetadatState?.findAll()
   const [refreshing, setRefreshing] = useState(false);
+  const [deletingBibleId, setDeletingBibleId] = useState<string | null>(null);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -31,6 +32,30 @@ export default function TabTwoScreen() {
       setRefreshing(false);
     }, 2000);
   }, []);
+
+  const handleDeleteBible = useCallback((bible: { id: string; name: string }) => {
+    Alert.alert(
+      'Supprimer cette Bible ?',
+      `"${bible.name}" et tous ses versets téléchargés seront supprimés de l'appareil.`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            setDeletingBibleId(bible.id)
+            try {
+              await deletedBible(bible.id)
+            } catch (e) {
+              if (__DEV__) console.log('[Settings] erreur suppression bible:', e)
+            } finally {
+              setDeletingBibleId(null)
+            }
+          }
+        }
+      ]
+    )
+  }, [deletedBible])
 
   return (
     <PageLayout_3>
@@ -80,7 +105,7 @@ export default function TabTwoScreen() {
         <Text style={{ ...styles.title, marginBottom: convert(16), paddingHorizontal: convert(16) }}>Data</Text>
         <DataSection />
         <View style={{ height: 40, width: 200, paddingHorizontal: convert(16) }} />
-        <Text style={{ ...styles.title, marginBottom: convert(16), paddingHorizontal: convert(16) }}>Bible Downloads</Text>
+        <Text style={{ ...styles.title, marginBottom: convert(16), paddingHorizontal: convert(16) }}>Bibles</Text>
         {
           biblelist?.length === 0 && (<View style={{ paddingHorizontal: convert(16) }}>
             <View style={{ marginBottom: 24 }}>
@@ -93,8 +118,17 @@ export default function TabTwoScreen() {
         <View style={{ marginBottom: convert(14), gap: 8, paddingHorizontal: convert(16) }}>
           {
             biblelist?.map((bible, index) => (
-              <View style={{ backgroundColor: '#004f9913', padding: 14 }} key={index}>
-                <Text style={{ fontWeight: 'bold', fontSize: convert(16) }}>{bible.name}</Text>
+              <View style={{ backgroundColor: '#004f9913', padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }} key={index}>
+                <Text style={{ fontWeight: 'bold', fontSize: convert(16), flex: 1 }}>{bible.name}</Text>
+                <TouchableOpacity
+                  onPress={() => handleDeleteBible(bible)}
+                  disabled={deletingBibleId === bible.id}
+                  style={{ width: convert(28), height: convert(28), alignItems: 'center', justifyContent: 'center', borderRadius: convert(14), backgroundColor: '#ff3b3020' }}
+                >
+                  {deletingBibleId === bible.id
+                    ? <ActivityIndicator size="small" color="#ff3b30" />
+                    : <LineMdCloseSmall width={convert(16)} height={convert(16)} color="#ff3b30" />}
+                </TouchableOpacity>
               </View>))
           }
         </View>

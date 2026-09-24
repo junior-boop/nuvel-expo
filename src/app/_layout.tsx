@@ -39,8 +39,10 @@ export function ErrorBoundary({ error, retry }: { error: Error; retry: () => voi
 }
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  // intro_page est l'état par défaut le plus sûr : un nouvel utilisateur (non
+  // authentifié) l'obtient directement sans passer par Home. AuthGate se charge
+  // de rediriger immédiatement vers (tabs)/onboarding si l'état réel diffère.
+  initialRouteName: 'intro_page',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -52,13 +54,21 @@ export default function RootLayout() {
   localStorage.createTable()
   return (
     <AuthProvider>
-      <RootLayoutGate />
+      <DatabaseProvider>
+        <RootLayoutGate />
+      </DatabaseProvider>
     </AuthProvider>
   );
 }
 
 function RootLayoutGate() {
-  const { loading } = useAuth();
+  const { loading: authLoading } = useAuth();
+  const { isLoading: dbLoading, biblemetadatState } = useDatabase();
+  // On attend que l'auth ET la base locale soient prêtes avant de monter le Stack :
+  // sinon expo-router affiche brièvement la route par défaut '(tabs)' (Home) pendant
+  // que AuthGate attend encore dbLoading/biblemetadatState pour décider de rediriger
+  // vers intro_page/onboarding.
+  const loading = authLoading || dbLoading || biblemetadatState === null;
 
   const prepare = useCallback(async () => {
     try {
@@ -165,7 +175,7 @@ function RootLayoutNav() {
 
   return (
     // <ThemeProvider value={DefaultTheme}>
-    <DatabaseProvider>
+    <>
       <AuthGate>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="intro_page" options={{ headerShown: false }} />
@@ -186,7 +196,7 @@ function RootLayoutNav() {
         </Stack>
       </AuthGate>
       <View style={{ height: frame.bottom }} />
-    </DatabaseProvider>
+    </>
     // </ThemeProvider>
   );
 }

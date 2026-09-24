@@ -373,6 +373,11 @@ export default function NoteEditor() {
                     text: "Delete",
                     style: "destructive",
                     onPress: async () => {
+                        // On sort d'abord de l'article/note avant de le supprimer,
+                        // pour éviter de rester sur un écran qui référence des
+                        // données en cours de suppression.
+                        setIsOpen(false)
+                        router.back()
                         try {
                             const { articleid } = JSON.parse(note.publishId as string) as { articleid: string }
                             await apiRequest(`${server_url}/articles/${session?.iduser}/doc/${articleid}`, { method: 'DELETE' })
@@ -380,8 +385,6 @@ export default function NoteEditor() {
                             if (__DEV__) console.log('[Publish] Erreur suppression article:', error)
                         }
                         await deleteNote(note.id)
-                        setIsOpen(false)
-                        router.back()
                     }
                 }
             ]

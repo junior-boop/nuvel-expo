@@ -2,6 +2,7 @@ import { QueryForTable } from '@/constants/Queryuilder';
 import * as AiStore from '@/Database/ai';
 import * as Articles from '@/Database/articles';
 import * as BibleMetadata from "@/Database/bible.metadata";
+import { bibleDownloader } from '@/Database/bibledownload';
 import * as Groups from '@/Database/groups';
 
 import * as LocalStorage from '@/Database/localstorage';
@@ -544,7 +545,18 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         clearError();
         try {
             const result = await BibleMetadata.deleted(id);
-            if (result) { refreshLocalData(); syncToServer(); }
+            if (result) {
+                // id correspond au book_id utilise par BibleContent/downloads lors du
+                // telechargement (voir addBible + bibleDownloader.downloadVersion) : on
+                // nettoie ces versets locaux pour ne pas laisser de donnees orphelines.
+                try {
+                    await bibleDownloader.init();
+                    await bibleDownloader.deleteVersion(id);
+                } catch (error) {
+                    if (__DEV__) console.log('[Database] bible content cleanup failed:', error);
+                }
+                refreshLocalData(); syncToServer();
+            }
             return result
         } catch (error) {
             handleError(error, 'deleting bible');
