@@ -1,6 +1,7 @@
 "use dom"
 
 import BibleVerset from '@/components/bible_component/extension'
+import LinkPreview from '@/components/link_preview/extension'
 import { Notes } from '@/Database/db'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
@@ -14,8 +15,9 @@ import React, { forwardRef, useEffect, useState } from 'react'
 import styles from './readerstyle'
 
 
-const extensions = [BibleVerset, TextStyleKit, StarterKit, Image, TaskList, Underline,
+const extensions = [BibleVerset, TextStyleKit, StarterKit, Image.configure({ allowBase64: true }), TaskList, Underline,
     Link.configure({ openOnClick: false, autolink: true }),
+    LinkPreview,
     TaskItem.configure({
         nested: true,
     })]
