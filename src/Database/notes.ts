@@ -56,7 +56,7 @@ export const update = async (data: Partial<NotesType>) => {
     body: data.body,
     html: data.html,
     modified: new Date().toISOString(),
-    version: data.version + 1 || 2,
+    version: data.version ?? 2,
   });
   return result;
 };

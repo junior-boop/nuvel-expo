@@ -191,7 +191,8 @@ const MenuBar = forwardRef(({ editor, biblemetadatState, trie, menubtn, pickImag
         const spliter = replace.split(RegExp(/\s+/g)) as [book_name: string, chapter: string, vers1?: string, vers2?: string]
         if (bible_id !== null) {
             const version = biblemetadatState.find((el) => el.id === bible_id)?.shortname
-            const result = await trie([bible_id, ...spliter, version])
+            const [book_name, chapter, vers1, vers2] = spliter
+            const result = await trie([bible_id, book_name, chapter, vers1, vers2, version])
             if (verse.trim() !== "") {
                 if (result !== undefined) {
                     editor?.commands.setVerset(result)
