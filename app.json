@@ -8,7 +8,8 @@
     "scheme": "nuvel",
     "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,6 +20,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.junior41.nuveltwyoptbpmwgsox1tafyp",
+      "versionCode": 3,
       "intentFilters": [
         {
           "action": "VIEW",
