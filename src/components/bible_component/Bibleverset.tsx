@@ -1,6 +1,5 @@
 import { NodeViewWrapper } from '@tiptap/react';
 import { useState } from 'react';
-// import filtre from './livre';
 
 
 type FilterProps = {
