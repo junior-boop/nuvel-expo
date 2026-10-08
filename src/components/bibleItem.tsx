@@ -9,7 +9,7 @@ import {
 import { useDatabase } from '@/context/database.context';
 import { bibleDownloader } from '@/Database/bibledownload';
 import { BibleData, BibleMetadata } from '@/Database/db';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, TouchableOpacity } from 'react-native';
 
 // /bible/version renvoie `verset` (nombre de versets) au niveau racine, et /bible
@@ -45,9 +45,15 @@ export const BibleItems = ({ item }: { item: BibleListItem }) => {
     const { biblemetadatState, addBible } = useDatabase()
     const animatedWidth = useRef(new Animated.Value(0)).current;
 
-    const alreadyDownload = biblemetadatState?.filter(el => el.module === item.metadata.module)?.count() > 0
-    const activeBadges = FEATURE_BADGES.filter(b => Number(item.metadata[b.key]) === 1)
-    const isRestricted = Number(item.metadata.restrict) === 1
+    const alreadyDownload = useMemo(
+        () => (biblemetadatState?.filter(el => el.module === item.metadata.module)?.count() ?? 0) > 0,
+        [biblemetadatState, item.metadata.module]
+    )
+    const activeBadges = useMemo(
+        () => FEATURE_BADGES.filter(b => Number(item.metadata[b.key]) === 1),
+        [item.metadata]
+    )
+    const isRestricted = useMemo(() => Number(item.metadata.restrict) === 1, [item.metadata.restrict])
 
     useEffect(() => {
         Animated.timing(animatedWidth, {
@@ -67,7 +73,7 @@ export const BibleItems = ({ item }: { item: BibleListItem }) => {
     }, [progress, download])
 
 
-    const handleBibleMetadata = async (data: Partial<BibleListItem>) => {
+    const handleBibleMetadata = useCallback(async (data: Partial<BibleListItem>) => {
         setDownload(true)
         const bible = await addBible(data.metadata as BibleMetadata)
         if (bible) {
@@ -105,7 +111,7 @@ export const BibleItems = ({ item }: { item: BibleListItem }) => {
         }
         setDownload(false)
         setBtnstate(true)
-    }
+    }, [addBible])
 
     const widthInterpolated = animatedWidth.interpolate({
         inputRange: [0, 100],

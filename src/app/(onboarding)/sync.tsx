@@ -98,7 +98,7 @@ export default function SyncNoteGroup() {
             email: user?.email
         }
         router.replace('/(tabs)', params)
-    }, [])
+    }, [user])
     return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
             <View>

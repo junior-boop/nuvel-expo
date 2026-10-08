@@ -64,10 +64,10 @@ export default function OnboardingBible() {
 
     const hasAtLeastOne = (biblemetadatState?.count() ?? 0) > 0
 
-    const handleContinue = () => {
+    const handleContinue = useCallback(() => {
         if (!hasAtLeastOne) return
         router.replace('/language' as never)
-    }
+    }, [hasAtLeastOne])
 
     return (
         <PageLayout_3>

@@ -38,6 +38,16 @@ export default function ModalScreen() {
     const [countryOpen, setCountryOpen] = useState(false)
     const [churchruleOpen, setChurchruleOpen] = useState(false)
 
+    // Callbacks stables : passes a useBottomSheetBackHandler via CountryPicker/ChurchRulePicker,
+    // qui les met dans un useEffect dep array. Non memoises, ils recreent l'effet (remove/add
+    // du listener hardwareBackPress) a chaque render du parent.
+    const openCountry = useCallback(() => setCountryOpen(true), [])
+    const closeCountry = useCallback(() => setCountryOpen(false), [])
+    const openChurchrule = useCallback(() => setChurchruleOpen(true), [])
+    const closeChurchrule = useCallback(() => setChurchruleOpen(false), [])
+    const handleCountryChange = useCallback((country: { id: string, name: string, code_2: string, code_3: string, phoneCode: string }) => setCountry(country), [setCountry])
+    const handleChurchruleChange = useCallback((rule: string) => setChurchrule(rule), [setChurchrule])
+
     return (
         <PageLayout_3>
             <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
@@ -76,13 +86,13 @@ export default function ModalScreen() {
 
                             <View style={{ gap: convert(12) }}>
                                 <TouchableOpacity
-                                    onPress={() => setCountryOpen(true)}
+                                    onPress={openCountry}
                                     style={[styles.input, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: convert(12) }]}>
                                     <Text style={{ fontSize: fontScale(16), fontWeight: "500" }}>{country === null ? 'Country' : country.name}</Text>
                                     <FluentChevronDown24Filled width={convert(18)} height={convert(18)} color="#444" />
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    onPress={() => setChurchruleOpen(true)}
+                                    onPress={openChurchrule}
                                     style={[styles.input, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: convert(12) }]}>
                                     <Text style={{ fontSize: fontScale(16), fontWeight: "500" }}>{churchrule === null ? 'Church Rule' : churchrule}</Text>
                                     <FluentChevronDown24Filled width={convert(18)} height={convert(18)} color="#444" />
@@ -114,8 +124,8 @@ export default function ModalScreen() {
                             </View>
                         </View>
                     </View>
-                    {churchruleOpen && <ChurchRulePicker onClose={() => setChurchruleOpen(false)} onChange={(churchrule) => setChurchrule(churchrule)} />}
-                    {countryOpen && <CountryPicker onClose={() => setCountryOpen(false)} onChange={(country) => setCountry(country)} />}
+                    {churchruleOpen && <ChurchRulePicker onClose={closeChurchrule} onChange={handleChurchruleChange} />}
+                    {countryOpen && <CountryPicker onClose={closeCountry} onChange={handleCountryChange} />}
                 </GestureHandlerRootView>
             </KeyboardAvoidingView>
         </PageLayout_3>
@@ -137,7 +147,8 @@ const CountryPicker = ({ onClose, onChange }: { onClose?: () => void, onChange?:
         countryfetch()
     }, [])
 
-    useBottomSheetBackHandler(true, () => onClose?.());
+    const handleClose = useCallback(() => onClose?.(), [onClose])
+    useBottomSheetBackHandler(true, handleClose);
 
     return (
         <BottomSheet
@@ -187,7 +198,8 @@ const ChurchRulePicker = ({ onClose, onChange }: { onClose?: () => void, onChang
         { id: 5, name: "Pastor" },
     ]
 
-    useBottomSheetBackHandler(true, () => onClose?.());
+    const handleClose = useCallback(() => onClose?.(), [onClose])
+    useBottomSheetBackHandler(true, handleClose);
 
     return (
         <BottomSheet

@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/auth.context";
 import { useDatabase } from "@/context/database.context";
 import { User } from "@/Database/db";
 import { compressImageForUpload } from "@/lib/imageCompression";
@@ -33,6 +34,7 @@ export default function useTakeUserInfos() {
     const [churchrule, setChurchrule] = useState<string | null>(null)
 
     const { adduser, updatedUser } = useDatabase()
+    const { refreshUser } = useAuth()
 
     /**
      * Sauvegarde les informations utilisateur (serveur + DB locale)
@@ -102,7 +104,13 @@ export default function useTakeUserInfos() {
             setUserinfos(localUser);
             if (__DEV__) console.log('[useAddUserInfos] ✅ Utilisateur sauvegardé:', localUser.email);
 
-            // 5. Navigation vers l'accueil
+            // 5. Rafraichir le user du AuthContext : AuthGate (_layout.tsx) se base sur ce
+            // user (pas celui du DatabaseContext) pour decider si le profil est complet.
+            // Sans ca, il reste sur l'ancien user (sans photo/biography) et renvoie
+            // aussitot vers /profile malgre la sauvegarde reussie.
+            await refreshUser();
+
+            // 6. Navigation vers l'accueil
             router.replace('/(tabs)');
             setLoading(false);
             return true;

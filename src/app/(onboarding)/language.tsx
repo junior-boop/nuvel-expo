@@ -5,7 +5,7 @@ import { server_url } from '@/constants/server_url';
 import { useAuth } from '@/context/auth.context';
 import { useDatabase } from '@/context/database.context';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, TouchableOpacity } from 'react-native';
 
 const LANGUAGES: { code: 'fr' | 'en' | 'es'; label: string }[] = [
@@ -19,7 +19,7 @@ export default function OnboardingLanguage() {
     const { updatedUser } = useDatabase();
     const [saving, setSaving] = useState<string | null>(null);
 
-    const handleSelect = async (code: 'fr' | 'en' | 'es') => {
+    const handleSelect = useCallback(async (code: 'fr' | 'en' | 'es') => {
         if (!user || saving) return;
         setSaving(code);
         try {
@@ -35,7 +35,7 @@ export default function OnboardingLanguage() {
         await refreshUser();
         setSaving(null);
         router.replace('/(tabs)');
-    };
+    }, [user, saving, updatedUser, refreshUser]);
 
     return (
         <PageLayout_3>
