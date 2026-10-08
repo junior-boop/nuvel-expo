@@ -1,7 +1,7 @@
 import ArticlesItems from "@/components/articlesItems";
 import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
-import { convert } from "@/constants/convert";
+import { convert, fontScale } from "@/constants/convert";
 import { useArticlesAll } from "@/lib/useArticlesAll";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { useLayoutEffect, useMemo } from "react";
@@ -39,11 +39,11 @@ export default function AuthorPage() {
                             <Image source={{ uri: `https://${author.photo}` }} style={{ width: convert(88), height: convert(88) }} />
                         ) : null}
                     </View>
-                    <Text style={{ fontSize: convert(20), fontWeight: 'bold' }}>{author.name} {author.first_name}</Text>
+                    <Text style={{ fontSize: fontScale(20), fontWeight: 'bold' }}>{author.name} {author.first_name}</Text>
                     {!!author.church_status && (
-                        <Text style={{ fontSize: convert(14), color: '#777' }}>{author.church_status}</Text>
+                        <Text style={{ fontSize: fontScale(14), color: '#777' }}>{author.church_status}</Text>
                     )}
-                    <Text style={{ fontSize: convert(13), color: '#777' }}>{authorArticles.length} publication{authorArticles.length > 1 ? 's' : ''}</Text>
+                    <Text style={{ fontSize: fontScale(13), color: '#777' }}>{authorArticles.length} publication{authorArticles.length > 1 ? 's' : ''}</Text>
                 </View>
 
                 {loading && authorArticles.length === 0 ? (
@@ -52,7 +52,7 @@ export default function AuthorPage() {
                     </View>
                 ) : authorArticles.length === 0 ? (
                     <View style={{ paddingHorizontal: convert(16), paddingTop: convert(20), alignItems: 'center' }}>
-                        <Text style={{ fontSize: convert(16), color: '#777' }}>No publications yet.</Text>
+                        <Text style={{ fontSize: fontScale(16), color: '#777' }}>No publications yet.</Text>
                     </View>
                 ) : (
                     <View style={{ gap: convert(24) }}>

@@ -1,5 +1,5 @@
 import { Text, View } from "@/components/Themed";
-import { convert } from "@/constants/convert";
+import { convert, fontScale } from "@/constants/convert";
 import { FluentCheckmark28Filled } from "@/constants/icons";
 import { useBottomSheetBackHandler } from "@/lib/useBottomSheetBackHandler";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
@@ -145,16 +145,16 @@ export default function TopicPicker({ selected, onClose, onChange }: { selected:
         >
             <BottomSheetView style={{ flex: 1, height: '100%' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: convert(20), paddingBottom: convert(8) }}>
-                    <Text style={{ fontSize: convert(16), fontWeight: '600' }}>Topics</Text>
+                    <Text style={{ fontSize: fontScale(16), fontWeight: '600' }}>Topics</Text>
                     <TouchableOpacity onPress={onClose} style={{ paddingHorizontal: convert(12), paddingVertical: convert(6) }}>
-                        <Text style={{ fontSize: convert(16), color: '#0083ff', fontWeight: '600' }}>Done</Text>
+                        <Text style={{ fontSize: fontScale(16), color: '#0083ff', fontWeight: '600' }}>Done</Text>
                     </TouchableOpacity>
                 </View>
                 <ScrollView showsVerticalScrollIndicator={true} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: convert(20), paddingBottom: convert(50), paddingTop: convert(4) }}>
                     <View>
                         {TOPICS.map((section) => (
                             <View key={section.category}>
-                                <Text style={{ fontSize: convert(13), fontWeight: '700', color: '#0009', textTransform: 'uppercase', marginTop: convert(16), marginBottom: convert(4) }}>{section.category}</Text>
+                                <Text style={{ fontSize: fontScale(13), fontWeight: '700', color: '#0009', textTransform: 'uppercase', marginTop: convert(16), marginBottom: convert(4) }}>{section.category}</Text>
                                 {section.items.map((topic) => {
                                     const isSelected = selected.includes(topic);
                                     return (
@@ -163,7 +163,7 @@ export default function TopicPicker({ selected, onClose, onChange }: { selected:
                                             onPress={() => toggle(topic)}
                                             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: convert(12), borderBottomWidth: 1, borderBottomColor: '#f0f0f0' }}
                                         >
-                                            <Text style={{ fontSize: convert(15), flex: 1, paddingRight: convert(8) }}>{topic}</Text>
+                                            <Text style={{ fontSize: fontScale(15), flex: 1, paddingRight: convert(8) }}>{topic}</Text>
                                             {isSelected && <FluentCheckmark28Filled width={18} height={18} color={'#0083ff'} />}
                                         </TouchableOpacity>
                                     );

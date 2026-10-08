@@ -87,7 +87,7 @@ const ReaderHtml = forwardRef(({ note, onAuthorPress, onTopicPress, onLinkPress 
 
     return (
         <div style={{ width: '100vw' }}>
-            <style dangerouslySetInnerHTML={{ __html: styles }}></style>
+            <style dangerouslySetInnerHTML={{ __html: styles() }}></style>
             <div style={{ position: "relative", height: "100svh", backgroundColor: 'white' }}>
                 <div style={{ width: '100%', aspectRatio: 4 / 3, overflow: 'hidden' }}>
                     <img src={`https://${note.imageurl}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

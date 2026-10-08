@@ -1,7 +1,7 @@
 import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 import { Text, View } from '@/components/Themed';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import { Stack } from 'expo-router';
 
 import { PageLayout_3 } from '@/components/page';
@@ -69,21 +69,21 @@ export default function TabTwoScreen() {
         <Text style={{ ...styles.title, marginBottom: convert(16), paddingHorizontal: convert(16) }}>Account</Text>
         <View style={{ paddingHorizontal: convert(16) }}>
           <View style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee' }}>
-            <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>Email adress</Text>
-            <Text style={{ fontSize: convert(16) }}>{userinfo?.email}</Text>
+            <Text style={{ fontSize: fontScale(16), fontWeight: 'bold' }}>Email adress</Text>
+            <Text style={{ fontSize: fontScale(16) }}>{userinfo?.email}</Text>
           </View>
         </View>
         <View style={{ paddingHorizontal: convert(16) }}>
           <View style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee' }}>
-            <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>User Name</Text>
-            <Text style={{ fontSize: convert(16) }}>{userinfo?.name} {userinfo?.first_name}</Text>
+            <Text style={{ fontSize: fontScale(16), fontWeight: 'bold' }}>User Name</Text>
+            <Text style={{ fontSize: fontScale(16) }}>{userinfo?.name} {userinfo?.first_name}</Text>
           </View>
         </View>
         <View style={{ paddingHorizontal: convert(16) }}>
           <TouchableOpacity onPress={() => router.navigate('/profils')} style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee', flexDirection: 'row', alignItems: 'center', justifyContent: "space-between" }}>
             <View>
-              <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>Profils information</Text>
-              <Text style={{ fontSize: convert(16) }}>Edit your name, bio, photo, etc...</Text>
+              <Text style={{ fontSize: fontScale(16), fontWeight: 'bold' }}>Profils information</Text>
+              <Text style={{ fontSize: fontScale(16) }}>Edit your name, bio, photo, etc...</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "space-between", gap: convert(6) }}>
               <Image
@@ -109,7 +109,7 @@ export default function TabTwoScreen() {
         {
           biblelist?.length === 0 && (<View style={{ paddingHorizontal: convert(16) }}>
             <View style={{ marginBottom: 24 }}>
-              <Text style={{ fontSize: convert(16), color: "#777", fontStyle: 'italic' }}>
+              <Text style={{ fontSize: fontScale(16), color: "#777", fontStyle: 'italic' }}>
                 No Bibles available rigth now. Just click "Add a Bible" to upload one
               </Text>
             </View>
@@ -119,7 +119,7 @@ export default function TabTwoScreen() {
           {
             biblelist?.map((bible, index) => (
               <View style={{ backgroundColor: '#004f9913', padding: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }} key={index}>
-                <Text style={{ fontWeight: 'bold', fontSize: convert(16), flex: 1 }}>{bible.name}</Text>
+                <Text style={{ fontWeight: 'bold', fontSize: fontScale(16), flex: 1 }}>{bible.name}</Text>
                 <TouchableOpacity
                   onPress={() => handleDeleteBible(bible)}
                   disabled={deletingBibleId === bible.id}
@@ -135,8 +135,8 @@ export default function TabTwoScreen() {
         <View style={{ paddingHorizontal: convert(16) }}>
           <TouchableOpacity onPress={() => router.navigate('/biblepage')} style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee', flexDirection: 'row', alignItems: 'center', justifyContent: "space-between" }}>
             <View>
-              <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>Add a Bible</Text>
-              <Text style={{ fontSize: convert(16), width: convert(w * 70 / 100) }}>Download the version you'll use in your notes</Text>
+              <Text style={{ fontSize: fontScale(16), fontWeight: 'bold' }}>Add a Bible</Text>
+              <Text style={{ fontSize: fontScale(16), width: convert(w * 70 / 100) }}>Download the version you'll use in your notes</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: "space-between", gap: convert(6) }}>
               <BxsBible width={convert(28)} height={convert(28)} color={'#333'} />
@@ -168,7 +168,7 @@ const History = () => {
         ))
       }
       <TouchableOpacity onPress={() => router.navigate('/history')} style={{ width: convert(150), aspectRatio: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: convert(8), backgroundColor: '#004f9909', flexDirection: "row", gap: convert(8) }}>
-        <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>See more</Text>
+        <Text style={{ fontSize: fontScale(16), fontWeight: 'bold' }}>See more</Text>
         <FluentChevronRight32Regular width={convert(20)} height={convert(20)} />
       </TouchableOpacity>
     </ScrollView>
@@ -248,8 +248,8 @@ const UpdatesSection = () => {
         style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee', flexDirection: 'row', alignItems: 'center', justifyContent: "space-between" }}
       >
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>{status === 'ready' ? 'Redémarrer pour appliquer' : 'Rechercher une mise à jour'}</Text>
-          <Text style={{ fontSize: convert(14), color: '#777' }}>{subtitle()}</Text>
+          <Text style={{ fontSize: fontScale(16), fontWeight: 'bold' }}>{status === 'ready' ? 'Redémarrer pour appliquer' : 'Rechercher une mise à jour'}</Text>
+          <Text style={{ fontSize: fontScale(14), color: '#777' }}>{subtitle()}</Text>
         </View>
         <View style={{ width: convert(20), height: convert(20) }}>
           {busy
@@ -330,8 +330,8 @@ const DataSection = () => {
   const Row = ({ title, subtitle, onPress, disabled, loading }: { title: string, subtitle: string, onPress: () => void, disabled?: boolean, loading?: boolean }) => (
     <TouchableOpacity disabled={disabled} onPress={onPress} style={{ marginBottom: convert(14), borderBottomWidth: 1, paddingBottom: convert(14), borderColor: '#eee', flexDirection: 'row', alignItems: 'center', justifyContent: "space-between" }}>
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>{title}</Text>
-        <Text style={{ fontSize: convert(16) }}>{subtitle}</Text>
+        <Text style={{ fontSize: fontScale(16), fontWeight: 'bold' }}>{title}</Text>
+        <Text style={{ fontSize: fontScale(16) }}>{subtitle}</Text>
       </View>
       <View style={{ width: convert(20), height: convert(20) }}>
         {loading
@@ -345,16 +345,16 @@ const DataSection = () => {
     <View style={{ paddingHorizontal: convert(16) }}>
       <View style={{ flexDirection: 'row', gap: convert(12), marginBottom: convert(16) }}>
         <View style={{ flex: 1, justifyContent: 'space-between', backgroundColor: '#004f9913', padding: convert(12), aspectRatio: 1 }}>
-          <Text style={{ fontSize: convert(11), fontWeight: 'bold', color: '#777', textTransform: 'uppercase' }}>Notes</Text>
-          <Text style={{ fontSize: convert(36), fontWeight: 'bold' }}>{notes.length}</Text>
+          <Text style={{ fontSize: fontScale(11), fontWeight: 'bold', color: '#777', textTransform: 'uppercase' }}>Notes</Text>
+          <Text style={{ fontSize: fontScale(36), fontWeight: 'bold' }}>{notes.length}</Text>
         </View>
         <View style={{ flex: 1, justifyContent: 'space-between', backgroundColor: '#004f9913', padding: convert(12), aspectRatio: 1 }}>
-          <Text style={{ fontSize: convert(11), fontWeight: 'bold', color: '#777', textTransform: 'uppercase' }}>Groups</Text>
-          <Text style={{ fontSize: convert(36), fontWeight: 'bold' }}>{groups.length}</Text>
+          <Text style={{ fontSize: fontScale(11), fontWeight: 'bold', color: '#777', textTransform: 'uppercase' }}>Groups</Text>
+          <Text style={{ fontSize: fontScale(36), fontWeight: 'bold' }}>{groups.length}</Text>
         </View>
         <View style={{ flex: 1, justifyContent: 'space-between', backgroundColor: '#004f9913', padding: convert(12), aspectRatio: 1 }}>
-          <Text style={{ fontSize: convert(11), fontWeight: 'bold', color: '#777', textTransform: 'uppercase' }}>Last sync</Text>
-          <Text style={{ fontSize: convert(20), fontWeight: 'bold' }}>{lastSync ? moment(lastSync).fromNow() : '—'}</Text>
+          <Text style={{ fontSize: fontScale(11), fontWeight: 'bold', color: '#777', textTransform: 'uppercase' }}>Last sync</Text>
+          <Text style={{ fontSize: fontScale(20), fontWeight: 'bold' }}>{lastSync ? moment(lastSync).fromNow() : '—'}</Text>
         </View>
       </View>
       <Row title="Export notes (JSON)" subtitle="Copy a full backup to clipboard" onPress={() => exportTo('json')} />
@@ -365,14 +365,37 @@ const DataSection = () => {
 }
 
 const HistoryItems = ({ history }: { history: HistoryType }) => {
+  const openArticle = () => {
+    const stub = {
+      id: history.articleId,
+      articleId: history.articleId,
+      viewCount: 0,
+      shareCount: 0,
+      signals: [] as string[],
+      upvotes: [] as string[],
+      article: {
+        id: history.articleId,
+        title: history.content?.title ?? '',
+        imageurl: history.content?.image ?? '',
+        description: '',
+        createdAt: history.content?.createdAt ?? history.createdAt,
+        user: { id: '', photo: '' },
+      },
+    }
+    router.navigate({
+      pathname: '/reader',
+      params: { element: JSON.stringify(stub) },
+    })
+  }
+
   return (
-    <View style={{ width: convert(150) }}>
+    <TouchableOpacity style={{ width: convert(150) }} onPress={openArticle}>
       <Image source={{ uri: `https://${history.content.image}` }} style={{ width: convert(150), marginBottom: convert(8), aspectRatio: 1, borderWidth: 1, borderColor: '#eee' }} />
       <View style={{ gap: convert(2) }}>
-        <Text style={{ fontSize: convert(16), fontWeight: 'semibold' }}>{history.content.title.length > 48 ? history.content.title.substring(0, 48) + '...' : history.content.title}</Text>
-        <Text style={{ color: '#777', fontSize: convert(11), fontWeight: 'bold', textTransform: "uppercase" }}>{moment(history.createdAt).fromNow()}</Text>
+        <Text style={{ fontSize: fontScale(16), fontWeight: 'semibold' }}>{history.content.title.length > 48 ? history.content.title.substring(0, 48) + '...' : history.content.title}</Text>
+        <Text style={{ color: '#777', fontSize: fontScale(11), fontWeight: 'bold', textTransform: "uppercase" }}>{moment(history.createdAt).fromNow()}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   )
 }
 

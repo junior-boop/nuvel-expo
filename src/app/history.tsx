@@ -1,7 +1,7 @@
 import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
 import { w } from "@/constants/Colors";
-import { convert } from "@/constants/convert";
+import { convert, fontScale } from "@/constants/convert";
 import { useDatabase } from "@/context/database.context";
 import { deleteHistoryItem, historiesDB, HistoryType } from "@/lib/instantdb.histories";
 import { router } from "expo-router";
@@ -78,14 +78,14 @@ export default function HistoryPage() {
             >
                 <View style={{ paddingHorizontal: convert(16) }}>
                     <Text style={{ ...styles.title, marginBottom: convert(8) }}>History</Text>
-                    <Text style={{ fontSize: convert(16), color: "#777", marginBottom: convert(16) }}>
+                    <Text style={{ fontSize: fontScale(16), color: "#777", marginBottom: convert(16) }}>
                         Articles you have read recently
                     </Text>
                 </View>
 
                 {filtered.length === 0 ? (
                     <View style={{ paddingHorizontal: convert(16), paddingTop: convert(40), alignItems: 'center' }}>
-                        <Text style={{ fontSize: convert(16), color: '#777' }}>
+                        <Text style={{ fontSize: fontScale(16), color: '#777' }}>
                             No reading history yet.
                         </Text>
                     </View>
@@ -117,10 +117,10 @@ const HistoryRow = ({ history, onPress, onLongPress }: { history: HistoryType, o
                 ) : null}
             </View>
             <View style={{ flex: 1, gap: convert(6) }}>
-                <Text style={{ width: w * 0.6, fontSize: convert(16), fontWeight: 'bold' }} numberOfLines={2}>
+                <Text style={{ width: w * 0.6, fontSize: fontScale(16), fontWeight: 'bold' }} numberOfLines={2}>
                     {title}
                 </Text>
-                <Text style={{ fontSize: convert(13), color: '#777', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                <Text style={{ fontSize: fontScale(13), color: '#777', textTransform: 'uppercase', fontWeight: 'bold' }}>
                     {moment(history.createdAt as any).fromNow()}
                 </Text>
             </View>

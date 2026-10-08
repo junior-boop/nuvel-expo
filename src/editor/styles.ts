@@ -1,10 +1,37 @@
-export default `
+// Composant "use dom" : ce fichier tourne dans une vraie webview (son propre
+// `window`), donc `window.devicePixelRatio` reflete la densite physique reelle
+// de l'ecran de l'appareil. Sur les telephones a tres faible dpi, le texte en
+// px/rem reste a la meme taille "logique" mais parait beaucoup plus grand a
+// l'oeil : on calcule donc un facteur d'echelle qui fait naviguer le paragraphe
+// de base (16px * 1.20rem = 19.2px) entre 14px (petit dpi) et 20px (grand dpi),
+// puis on l'applique a toutes les autres tailles de police du document pour
+// qu'elles retrecissent/grandissent dans la meme proportion (hierarchie
+// titres/boutons/popups preservee).
+const MIN_DPI_RATIO = 1
+const MAX_DPI_RATIO = 3
+const BASE_PARAGRAPH_PX = 19.2
+const MIN_PARAGRAPH_PX = 14
+const MAX_PARAGRAPH_PX = 20
+
+const getScaleFactor = (): number => {
+    const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 2
+    const clamped = Math.min(MAX_DPI_RATIO, Math.max(MIN_DPI_RATIO, dpr))
+    const t = (clamped - MIN_DPI_RATIO) / (MAX_DPI_RATIO - MIN_DPI_RATIO)
+    const paragraphPx = MIN_PARAGRAPH_PX + t * (MAX_PARAGRAPH_PX - MIN_PARAGRAPH_PX)
+    return paragraphPx / BASE_PARAGRAPH_PX
+}
+
+const getEditorStyles = (): string => {
+    const factor = getScaleFactor()
+    const px = (value: number) => `${(value * factor).toFixed(2)}px`
+
+    return `
 @import url('https://fonts.googleapis.com/css2?family=Andada+Pro:ital,wght@0,400..840;1,400..840&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import "tailwindcss";
 
 
 html {
-    font-size: 16px;
+    font-size: ${px(16)};
 }
 
 * {
@@ -308,7 +335,7 @@ p {
 .collaboration-cursor__label {
     border-radius: 3px 3px 3px 0;
     color: #fff;
-    font-size: 12px;
+    font-size: ${px(12)};
     font-style: normal;
     font-weight: 600;
     left: -1px;
@@ -538,7 +565,7 @@ p {
         background-color : #00edff27;
         align-items: center;
         gap : 12px;
-        font-size : 16px;
+        font-size : ${px(16)};
         font-weight : 600;
        /* margin:0 12px */
     }
@@ -675,7 +702,7 @@ control-groupe .button-group bottom.is-active {
     padding: 0 12px;
     border: none;
     background-color: white;
-    font-size: 14px;
+    font-size: ${px(14)};
     white-space: nowrap;
 }
 
@@ -908,7 +935,7 @@ control-groupe .button-group bottom.is-active {
 }
 
 .spell-popup-title {
-    font-size: 13px;
+    font-size: ${px(13)};
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -922,7 +949,7 @@ control-groupe .button-group bottom.is-active {
 }
 
 .spell-popup-nav-count {
-    font-size: 13px;
+    font-size: ${px(13)};
     font-weight: 600;
     color: #6b7280;
 }
@@ -934,7 +961,7 @@ control-groupe .button-group bottom.is-active {
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    font-size: 16px;
+    font-size: ${px(16)};
     font-weight: 700;
     line-height: 1;
     cursor: pointer;
@@ -949,7 +976,7 @@ control-groupe .button-group bottom.is-active {
 }
 
 .spell-popup-suggestion {
-    font-size: 17px;
+    font-size: ${px(17)};
     font-weight: 600;
     color: #111;
     background-color: rgba(255, 59, 48, 0.08);
@@ -969,7 +996,7 @@ control-groupe .button-group bottom.is-active {
     border: none;
     border-radius: 999px;
     padding: 8px 16px;
-    font-size: 14px;
+    font-size: ${px(14)};
     font-weight: 600;
     cursor: pointer;
 }
@@ -984,4 +1011,7 @@ control-groupe .button-group bottom.is-active {
     color: #374151;
 }
 
-`;
+`
+}
+
+export default getEditorStyles;

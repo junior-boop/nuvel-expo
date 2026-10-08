@@ -1,6 +1,6 @@
 import { PageLayout_3 } from '@/components/page';
 import { Text, View } from '@/components/Themed';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import { server_url } from '@/constants/server_url';
 import { useAuth } from '@/context/auth.context';
 import { useDatabase } from '@/context/database.context';
@@ -40,8 +40,8 @@ export default function OnboardingLanguage() {
     return (
         <PageLayout_3>
             <View style={{ flex: 1, paddingHorizontal: convert(24), paddingTop: convert(48) }}>
-                <Text style={{ fontSize: convert(24), fontWeight: '700', marginBottom: convert(8) }}>Choisissez votre langue</Text>
-                <Text style={{ fontSize: convert(15), color: '#777', marginBottom: convert(32) }}>
+                <Text style={{ fontSize: fontScale(24), fontWeight: '700', marginBottom: convert(8) }}>Choisissez votre langue</Text>
+                <Text style={{ fontSize: fontScale(15), color: '#777', marginBottom: convert(32) }}>
                     Cette préférence sera utilisée pour votre expérience dans l'application.
                 </Text>
                 <View style={{ gap: convert(12) }}>
@@ -52,7 +52,7 @@ export default function OnboardingLanguage() {
                             disabled={!!saving}
                             style={{ borderWidth: 1, borderColor: '#ccc', paddingVertical: convert(16), paddingHorizontal: convert(16), flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
                         >
-                            <Text style={{ fontSize: convert(18), fontWeight: '600' }}>{lang.label}</Text>
+                            <Text style={{ fontSize: fontScale(18), fontWeight: '600' }}>{lang.label}</Text>
                             {saving === lang.code && <ActivityIndicator size="small" color="#0083ff" />}
                         </TouchableOpacity>
                     ))}

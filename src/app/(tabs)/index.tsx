@@ -1,10 +1,10 @@
 import { PageLayout_3 } from '@/components/page';
 import { Text, View } from '@/components/Themed';
-// import { convert } from '@/constants/convert';
+// import { convert, fontScale } from '@/constants/convert';
 import { ArticleStat, useArticlesAll } from '@/lib/useArticlesAll';
 // import moment from 'moment';
 import ArticlesItems from '@/components/articlesItems';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import { createdHistoryItem } from '@/lib/instantdb.histories';
 import { router } from 'expo-router';
 import moment from 'moment';
@@ -47,7 +47,7 @@ export default function TabOneScreen() {
 
           <>
             <View style={{ marginVertical: convert(16) }}>
-              <Text style={{ fontSize: convert(20), fontWeight: "bold", paddingHorizontal: convert(16) }}>For You</Text>
+              <Text style={{ fontSize: fontScale(20), fontWeight: "bold", paddingHorizontal: convert(16) }}>For You</Text>
             </View>
             <View style={{ gap: convert(42) }}>
               {articles?.map((article, key) => {
@@ -108,18 +108,18 @@ const TopArticles = ({ articles }: { articles: ArticleStat }) => {
   return (<View style={{ paddingHorizontal: convert(16), gap: convert(12) }}>
     <View>
       <TouchableOpacity onPress={handleOpen}>
-        <Text style={{ fontSize: convert(28), fontWeight: "bold", width: '90%', marginBottom: convert(8) }}>{articles.article?.title}</Text>
-        <Text style={{ fontSize: convert(16), color: '#444', width: '90%', marginBottom: convert(8) }}>{articles.article?.description.substring(0, 120)}...</Text>
+        <Text style={{ fontSize: fontScale(28), fontWeight: "bold", width: '90%', marginBottom: convert(8) }}>{articles.article?.title}</Text>
+        <Text style={{ fontSize: fontScale(16), color: '#444', width: '90%', marginBottom: convert(8) }}>{articles.article?.description.substring(0, 120)}...</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={handleOpenAuthor} style={{ flexDirection: 'row', gap: convert(8), alignItems: 'center' }}>
         <View style={{ width: convert(32), height: convert(32), backgroundColor: "#444", borderRadius: convert(16), overflow: 'hidden' }}><Image source={{ uri: `https://${articles.article?.user?.photo}` }} style={{ width: '100%', aspectRatio: 1 }} /></View>
         <View style={{ flexDirection: 'column', gap: convert(4) }}>
           <View style={{ flexDirection: 'row', gap: convert(8), alignItems: 'center' }}>
-            <Text style={{ fontSize: convert(13), color: "#444", fontWeight: "bold", marginBottom: convert(-3) }}>{articles.article?.user?.name} {articles.article?.user?.first_name}</Text>
+            <Text style={{ fontSize: fontScale(13), color: "#444", fontWeight: "bold", marginBottom: convert(-3) }}>{articles.article?.user?.name} {articles.article?.user?.first_name}</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: convert(3), alignItems: 'center' }}>
-            <Text style={{ fontSize: convert(13), color: "#444", fontWeight: "bold", marginBottom: convert(0) }}>{articles.viewCount}  <FluentEyeShow24Filled style={{ width: convert(14), height: convert(14) }} /> </Text>
-            <Text style={{ fontSize: convert(13), color: "#444" }}>• {moment(articles.article?.createdAt).fromNow()}</Text>
+            <Text style={{ fontSize: fontScale(13), color: "#444", fontWeight: "bold", marginBottom: convert(0) }}>{articles.viewCount}  <FluentEyeShow24Filled style={{ width: convert(14), height: convert(14) }} /> </Text>
+            <Text style={{ fontSize: fontScale(13), color: "#444" }}>• {moment(articles.article?.createdAt).fromNow()}</Text>
           </View>
         </View>
       </TouchableOpacity>

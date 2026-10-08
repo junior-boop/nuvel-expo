@@ -1,4 +1,4 @@
-import { convert } from "@/constants/convert";
+import { convert, fontScale } from "@/constants/convert";
 import { useDatabase } from "@/context/database.context";
 import type { Notes as NotesType } from "@/Database/db";
 import { MaterialIcons } from '@expo/vector-icons';
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
         userSelect: 'none'
     },
     titre: {
-        fontSize: convert(15),
+        fontSize: fontScale(15),
         marginBottom: convert(5),
         lineHeight: convert(18),
         fontWeight: "bold",
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     },
 
     texte: {
-        fontSize: convert(14),
+        fontSize: fontScale(14),
         lineHeight: convert(17),
         color: '#444'
     },
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
         paddingVertical: (4),
         borderRadius: (1),
         color: '#1e293b',
-        fontSize: convert(13),
+        fontSize: fontScale(13),
         backgroundColor: '#e2e8f0',
         width: 'auto'
     },
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     },
     taskBadgeText: {
         color: '#fff',
-        fontSize: convert(13),
+        fontSize: fontScale(13),
         fontWeight: '600'
     }
 })

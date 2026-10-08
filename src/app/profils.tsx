@@ -1,7 +1,7 @@
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 
 import { Text, View } from '@/components/Themed';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import { FluentEdit32Regular, FluentImageAdd32Regular } from '@/constants/icons';
 import { server_url } from '@/constants/server_url';
 import { useAuth } from '@/context/auth.context';
@@ -216,7 +216,7 @@ export default function Profils() {
                     placeholder={label}
                 />
             ) : (
-                <Text style={{ fontSize: convert(16) }}>{value || '—'}</Text>
+                <Text style={{ fontSize: fontScale(16) }}>{value || '—'}</Text>
             )}
         </View>
     )
@@ -252,7 +252,7 @@ export default function Profils() {
 
                 <View style={{ ...styles.fieldRow, paddingBottom: convert(14) }}>
                     <Text style={styles.entete}>Email adress</Text>
-                    <Text style={{ fontSize: convert(16), color: editing ? '#999' : undefined }}>{userinfo?.email}</Text>
+                    <Text style={{ fontSize: fontScale(16), color: editing ? '#999' : undefined }}>{userinfo?.email}</Text>
                 </View>
 
                 <View style={{ ...styles.fieldRow, paddingBottom: !editing ? convert(14) : convert(6) }}>
@@ -271,19 +271,19 @@ export default function Profils() {
                                             borderColor: active ? '#048effff' : '#ccc',
                                             backgroundColor: active ? '#048effff' : 'transparent',
                                         }}>
-                                        <Text style={{ color: active ? '#fff' : '#333', fontSize: convert(14), fontWeight: active ? 'bold' : 'regular' }}>{s}</Text>
+                                        <Text style={{ color: active ? '#fff' : '#333', fontSize: fontScale(14), fontWeight: active ? 'bold' : 'regular' }}>{s}</Text>
                                     </TouchableOpacity>
                                 )
                             })}
                         </View>
                     ) : (
-                        <Text style={{ fontSize: convert(16) }}>{userinfo?.church_status}</Text>
+                        <Text style={{ fontSize: fontScale(16) }}>{userinfo?.church_status}</Text>
                     )}
                 </View>
 
                 <View style={{ ...styles.fieldRow, paddingBottom: convert(14) }}>
                     <Text style={styles.entete}>Country</Text>
-                    <Text style={{ fontSize: convert(16) }}>{country ? `${country.name}, ${country.code_2}` : '—'}</Text>
+                    <Text style={{ fontSize: fontScale(16) }}>{country ? `${country.name}, ${country.code_2}` : '—'}</Text>
                 </View>
 
                 {renderField('Biography', biography, setBiography, true)}
@@ -294,19 +294,19 @@ export default function Profils() {
                             disabled={saving}
                             onPress={handleSave}
                             style={{ marginTop: convert(24), alignItems: 'center', borderWidth: 1, borderColor: '#048effff', paddingVertical: convert(12), backgroundColor: '#eaf6ffff', justifyContent: 'center', flexDirection: 'row', gap: convert(6) }}>
-                            <Text style={{ fontSize: convert(16), fontWeight: 'bold', color: '#048effff' }}>Save</Text>
+                            <Text style={{ fontSize: fontScale(16), fontWeight: 'bold', color: '#048effff' }}>Save</Text>
                             {saving && <ActivityIndicator size={'small'} color={'#048effff'} />}
                         </TouchableOpacity>
                         <TouchableOpacity
                             disabled={saving}
                             onPress={() => { resetForm(); setEditing(false) }}
                             style={{ marginTop: convert(12), alignItems: 'center', borderWidth: 1, borderColor: '#cccccc', paddingVertical: convert(12), backgroundColor: '#f7f7f7ff', justifyContent: 'center', flexDirection: 'row', gap: convert(6) }}>
-                            <Text style={{ fontSize: convert(16), fontWeight: 'bold', color: '#333333' }}>Cancel</Text>
+                            <Text style={{ fontSize: fontScale(16), fontWeight: 'bold', color: '#333333' }}>Cancel</Text>
                         </TouchableOpacity>
                     </>
                 ) : (
                     <TouchableOpacity onPress={handleLogout} style={{ marginTop: convert(24), alignItems: 'center', borderWidth: 1, borderColor: "rgba(250, 36, 36, 1)", paddingVertical: convert(12), backgroundColor: "#fff5f5ff", justifyContent: 'center', flexDirection: 'row', gap: convert(6) }}>
-                        <Text style={{ fontSize: convert(16), fontWeight: 'bold', color: "rgba(250, 36, 36, 1)", }}>Log Out</Text>
+                        <Text style={{ fontSize: fontScale(16), fontWeight: 'bold', color: "rgba(250, 36, 36, 1)", }}>Log Out</Text>
                         {isLoading && <ActivityIndicator size={'small'} color={"rgba(250, 36, 36, 1)"} />}
                     </TouchableOpacity>
                 )}
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
         flex: 1
     },
     entete: {
-        fontSize: convert(14),
+        fontSize: fontScale(14),
         fontWeight: 'bold',
         color: '#000000ff',
     },
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
         borderColor: '#eee',
     },
     input: {
-        fontSize: convert(16),
+        fontSize: fontScale(16),
         paddingVertical: convert(6),
         paddingHorizontal: convert(8),
         borderWidth: 1,

@@ -1,5 +1,5 @@
 import { w } from "@/constants/Colors";
-import { convert } from "@/constants/convert";
+import { convert, fontScale } from "@/constants/convert";
 import { createdHistoryItem } from "@/lib/instantdb.histories";
 import { ArticleStat } from "@/lib/useArticlesAll";
 import { router } from "expo-router";
@@ -42,14 +42,14 @@ export default function ArticlesItems({ article }: { article: ArticleStat }) {
             onPress={handleOpen}
             style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: convert(16), alignItems: 'flex-start' }}>
             <View style={{ gap: convert(5) }}>
-                <Text style={{ width: w * 0.66, fontSize: convert(18), fontWeight: "bold", textTransform: "capitalize" }}>{article.article?.title}</Text>
-                <Text style={{ width: w * 0.66, fontSize: convert(16), color: "#797979" }}>{(article.article?.description ?? '').substring(0, 100)}...</Text>
+                <Text style={{ width: w * 0.66, fontSize: fontScale(18), fontWeight: "bold", textTransform: "capitalize" }}>{article.article?.title}</Text>
+                <Text style={{ width: w * 0.66, fontSize: fontScale(16), color: "#797979" }}>{(article.article?.description ?? '').substring(0, 100)}...</Text>
                 <TouchableOpacity onPress={handleOpenAuthor} style={{ flexDirection: 'row', gap: convert(8), alignItems: 'center' }}>
                     <View style={{ width: convert(20), height: convert(20), borderRadius: convert(12), overflow: 'hidden', borderColor: "#e2e2e2ff", borderWidth: 1, backgroundColor: "#c7c7c7ff" }}>
                         <Image source={{ uri: `https://${article.article?.user?.photo}` }} style={{ width: convert(20), height: convert(20) }} />
                     </View>
-                    <Text style={{ fontSize: convert(12), color: "#444", fontWeight: "bold", textTransform: "uppercase" }}>{article.viewCount} <FluentEyeShow24Filled style={{ width: convert(12), height: convert(12) }} /></Text>
-                    <Text style={{ fontSize: convert(12), color: "#444" }}>•  {moment(article.article?.createdAt).fromNow()}</Text>
+                    <Text style={{ fontSize: fontScale(12), color: "#444", fontWeight: "bold", textTransform: "uppercase" }}>{article.viewCount} <FluentEyeShow24Filled style={{ width: convert(12), height: convert(12) }} /></Text>
+                    <Text style={{ fontSize: fontScale(12), color: "#444" }}>•  {moment(article.article?.createdAt).fromNow()}</Text>
                 </TouchableOpacity>
             </View>
             <View style={{ borderWidth: 1, borderColor: "#e2e2e2ff", borderRadius: convert(5), overflow: 'hidden', marginTop: convert(8) }}>

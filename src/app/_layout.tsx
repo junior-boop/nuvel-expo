@@ -144,7 +144,21 @@ function AuthGate({ children }: { children: ReactNode }) {
       return;
     }
     if (profileIncomplete) {
-      if (!inOnboardingGroup) router.replace('/profile' as never);
+      if (!inOnboardingGroup) {
+        // /profile n'affiche aucun champ editable pour id/name/first_name/email : ces
+        // valeurs doivent venir des params de navigation, sinon handleSave echoue toujours
+        // avec "Veuillez remplir tous les champs obligatoires" sans que l'utilisateur
+        // puisse jamais corriger le probleme depuis cet ecran.
+        router.replace({
+          pathname: '/profile' as never,
+          params: {
+            id: user?.id,
+            name: user?.name,
+            first_name: user?.first_name,
+            email: user?.email,
+          },
+        });
+      }
       return;
     }
     if (bibleIncomplete) {

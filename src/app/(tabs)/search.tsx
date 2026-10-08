@@ -1,7 +1,7 @@
 import { PageLayout_3 } from '@/components/page';
 import { Text, View } from '@/components/Themed';
 import { w } from '@/constants/Colors';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import { FluentSparkle32Regular, RiMessageLine } from '@/constants/icons';
 import { useNotificationsContext } from '@/context/notifications.context';
 import { NotificationRow } from '@/lib/notifications.api';
@@ -35,11 +35,11 @@ const NotificationItem = ({ notification, onRead, onOpen }: { notification: Noti
         <Icon width={20} height={20} color={'#208AEF'} />
       </View>
       <View style={{ flex: 1, gap: convert(4) }}>
-        <Text style={{ width: w * 0.7, fontSize: convert(15), fontWeight: 'bold' }}>
+        <Text style={{ width: w * 0.7, fontSize: fontScale(15), fontWeight: 'bold' }}>
           {isAdminNotification(notification.type) && <Text style={styles.adminTag}>  Admin  </Text>}
-          <Text> </Text>{notification.title} - <Text style={{ fontSize: convert(14), color: '#a0a0a0' }}>{moment(notification.createdAt).fromNow()}</Text>
+          <Text> </Text>{notification.title} - <Text style={{ fontSize: fontScale(14), color: '#a0a0a0' }}>{moment(notification.createdAt).fromNow()}</Text>
         </Text>
-        <Text style={{ width: w * 0.7, fontSize: convert(14), color: '#797979' }}>{notification.body}</Text>
+        <Text style={{ width: w * 0.7, fontSize: fontScale(14), color: '#797979' }}>{notification.body}</Text>
 
       </View>
       {!notification.read && <View style={{ width: convert(8), height: convert(8), borderRadius: convert(4), backgroundColor: '#208AEF', marginTop: convert(6) }} />}
@@ -87,7 +87,7 @@ export default function TabTwoScreen() {
           </View>
         ) : notifications.length === 0 ? (
           <View style={{ alignItems: 'center', paddingHorizontal: convert(16), paddingVertical: convert(32) }}>
-            <Text style={{ fontSize: convert(14), color: '#797979' }}>Vous n'avez aucune notification pour le moment.</Text>
+            <Text style={{ fontSize: fontScale(14), color: '#797979' }}>Vous n'avez aucune notification pour le moment.</Text>
           </View>
         ) : (
           <View style={{ gap: convert(20) }}>
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     width: '80%',
   },
   adminTag: {
-    fontSize: convert(12),
+    fontSize: fontScale(12),
     fontWeight: 'bold',
     color: '#208AEF',
     backgroundColor: '#e6f0ff',

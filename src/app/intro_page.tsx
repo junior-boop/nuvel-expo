@@ -1,6 +1,6 @@
 import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
-import { convert } from "@/constants/convert";
+import { convert, fontScale } from "@/constants/convert";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { StyleSheet, TouchableOpacity } from "react-native";
@@ -30,7 +30,7 @@ export default function IntroPage() {
 
 const styles = StyleSheet.create({
     tagline: {
-        fontSize: convert(16),
+        fontSize: fontScale(16),
         fontWeight: '500',
         color: '#797979',
         textAlign: 'left',
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     buttonText: {
-        fontSize: convert(16),
+        fontSize: fontScale(16),
         fontWeight: '700',
         color: '#fff',
     },

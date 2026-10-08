@@ -1,5 +1,5 @@
 import { Text, View } from '@/components/Themed';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import { useDatabase } from '@/context/database.context';
 import type { Notes } from '@/Database/db';
 import Column from './column';
@@ -14,7 +14,7 @@ export default function AllNotesPinned() {
     }
     return (
         <View style={{ marginBottom: convert(24) }}>
-            <View style={{ paddingHorizontal: 14 }}><Text style={{ fontSize: convert(18), fontWeight: "bold", marginBottom: convert(12) }}>Notes épinglés</Text></View>
+            <View style={{ paddingHorizontal: 14 }}><Text style={{ fontSize: fontScale(18), fontWeight: "bold", marginBottom: convert(12) }}>Notes épinglés</Text></View>
             <Column data={note as Notes[]} />
         </View>
     );

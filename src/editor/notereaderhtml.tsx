@@ -55,7 +55,7 @@ const NoteReaderHtml = forwardRef(({ note, onLinkPress }: { note: Notes, onLinkP
 
     return (
         <div style={{ width: '100vw' }}>
-            <style dangerouslySetInnerHTML={{ __html: styles }}></style>
+            <style dangerouslySetInnerHTML={{ __html: styles() }}></style>
             <div style={{ position: "relative", minHeight: "100svh", backgroundColor: 'white' }}>
 
                 <EditorContent editor={editor} />

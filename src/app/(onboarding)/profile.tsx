@@ -3,7 +3,7 @@ import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, StyleSheet, T
 import { PageLayout_3 } from '@/components/page';
 import { Text, View } from '@/components/Themed';
 import { w } from '@/constants/Colors';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import { FluentChevronDown24Filled, FluentImageAdd32Regular } from '@/constants/icons';
 import useTakeUserInfos from '@/lib/useAddUserInfos';
 import { useBottomSheetBackHandler } from '@/lib/useBottomSheetBackHandler';
@@ -68,8 +68,8 @@ export default function ModalScreen() {
                                 </View>
                             </TouchableOpacity>
                             <View style={{ alignItems: 'center' }}>
-                                <Text style={{ fontSize: convert(24), fontWeight: "500" }}>{name} {first_name}</Text>
-                                <Text style={{ fontSize: convert(15), fontWeight: "400" }}>{email}</Text>
+                                <Text style={{ fontSize: fontScale(24), fontWeight: "500" }}>{name} {first_name}</Text>
+                                <Text style={{ fontSize: fontScale(15), fontWeight: "400" }}>{email}</Text>
                             </View>
                         </View>
                         <View style={{ width: '100%', gap: convert(12), marginTop: convert(34), flex: 1, justifyContent: 'space-between', paddingBottom: convert(24) }}>
@@ -78,13 +78,13 @@ export default function ModalScreen() {
                                 <TouchableOpacity
                                     onPress={() => setCountryOpen(true)}
                                     style={[styles.input, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: convert(12) }]}>
-                                    <Text style={{ fontSize: convert(16), fontWeight: "500" }}>{country === null ? 'Country' : country.name}</Text>
+                                    <Text style={{ fontSize: fontScale(16), fontWeight: "500" }}>{country === null ? 'Country' : country.name}</Text>
                                     <FluentChevronDown24Filled width={convert(18)} height={convert(18)} color="#444" />
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     onPress={() => setChurchruleOpen(true)}
                                     style={[styles.input, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: convert(12) }]}>
-                                    <Text style={{ fontSize: convert(16), fontWeight: "500" }}>{churchrule === null ? 'Church Rule' : churchrule}</Text>
+                                    <Text style={{ fontSize: fontScale(16), fontWeight: "500" }}>{churchrule === null ? 'Church Rule' : churchrule}</Text>
                                     <FluentChevronDown24Filled width={convert(18)} height={convert(18)} color="#444" />
                                 </TouchableOpacity>
 
@@ -92,12 +92,12 @@ export default function ModalScreen() {
                                     <TextInput
                                         value={biography || ''}
                                         onChangeText={(e) => setBiography(e)}
-                                        style={{ minHeight: convert(56), paddingHorizontal: convert(12), paddingVertical: convert(12), fontSize: convert(16), fontWeight: "500", color: '#000000ff', borderWidth: 1, borderColor: "#ccc" }} placeholder='Your biography' placeholderTextColor={"#000000ff"} multiline numberOfLines={5} />
+                                        style={{ minHeight: convert(56), paddingHorizontal: convert(12), paddingVertical: convert(12), fontSize: fontScale(16), fontWeight: "500", color: '#000000ff', borderWidth: 1, borderColor: "#ccc" }} placeholder='Your biography' placeholderTextColor={"#000000ff"} multiline numberOfLines={5} />
                                 </View>
                             </View>
                             <View>
                                 {error && (
-                                    <Text style={{ color: 'red', marginBottom: convert(8), fontSize: convert(14) }}>
+                                    <Text style={{ color: 'red', marginBottom: convert(8), fontSize: fontScale(14) }}>
                                         {error}
                                     </Text>
                                 )}
@@ -106,7 +106,7 @@ export default function ModalScreen() {
                                     onPress={handleSave}
                                     disabled={loading}
                                 >
-                                    <Text style={{ fontSize: convert(18), fontWeight: "700", color: '#fff' }}>
+                                    <Text style={{ fontSize: fontScale(18), fontWeight: "700", color: '#fff' }}>
                                         {loading ? 'Saving...' : 'Save'}
                                     </Text>
                                     {loading && <ActivityIndicator size="small" color="#fff" />}
@@ -164,7 +164,7 @@ const CountryPicker = ({ onClose, onChange }: { onClose?: () => void, onChange?:
                             ) : (
                                 countries.map((country, index) => (
                                     <TouchableOpacity key={index} style={{ paddingVertical: convert(12), borderBottomWidth: 1, borderBottomColor: '#cfdfeeff' }} onPress={() => { onClose?.(); onChange?.(country) }}>
-                                        <Text style={{ fontSize: convert(16), fontWeight: "400" }}>{country.name}</Text>
+                                        <Text style={{ fontSize: fontScale(16), fontWeight: "400" }}>{country.name}</Text>
                                     </TouchableOpacity>
                                 ))
                             )
@@ -205,13 +205,13 @@ const ChurchRulePicker = ({ onClose, onChange }: { onClose?: () => void, onChang
                 position: 'relative'
             }}>
                 <View style={{ paddingVertical: convert(12), borderBottomWidth: 1, borderBottomColor: '#cfdfeeff', paddingHorizontal: convert(20) }}>
-                    <Text style={{ fontSize: convert(18), fontWeight: "600" }}>Status</Text>
+                    <Text style={{ fontSize: fontScale(18), fontWeight: "600" }}>Status</Text>
                 </View>
                 <View style={{ flex: 1, paddingHorizontal: convert(20) }}>
                     {
                         churchrules.map((rule, index) => (
                             <TouchableOpacity key={index} style={{ paddingVertical: convert(12), borderBottomWidth: 1, borderBottomColor: '#cfdfeeff' }} onPress={() => { onClose?.(); onChange?.(rule.name) }}>
-                                <Text style={{ fontSize: convert(16) }}>{rule.name}</Text>
+                                <Text style={{ fontSize: fontScale(16) }}>{rule.name}</Text>
                             </TouchableOpacity>
                         ))
                     }
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
 
         paddingHorizontal: convert(12),
         paddingVertical: convert(12),
-        fontSize: convert(18),
+        fontSize: fontScale(18),
         fontWeight: "700",
         color: '#444',
         borderBottomWidth: 1,

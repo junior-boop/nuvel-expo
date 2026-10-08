@@ -717,7 +717,7 @@ const EditorJS = forwardRef<EditorJSRef, { note: Notes, keyboardState?: { height
     return (
 
         <div style={{ width: '100vw' }}>
-            <style dangerouslySetInnerHTML={{ __html: styles }}></style>
+            <style dangerouslySetInnerHTML={{ __html: styles() }}></style>
             <div style={{ position: "relative", height: "100dvh" }}>
                 <MenuBar editor={editor} biblemetadatState={biblemetadatState} trie={trie} menubtn={menubtn} pickImage={pickImage} />
                 <EditorContent editor={editor} onFocus={() => setIsFocus(true)} onBlur={() => setIsFocus(false)} />

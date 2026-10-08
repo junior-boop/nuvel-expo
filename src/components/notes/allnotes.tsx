@@ -1,5 +1,5 @@
 import { Text, View } from '@/components/Themed';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import { useDatabase } from '@/context/database.context';
 import type { Notes } from '@/Database/db';
 import Column from './column';
@@ -13,7 +13,7 @@ export default function AllNotesFilters() {
 
     return (
         <View>
-            {notepinned?.length > 0 || notepublished?.length > 0 ? <View style={{ paddingHorizontal: 14 }}><Text style={{ fontSize: convert(18), fontWeight: "bold", marginBottom: convert(12) }}>Toutes les Notes</Text></View> : null}
+            {notepinned?.length > 0 || notepublished?.length > 0 ? <View style={{ paddingHorizontal: 14 }}><Text style={{ fontSize: fontScale(18), fontWeight: "bold", marginBottom: convert(12) }}>Toutes les Notes</Text></View> : null}
             <Column data={note as Notes[]} />
         </View>
     );

@@ -1,7 +1,7 @@
 
 import { Text, View } from '@/components/Themed';
 import TopicPicker from '@/components/TopicPicker';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import { FluentImageAdd32Regular, IcBaselineArrowBack } from '@/constants/icons';
 import { server_url } from '@/constants/server_url';
 import { useDatabase } from '@/context/database.context';
@@ -267,10 +267,10 @@ export default function NewArticle() {
                 <View style={{ flex: 1 }}>
 
                     <ScrollView style={{ flex: 1, backgroundColor: '#fff' }} contentContainerStyle={{ paddingHorizontal: convert(16), paddingBottom: convert(100) }}>
-                        <Text style={{ fontSize: convert(28), fontWeight: '600', marginBottom: convert(12) }}>{params.title}</Text>
+                        <Text style={{ fontSize: fontScale(28), fontWeight: '600', marginBottom: convert(12) }}>{params.title}</Text>
                         {/* Cette partie est faite pour picker une image, pour prendre les images dans le telephone de l'utilisateur */}
                         <View style={{ position: 'relative' }}>
-                            <Text style={{ fontSize: convert(16), fontWeight: '600', marginBottom: convert(12), color: '#929292ff' }}>Add an image</Text>
+                            <Text style={{ fontSize: fontScale(16), fontWeight: '600', marginBottom: convert(12), color: '#929292ff' }}>Add an image</Text>
                             <View style={{ width: "100%", aspectRatio: 4 / 3, backgroundColor: '#f0f0f0', borderRadius: convert(12) }}>
                                 {image && <Image source={{ uri: image }} style={{ width: "100%", height: "100%", borderRadius: convert(12) }} />}
                             </View>
@@ -281,23 +281,23 @@ export default function NewArticle() {
                             </Pressable>
                         </View>
                         <View style={{ marginTop: convert(12) }}>
-                            <Text style={{ fontSize: convert(16), fontWeight: '600', marginBottom: convert(12), color: '#929292ff' }}>Add a desciption</Text>
+                            <Text style={{ fontSize: fontScale(16), fontWeight: '600', marginBottom: convert(12), color: '#929292ff' }}>Add a desciption</Text>
                             <TextInput
                                 value={valueDesc}
                                 onChangeText={setValueDesc}
                                 placeholder="Description"
                                 placeholderTextColor="#9ca3af"
-                                style={{ fontSize: convert(16), color: '#555', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: convert(8), padding: convert(12), backgroundColor: '#fff' }}
+                                style={{ fontSize: fontScale(16), color: '#555', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: convert(8), padding: convert(12), backgroundColor: '#fff' }}
                                 multiline
                                 numberOfLines={5}
                             />
                         </View>
                         <View style={{ marginTop: convert(12) }}>
-                            <Text style={{ fontSize: convert(16), fontWeight: '600', marginBottom: convert(12), color: '#929292ff' }}>Add a topic</Text>
+                            <Text style={{ fontSize: fontScale(16), fontWeight: '600', marginBottom: convert(12), color: '#929292ff' }}>Add a topic</Text>
                             <Pressable
                                 onPress={() => setTopicPickerOpen(true)}
                                 style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: convert(8), padding: convert(12), backgroundColor: '#fff', minHeight: convert(48), justifyContent: 'center' }}>
-                                <Text style={{ fontSize: convert(16), color: selectedTopics.length ? '#555' : '#9ca3af' }}>
+                                <Text style={{ fontSize: fontScale(16), color: selectedTopics.length ? '#555' : '#9ca3af' }}>
                                     {selectedTopics.length ? selectedTopics.join(', ') : 'Select topics'}
                                 </Text>
                             </Pressable>
@@ -306,7 +306,7 @@ export default function NewArticle() {
                             onPress={handleSave}
                             disabled={isSaving}
                             style={{ backgroundColor: '#048effff', opacity: isSaving ? 0.7 : 1, borderRadius: convert(24), height: convert(48), width: '100%', justifyContent: 'center', alignItems: 'center', marginTop: convert(16), flexDirection: 'row', gap: convert(12) }}>
-                            <Text style={{ fontSize: convert(18), color: '#fff', fontWeight: '600' }}>{isEditMode ? 'Update' : 'Publish'}</Text>
+                            <Text style={{ fontSize: fontScale(18), color: '#fff', fontWeight: '600' }}>{isEditMode ? 'Update' : 'Publish'}</Text>
                             {isSaving && <ActivityIndicator color="#fff" size={'small'} />}
                         </Pressable>
                     </ScrollView>

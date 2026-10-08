@@ -1,5 +1,5 @@
 // components/LikeButton.tsx
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import { RiOpenArmFill, RiOpenArmLine } from '@/constants/icons';
 import { useAppreciationsWebSocket } from '@/lib/useLikes';
 import React from 'react';
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
         paddingVertical: convert(4),
     },
     count: {
-        fontSize: convert(18),
+        fontSize: fontScale(18),
         fontWeight: 'bold',
         color: '#777',
     },
@@ -58,6 +58,6 @@ const styles = StyleSheet.create({
     },
     error: {
         color: 'red',
-        fontSize: convert(12),
+        fontSize: fontScale(12),
     },
 });

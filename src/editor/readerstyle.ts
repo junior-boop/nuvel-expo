@@ -1,10 +1,34 @@
-export default `
+// Composant "use dom" : ce fichier tourne dans une vraie webview (son propre
+// `window`), donc `window.devicePixelRatio` reflete la densite physique reelle
+// de l'ecran de l'appareil. On fait naviguer le paragraphe de base
+// (16px * 1.20rem = 19.2px) entre 14px (petit dpi) et 20px (grand dpi), puis on
+// applique ce meme facteur aux autres tailles de police en px pour garder la
+// hierarchie (les tailles en rem suivent automatiquement via le html de base).
+const MIN_DPI_RATIO = 1
+const MAX_DPI_RATIO = 3
+const BASE_PARAGRAPH_PX = 19.2
+const MIN_PARAGRAPH_PX = 14
+const MAX_PARAGRAPH_PX = 20
+
+const getScaleFactor = (): number => {
+    const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 2
+    const clamped = Math.min(MAX_DPI_RATIO, Math.max(MIN_DPI_RATIO, dpr))
+    const t = (clamped - MIN_DPI_RATIO) / (MAX_DPI_RATIO - MIN_DPI_RATIO)
+    const paragraphPx = MIN_PARAGRAPH_PX + t * (MAX_PARAGRAPH_PX - MIN_PARAGRAPH_PX)
+    return paragraphPx / BASE_PARAGRAPH_PX
+}
+
+const getReaderStyles = (): string => {
+    const factor = getScaleFactor()
+    const px = (value: number) => `${(value * factor).toFixed(2)}px`
+
+    return `
 @import url('https://fonts.googleapis.com/css2?family=Andada+Pro:ital,wght@0,400..840;1,400..840&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import "tailwindcss";
 
 
 html {
-    font-size: 16px;
+    font-size: ${px(16)};
 }
 
 * {
@@ -374,7 +398,7 @@ p {
 .collaboration-cursor__label {
     border-radius: 3px 3px 3px 0;
     color: #fff;
-    font-size: 12px;
+    font-size: ${px(12)};
     font-style: normal;
     font-weight: 600;
     left: -1px;
@@ -604,7 +628,7 @@ p {
         background-color : #00edff27;
         align-items: center;
         gap : 12px;
-        font-size : 16px;
+        font-size : ${px(16)};
         font-weight : 600;
        /* margin:0 12px */
     }
@@ -722,4 +746,7 @@ control-groupe .button-group bottom.is-active {
     border-radius : 5px
 }
 
-`;
+`
+}
+
+export default getReaderStyles;

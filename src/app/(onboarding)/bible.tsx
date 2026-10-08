@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { BibleItems, BibleListItem } from '@/components/bibleItem';
 import { PageLayout_3 } from '@/components/page';
 import { Text, View } from '@/components/Themed';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import { useDatabase } from '@/context/database.context';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -65,6 +65,7 @@ export default function OnboardingBible() {
     const hasAtLeastOne = (biblemetadatState?.count() ?? 0) > 0
 
     const handleContinue = () => {
+        if (!hasAtLeastOne) return
         router.replace('/language' as never)
     }
 
@@ -73,26 +74,27 @@ export default function OnboardingBible() {
             <View style={{ flex: 1 }}>
                 <StatusBar style="dark" />
                 <ScrollView contentContainerStyle={{ paddingBottom: convert(120), paddingHorizontal: convert(16), paddingTop: convert(24) }}>
-                    <Text style={{ ...styles.title, marginBottom: convert(8) }}>Choisissez votre Bible</Text>
+                    <Text style={{ ...styles.title, marginBottom: convert(8) }}>Choose your Bible</Text>
                     <View style={{ marginBottom: convert(24) }}>
-                        <Text style={{ fontSize: convert(15), color: "#777" }}>
-                            Téléchargez les versions de la Bible que vous utiliserez. Vous pourrez en ajouter d'autres plus tard.
+                        <Text style={{ fontSize: fontScale(15), color: "#777" }}>
+                            Download the Bible versions you will use. You can add more later.
                         </Text>
                     </View>
                     <View style={{ gap: convert(8) }}>
                         {
-                            isLoading ? <Text>Chargement...</Text>
+                            isLoading ? <Text>Loading...</Text>
                                 : liste.map((item, index) => <BibleItems key={index} item={item} />)
                         }
                     </View>
                 </ScrollView>
                 <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: convert(16), backgroundColor: '#fff' }}>
                     <TouchableOpacity
-                        style={{ backgroundColor: "#0083ff", paddingHorizontal: convert(18), paddingVertical: convert(14), alignItems: 'center', justifyContent: 'center' }}
+                        style={{ backgroundColor: hasAtLeastOne ? "#0083ff" : "#cccccc", paddingHorizontal: convert(18), paddingVertical: convert(14), alignItems: 'center', justifyContent: 'center' }}
                         onPress={handleContinue}
+                        disabled={!hasAtLeastOne}
                     >
-                        <Text style={{ fontSize: convert(18), fontWeight: "700", color: '#fff' }}>
-                            {hasAtLeastOne ? 'Continuer' : 'Passer pour le moment'}
+                        <Text style={{ fontSize: fontScale(18), fontWeight: "700", color: '#fff' }}>
+                            Continue
                         </Text>
                     </TouchableOpacity>
                 </View>

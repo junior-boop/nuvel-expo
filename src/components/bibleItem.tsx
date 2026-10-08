@@ -1,5 +1,5 @@
 import { Text, View } from '@/components/Themed';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import {
     BibleVersetIcon,
     FluentAlert32Regular,
@@ -22,11 +22,11 @@ export type BibleListItem = BibleData & {
 
 const FEATURE_BADGES: { key: keyof BibleMetadata; label: string }[] = [
     { key: 'strongs', label: "Strong's" },
-    { key: 'red_letter', label: 'Paroles du Christ' },
-    { key: 'italics', label: 'Italiques' },
-    { key: 'paragraph', label: 'Paragraphes' },
-    { key: 'official', label: 'Officielle' },
-    { key: 'research', label: 'Recherche' },
+    { key: 'red_letter', label: "Christ's Words" },
+    { key: 'italics', label: 'Italics' },
+    { key: 'paragraph', label: 'Paragraphs' },
+    { key: 'official', label: 'Official' },
+    { key: 'research', label: 'Research' },
 ];
 
 export const BibleItems = ({ item }: { item: BibleListItem }) => {
@@ -117,12 +117,12 @@ export const BibleItems = ({ item }: { item: BibleListItem }) => {
             <View style={{ borderWidth: 1, borderColor: '#ccccccff', padding: convert(12), flexDirection: "row", alignItems: "flex-start", justifyContent: 'space-between' }} >
                 <View style={{ flex: 1, paddingRight: convert(12) }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: convert(8) }}>
-                        <Text style={{ fontSize: convert(16), fontWeight: 'bold' }}>{item.metadata.name}</Text>
+                        <Text style={{ fontSize: fontScale(16), fontWeight: 'bold' }}>{item.metadata.name}</Text>
                         <View style={{ paddingHorizontal: convert(6), paddingVertical: 2, backgroundColor: '#eee', borderRadius: 4 }}>
-                            <Text style={{ fontSize: convert(11), fontWeight: '600', color: '#555' }}>{item.metadata.shortname}</Text>
+                            <Text style={{ fontSize: fontScale(11), fontWeight: '600', color: '#555' }}>{item.metadata.shortname}</Text>
                         </View>
                     </View>
-                    <Text style={{ fontSize: convert(13), color: "#555", marginTop: 2 }}>
+                    <Text style={{ fontSize: fontScale(13), color: "#555", marginTop: 2 }}>
                         {[item.metadata.lang, item.metadata.year, item.metadata.publisher].filter(Boolean).join(' · ')}
                     </Text>
 
@@ -130,7 +130,7 @@ export const BibleItems = ({ item }: { item: BibleListItem }) => {
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: convert(6), marginTop: convert(8) }}>
                             {activeBadges.map(b => (
                                 <View key={b.key} style={{ paddingHorizontal: convert(8), paddingVertical: convert(3), backgroundColor: '#e8f2ff', borderRadius: 12 }}>
-                                    <Text style={{ fontSize: convert(10), color: '#1f78ff', fontWeight: '600' }}>{b.label}</Text>
+                                    <Text style={{ fontSize: fontScale(10), color: '#1f78ff', fontWeight: '600' }}>{b.label}</Text>
                                 </View>
                             ))}
                         </View>
@@ -139,16 +139,16 @@ export const BibleItems = ({ item }: { item: BibleListItem }) => {
                         {!!item.verset && (
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: convert(4) }}>
                                 <BibleVersetIcon width={12} height={12} color="#999" />
-                                <Text style={{ fontSize: convert(11), color: '#999' }}>{item.verset.toLocaleString()} versets</Text>
+                                <Text style={{ fontSize: fontScale(11), color: '#999' }}>{item.verset.toLocaleString()} verses</Text>
                             </View>
                         )}
                         {!!item.tailleFormatee && (
-                            <Text style={{ fontSize: convert(11), color: '#999' }}>{item.tailleFormatee}</Text>
+                            <Text style={{ fontSize: fontScale(11), color: '#999' }}>{item.tailleFormatee}</Text>
                         )}
                         {isRestricted && (
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: convert(4) }}>
                                 <FluentAlert32Regular width={12} height={12} color="#c77700" />
-                                <Text style={{ fontSize: convert(11), color: '#c77700' }}>Usage restreint</Text>
+                                <Text style={{ fontSize: fontScale(11), color: '#c77700' }}>Restricted use</Text>
                             </View>
                         )}
                     </View>

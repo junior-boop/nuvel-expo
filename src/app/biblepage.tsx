@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 
 import { BibleItems, BibleListItem } from '@/components/bibleItem';
 import { Text, View, } from '@/components/Themed';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import * as BibleContent from '@/Database/bible.content';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -72,7 +72,7 @@ export default function BiblePage() {
             <ScrollView contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: convert(16), paddingTop: convert(16) }}>
                 <Text style={{ ...styles.title, marginBottom: convert(16) }}>Bible Library</Text>
                 <View style={{ marginBottom: 24 }}>
-                    <Text style={{ fontSize: convert(16), color: "#777", fontStyle: 'italic' }}>
+                    <Text style={{ fontSize: fontScale(16), color: "#777", fontStyle: 'italic' }}>
                         Download the Bible version you need to use
                     </Text>
                 </View>

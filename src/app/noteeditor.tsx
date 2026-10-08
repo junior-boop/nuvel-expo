@@ -9,7 +9,7 @@ import { ActivityIndicator, Alert, Animated, Keyboard, KeyboardAvoidingView, Lin
 import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
 import { w } from "@/constants/Colors";
-import { convert, H } from "@/constants/convert";
+import { convert, H, fontScale } from "@/constants/convert";
 import { FluentArrowUp32Filled, FluentCheckmark28Filled, FluentDelete32Regular, FluentDismiss32Filled, FluentFolderLink32Regular, FluentGlobeArrowForward32Regular, FluentMoreVertical32Filled, FluentShare32Regular, FluentSparkle32Regular, FluentTextProofingToolsAbc16Regular, IcBaselineArrowBack, IcTwotoneWhatsapp } from "@/constants/icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
@@ -485,9 +485,9 @@ export default function NoteEditor() {
                             } catch { }
                             return (
                                 <View style={{ paddingVertical: convert(12), paddingHorizontal: convert(12), borderBottomWidth: 1, borderColor: '#e2e8f0', gap: convert(2) }}>
-                                    <Text style={{ fontSize: convert(14), fontWeight: '600' }} numberOfLines={2}>{noteTitle}</Text>
-                                    <Text style={{ fontSize: convert(13), color: '#0009' }}>Created on {moment(Note.created).format('MMM D, YYYY')}</Text>
-                                    <Text style={{ fontSize: convert(13), color: '#0009' }}>Last updated {moment(Note.modified).format('MMM D, YYYY [at] HH:mm')}</Text>
+                                    <Text style={{ fontSize: fontScale(14), fontWeight: '600' }} numberOfLines={2}>{noteTitle}</Text>
+                                    <Text style={{ fontSize: fontScale(13), color: '#0009' }}>Created on {moment(Note.created).format('MMM D, YYYY')}</Text>
+                                    <Text style={{ fontSize: fontScale(13), color: '#0009' }}>Last updated {moment(Note.modified).format('MMM D, YYYY [at] HH:mm')}</Text>
                                 </View>
                             );
                         })()}
@@ -495,31 +495,31 @@ export default function NoteEditor() {
                             onPress={onShare}
                             style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}>
                             <FluentShare32Regular width={24} height={24} color={'black'} />
-                            <Text style={{ fontSize: convert(18) }}>Share</Text>
+                            <Text style={{ fontSize: fontScale(18) }}>Share</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => { setIsOpen(false); setGroupPickerOpen(true) }}
                             style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}>
                             <FluentFolderLink32Regular width={24} height={24} color={'black'} />
-                            <Text style={{ fontSize: convert(18) }}>Link to group</Text>
+                            <Text style={{ fontSize: fontScale(18) }}>Link to group</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={handleWhatsapp}
                             style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }}
                         >
                             <IcTwotoneWhatsapp width={24} height={24} color={'black'} />
-                            <Text style={{ fontSize: convert(18) }}>Share on Whatsapp</Text>
+                            <Text style={{ fontSize: fontScale(18) }}>Share on Whatsapp</Text>
                         </TouchableOpacity>
                         {
                             Note.publishId ? (
                                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handleUpdateArticle}>
                                     <FluentGlobeArrowForward32Regular width={24} height={24} color={'black'} />
-                                    <Text style={{ fontSize: convert(18) }}>Updated the article</Text>
+                                    <Text style={{ fontSize: fontScale(18) }}>Updated the article</Text>
                                 </TouchableOpacity>
                             ) : (
                                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handlePublish}>
                                     <FluentGlobeArrowForward32Regular width={24} height={24} color={'black'} />
-                                    <Text style={{ fontSize: convert(18) }}>Publish as article</Text>
+                                    <Text style={{ fontSize: fontScale(18) }}>Publish as article</Text>
                                 </TouchableOpacity>
                             )
                         }
@@ -527,12 +527,12 @@ export default function NoteEditor() {
                             Note.publishId ? (
                                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handleDeleteArticleAndNote}>
                                     <FluentDelete32Regular width={24} height={24} color={'black'} />
-                                    <Text style={{ fontSize: convert(18) }}>Deleted the note and article</Text>
+                                    <Text style={{ fontSize: fontScale(18) }}>Deleted the note and article</Text>
                                 </TouchableOpacity>
                             ) : (
                                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: convert(12), paddingVertical: convert(14), borderColor: '#e2e8f0', paddingHorizontal: convert(12) }} onPress={handleDeleteNoteOnly}>
                                     <FluentDelete32Regular width={24} height={24} color={'black'} />
-                                    <Text style={{ fontSize: convert(18) }}>Deleted this note</Text>
+                                    <Text style={{ fontSize: fontScale(18) }}>Deleted this note</Text>
                                 </TouchableOpacity>
                             )
                         }
@@ -559,8 +559,8 @@ export default function NoteEditor() {
                         }}>
                             <View style={{ flex: 1, }}>
                                 <View style={{ paddingHorizontal: convert(16), height: convert(62), justifyContent: 'center', borderBottomColor: '#cfdfeeff', borderBottomWidth: 1, zIndex: 10 }}>
-                                    <Text style={{ fontSize: convert(13), color: "#0009" }}>Assistant</Text>
-                                    <Text style={{ fontSize: convert(20), fontWeight: '600' }}>{title?.length > 34 ? `${title?.substring(0, 34)}...` : title}</Text>
+                                    <Text style={{ fontSize: fontScale(13), color: "#0009" }}>Assistant</Text>
+                                    <Text style={{ fontSize: fontScale(20), fontWeight: '600' }}>{title?.length > 34 ? `${title?.substring(0, 34)}...` : title}</Text>
                                 </View>
                                 <ScrollView
                                     ref={chatScrollRef}
@@ -591,11 +591,11 @@ export default function NoteEditor() {
                                                         >
                                                             {item.replyContent && (
                                                                 <View style={{ paddingLeft: convert(8), backgroundColor: '#008cff18' }}>
-                                                                    <Text numberOfLines={2} style={{ fontSize: convert(13), color: '#0009', paddingVertical: convert(5) }}>{item.replyContent}</Text>
+                                                                    <Text numberOfLines={2} style={{ fontSize: fontScale(13), color: '#0009', paddingVertical: convert(5) }}>{item.replyContent}</Text>
                                                                 </View>
                                                             )}
-                                                            <Text style={{ fontSize: convert(16), fontWeight: '500', paddingHorizontal: convert(12), paddingVertical: convert(8), lineHeight: convert(20) }}>{item.content}</Text>
-                                                            {/* <Text style={{ fontSize: convert(12), color: "#0009", textAlign: 'right' }}>{moment(item.created).fromNow()}</Text> */}
+                                                            <Text style={{ fontSize: fontScale(16), fontWeight: '500', paddingHorizontal: convert(12), paddingVertical: convert(8), lineHeight: convert(20) }}>{item.content}</Text>
+                                                            {/* <Text style={{ fontSize: fontScale(12), color: "#0009", textAlign: 'right' }}>{moment(item.created).fromNow()}</Text> */}
                                                         </View>
                                                         {isPendingQuestion && <ThinkingIndicator />}
                                                     </View>
@@ -611,8 +611,8 @@ export default function NoteEditor() {
                             {replyTo && (
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: convert(16), paddingVertical: convert(8), borderTopWidth: 1, borderColor: '#cfdfeeff', backgroundColor: '#f7fafc' }}>
                                     <View style={{ flex: 1, backgroundColor: '#f7fafc' }}>
-                                        <Text style={{ fontSize: convert(12), color: '#238dffff', fontWeight: '600' }}>Reply to</Text>
-                                        <Text numberOfLines={1} style={{ fontSize: convert(13), color: '#0009' }}>{replyTo.content}</Text>
+                                        <Text style={{ fontSize: fontScale(12), color: '#238dffff', fontWeight: '600' }}>Reply to</Text>
+                                        <Text numberOfLines={1} style={{ fontSize: fontScale(13), color: '#0009' }}>{replyTo.content}</Text>
                                     </View>
                                     <Pressable onPress={() => setReplyTo(null)} style={{ paddingLeft: convert(12) }}>
                                         <FluentDismiss32Filled width={16} height={16} color={'#0009'} />
@@ -633,7 +633,7 @@ export default function NoteEditor() {
                                         height: 'auto',
                                         color: 'black',
                                         flex: 1,
-                                        fontSize: convert(16)
+                                        fontSize: fontScale(16)
                                     }}
                                 />
                                 <View>
@@ -702,7 +702,7 @@ function GroupPicker({ noteId, currentGroup, onClose }: { noteId: string, curren
                             onChangeText={setValue}
                             placeholder="New group name"
                             placeholderTextColor={"#8fa0acff"}
-                            style={{ flex: 1, fontSize: convert(18), color: 'black', paddingLeft: convert(12) }}
+                            style={{ flex: 1, fontSize: fontScale(18), color: 'black', paddingLeft: convert(12) }}
                         />
                         <TouchableOpacity onPress={handleCreate} style={{ padding: convert(12) }}>
                             <MaterialIcons name="add" size={24} color="#0083ff" />
@@ -713,7 +713,7 @@ function GroupPicker({ noteId, currentGroup, onClose }: { noteId: string, curren
                 <ScrollView showsVerticalScrollIndicator={true} style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: convert(14), paddingBottom: convert(50), paddingTop: convert(12) }}>
                     {currentGroup && (
                         <TouchableOpacity onPress={() => handleSelect(null)} style={{ paddingVertical: convert(12), borderBottomWidth: 1, borderBottomColor: '#cfdfeeff' }}>
-                            <Text style={{ fontSize: convert(16), color: '#c0392b' }}>No group</Text>
+                            <Text style={{ fontSize: fontScale(16), color: '#c0392b' }}>No group</Text>
                         </TouchableOpacity>
                     )}
                     {(groupsQuery?.findAll() ?? []).map((group: { id: string, name: string }) => (
@@ -722,7 +722,7 @@ function GroupPicker({ noteId, currentGroup, onClose }: { noteId: string, curren
                             onPress={() => handleSelect(group.id)}
                             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: convert(12), paddingHorizontal: convert(6), borderBottomWidth: 1, borderBottomColor: '#cfdfeeff' }}
                         >
-                            <Text style={{ fontSize: convert(16) }}>{group.name}</Text>
+                            <Text style={{ fontSize: fontScale(16) }}>{group.name}</Text>
                             {currentGroup === group.id && <FluentCheckmark28Filled width={18} height={18} color={'#0083ff'} />}
                         </TouchableOpacity>
                     ))}
@@ -758,7 +758,7 @@ function ThinkingIndicator() {
 
     return (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: convert(6), paddingTop: convert(8), marginBottom: convert(12) }}>
-            <Text style={{ fontSize: convert(14), color: '#0009', fontStyle: 'italic' }}>Thinking</Text>
+            <Text style={{ fontSize: fontScale(14), color: '#0009', fontStyle: 'italic' }}>Thinking</Text>
             <View style={{ flexDirection: 'row', gap: 3 }}>
                 <Animated.View style={[{ width: 5, height: 5, borderRadius: 3, backgroundColor: '#0009' }, dotStyle(dot1)]} />
                 <Animated.View style={[{ width: 5, height: 5, borderRadius: 3, backgroundColor: '#0009' }, dotStyle(dot2)]} />
@@ -776,7 +776,7 @@ const inlineStyles: Record<string, TextStyle> = {
     code_inline: {
         fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
         backgroundColor: '#f1f5f9',
-        fontSize: convert(14),
+        fontSize: fontScale(14),
     },
     link: { color: '#238dff', textDecorationLine: 'underline' },
 };
@@ -848,7 +848,7 @@ function SelectableTextGroup({ node, styles, onReply }: { node: any, styles: any
         if (next.end > next.start) setSelection(next)
     }
 
-    const textLayoutStyle = [styles.textgroup, { padding: 0, margin: 0, lineHeight: 24, fontSize: convert(16) }];
+    const textLayoutStyle = [styles.textgroup, { padding: 0, margin: 0, lineHeight: 24, fontSize: fontScale(16) }];
 
     return (
         <View key={node.key} style={{ position: 'relative' }}>
@@ -869,10 +869,10 @@ function SelectableTextGroup({ node, styles, onReply }: { node: any, styles: any
             {hasSelection && (
                 <View style={{ flexDirection: 'row', gap: 8, marginTop: convert(4), marginBottom: convert(4) }}>
                     <TouchableOpacity onPress={handleCopy} style={{ paddingVertical: convert(4), paddingHorizontal: convert(10), backgroundColor: '#eef4ff', borderRadius: 2 }}>
-                        <Text style={{ fontSize: convert(12), color: '#238dffff', fontWeight: '600' }}>Copy</Text>
+                        <Text style={{ fontSize: fontScale(12), color: '#238dffff', fontWeight: '600' }}>Copy</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleReply} style={{ paddingVertical: convert(4), paddingHorizontal: convert(10), backgroundColor: '#238dffff', borderRadius: 2 }}>
-                        <Text style={{ fontSize: convert(12), color: 'white', fontWeight: '600' }}>Reply</Text>
+                        <Text style={{ fontSize: fontScale(12), color: 'white', fontWeight: '600' }}>Reply</Text>
                     </TouchableOpacity>
                 </View>
             )}
@@ -910,7 +910,7 @@ function Response_Ai({ item, onReply }: { item: AiHistoryType, onReply: (item: A
 
 
             >
-                <Markdown mergeStyle={true} rules={getMarkdownRules(handleInlineReply)} style={{ body: { color: 'black', fontSize: convert(16), lineHeight: 23 } }}>
+                <Markdown mergeStyle={true} rules={getMarkdownRules(handleInlineReply)} style={{ body: { color: 'black', fontSize: fontScale(16), lineHeight: 23 } }}>
                     {item.content}
                 </Markdown>
             </Pressable>
@@ -919,10 +919,10 @@ function Response_Ai({ item, onReply }: { item: AiHistoryType, onReply: (item: A
                     {menu && (
                         <View style={{ position: 'absolute', top: menu.y, left: Math.min(menu.x, w - convert(160)), width: convert(150), backgroundColor: 'white', borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 4, overflow: 'hidden' }}>
                             <TouchableOpacity onPress={handleCopy} style={{ paddingVertical: convert(12), paddingHorizontal: convert(14), borderBottomWidth: 1, borderColor: '#e2e8f0' }}>
-                                <Text style={{ fontSize: convert(15) }}>Copy</Text>
+                                <Text style={{ fontSize: fontScale(15) }}>Copy</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={handleReply} style={{ paddingVertical: convert(12), paddingHorizontal: convert(14) }}>
-                                <Text style={{ fontSize: convert(15) }}>Reply</Text>
+                                <Text style={{ fontSize: fontScale(15) }}>Reply</Text>
                             </TouchableOpacity>
                         </View>
                     )}

@@ -1,5 +1,5 @@
 // components/Commentaire.tsx
-import { convert } from "@/constants/convert";
+import { convert, fontScale } from "@/constants/convert";
 import { RiMessageLine } from "@/constants/icons";
 import { User } from "@/Database/db";
 import { CommentRow, deleteComment as deleteCommentApi, getComments, postComment } from "@/lib/comments.api";
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
         paddingVertical: convert(4),
     },
     countText: {
-        fontSize: convert(18),
+        fontSize: fontScale(18),
         fontWeight: 'bold',
     },
     connectedDot: {

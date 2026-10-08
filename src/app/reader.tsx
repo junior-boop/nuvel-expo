@@ -4,7 +4,7 @@ import CommentaireItem from "@/components/commentaireItem";
 import { PageLayout_3 } from "@/components/page";
 import { Text, View } from "@/components/Themed";
 import { w } from "@/constants/Colors";
-import { convert } from "@/constants/convert";
+import { convert, fontScale } from "@/constants/convert";
 import { FluentSubtractCircle12Regular, IcBaselineArrowBack, RiBookmark3Fill, RiBookmark3Line, RiSendPlaneLine, RiShareForwardLine } from "@/constants/icons";
 import { useDatabase } from "@/context/database.context";
 import { Articles, Comments } from "@/Database/db";
@@ -227,7 +227,7 @@ const SheetComments = ({
     >
         <BottomSheetView style={{ position: 'relative', flex: 1, height: '100%' }}>
             <View style={{ height: convert(32), backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: convert(16) }}>
-                <Text style={{ fontSize: convert(16), fontWeight: 'bold', color: '#929292' }}>{count < 9 ? `0${count}` : count} - comments</Text>
+                <Text style={{ fontSize: fontScale(16), fontWeight: 'bold', color: '#929292' }}>{count < 9 ? `0${count}` : count} - comments</Text>
             </View>
             <ScrollView style={{ flex: 1, position: 'relative', height: "100%" }}>
                 <View style={{ gap: convert(24), paddingVertical: convert(16) }}>
@@ -253,7 +253,7 @@ const SheetComments = ({
                         color: 'black',
                         flex: 1,
                         lineHeight: convert(18),
-                        fontSize: convert(18)
+                        fontSize: fontScale(18)
                     }}
                 />
                 <View>
@@ -324,7 +324,7 @@ const ShareButton = ({ articleId, Count }: { articleId: string, Count: number })
     return (
         <TouchableOpacity onPress={onShare} style={styles.btn_appreciation}>
             <RiShareForwardLine width={24} height={24} color={'#777'} />
-            <Text style={{ fontSize: convert(18), fontWeight: 'bold' }}>{shareCount}</Text>
+            <Text style={{ fontSize: fontScale(18), fontWeight: 'bold' }}>{shareCount}</Text>
         </TouchableOpacity>
     )
 }
@@ -362,7 +362,7 @@ const SignalButton = ({ articleId, signalStat, userId }: { articleId: string, si
     return (
         <TouchableOpacity onPress={signalArticle} style={styles.btn_appreciation}>
             <FluentSubtractCircle12Regular width={24} height={24} color={isSignal ? '#ff2323ff' : '#777'} />
-            <Text style={{ fontSize: convert(18), fontWeight: 'bold', color: isSignal ? '#ff2323ff' : '#777' }}>Signal</Text>
+            <Text style={{ fontSize: fontScale(18), fontWeight: 'bold', color: isSignal ? '#ff2323ff' : '#777' }}>Signal</Text>
         </TouchableOpacity>
     )
 }

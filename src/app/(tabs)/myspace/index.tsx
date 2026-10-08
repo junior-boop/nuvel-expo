@@ -5,7 +5,7 @@ import HeaderPage from '@/components/headerpage';
 import AllNotesFilters from '@/components/notes/allnotes';
 import AllNotesPinned from '@/components/notes/notespinned';
 import { View } from '@/components/Themed';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import { FluentChevronRight32Regular, FluentNoteAdd28Regular, FluentSearch32Filled } from "@/constants/icons";
 import { useAuth } from '@/context/auth.context';
 import { useDatabase } from '@/context/database.context';
@@ -59,7 +59,7 @@ export default function TabTwoScreen() {
                 <Pressable style={{ marginBottom: convert(16) }} onPress={() => router.push('/searchnotes')}>
                     <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: convert(16), paddingVertical: convert(12), backgroundColor: "#f6f9ffff", height: 50, borderBottomWidth: 1, borderColor: "#eff2fdff" }}>
                         <FluentSearch32Filled width={20} height={20} color={"black"} />
-                        <Text style={{ fontSize: convert(16), fontWeight: "bold", marginLeft: convert(8) }}>Search a note </Text>
+                        <Text style={{ fontSize: fontScale(16), fontWeight: "bold", marginLeft: convert(8) }}>Search a note </Text>
                     </View>
                 </Pressable>
                 <MyPublicationsButton />
@@ -109,8 +109,8 @@ const MyPublicationsButton = () => {
                         )}
                     </View>
                     <View style={{ flex: 1, marginLeft: convert(12) }}>
-                        <Text style={{ fontSize: convert(16), fontWeight: "bold" }}>My publications</Text>
-                        <Text style={{ fontSize: convert(13), color: "#797979" }}>{publicationCount} publication{publicationCount > 1 ? 's' : ''}</Text>
+                        <Text style={{ fontSize: fontScale(16), fontWeight: "bold" }}>My publications</Text>
+                        <Text style={{ fontSize: fontScale(13), color: "#797979" }}>{publicationCount} publication{publicationCount > 1 ? 's' : ''}</Text>
                     </View>
                     <FluentChevronRight32Regular width={20} height={20} color={"#797979"} />
                 </View>
@@ -127,7 +127,7 @@ const PublishElement = ({ publishId }: { publishId: string }) => {
     return (<View style={{ width: convert(200), height: convert(200), backgroundColor: "#d3e3f1ff", borderRadius: convert(12), alignItems: "center", justifyContent: "center", position: 'relative' }}>
         <Image source={{ uri: `https://${imageUrl}` }} style={{ width: convert(200), height: convert(200), borderRadius: convert(12), resizeMode: "cover", position: 'absolute', zIndex: 1 }} />
         <View style={{ position: 'absolute', zIndex: 2, width: convert(200), height: convert(200), backgroundColor: "#0000004b", borderRadius: convert(12), padding: convert(16) }}>
-            <Text style={{ fontSize: convert(20), fontWeight: "bold", color: "white" }}>{title}</Text>
+            <Text style={{ fontSize: fontScale(20), fontWeight: "bold", color: "white" }}>{title}</Text>
         </View>
     </View>)
 }
@@ -142,7 +142,7 @@ const PublishSqare = () => {
         setNotes(query)
     }, [])
     return (<View>
-        <Text style={{ fontSize: convert(16), fontWeight: "bold", marginLeft: convert(16), marginBottom: convert(12) }}>Published Notes</Text>
+        <Text style={{ fontSize: fontScale(16), fontWeight: "bold", marginLeft: convert(16), marginBottom: convert(12) }}>Published Notes</Text>
         <ScrollView horizontal contentContainerStyle={{ paddingHorizontal: convert(16), paddingBottom: convert(16), gap: convert(16) }}>
             {
                 notes?.map((note) => <PublishElement key={note.id} publishId={note.publishId} />)

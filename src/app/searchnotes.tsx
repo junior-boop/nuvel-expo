@@ -4,7 +4,7 @@ import { View } from "@/components/Themed";
 import { router, Stack } from "expo-router";
 
 import Column from "@/components/notes/column";
-import { convert } from "@/constants/convert";
+import { convert, fontScale } from "@/constants/convert";
 import { IcBaselineArrowBack } from "@/constants/icons";
 import { useDatabase } from "@/context/database.context";
 import { Notes } from "@/Database/db";
@@ -56,7 +56,7 @@ export default function SearchNotes() {
                     <TouchableOpacity onPress={() => { router.back() }}>
                         <IcBaselineArrowBack width={24} height={24} color={'black'} />
                     </TouchableOpacity>
-                    <TextInput multiline value={value} onChangeText={handleEdit} style={{ fontSize: convert(18), fontWeight: 'bold', padding: 0, color: 'black' }} autoFocus={true} placeholder="Type the title" placeholderTextColor={"#919191ff"} />
+                    <TextInput multiline value={value} onChangeText={handleEdit} style={{ fontSize: fontScale(18), fontWeight: 'bold', padding: 0, color: 'black' }} autoFocus={true} placeholder="Type the title" placeholderTextColor={"#919191ff"} />
                 </View>
             </View>
             <ScrollView contentContainerStyle={{ paddingTop: convert(24) }}>

@@ -1,7 +1,7 @@
 import { PageLayout_3 } from '@/components/page';
 import { Text, View } from '@/components/Themed';
 import { w } from '@/constants/Colors';
-import { convert } from '@/constants/convert';
+import { convert, fontScale } from '@/constants/convert';
 import { IcBaselineArrowBack } from '@/constants/icons';
 import { ArticleStat } from '@/lib/useArticlesAll';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -64,12 +64,12 @@ export default function NotificationPage() {
                             <Text style={styles.adminTagText}>Admin</Text>
                         </View>
                     )}
-                    <Text style={{ width: w - convert(32), fontSize: convert(22), fontWeight: 'bold' }}>{title}</Text>
+                    <Text style={{ width: w - convert(32), fontSize: fontScale(22), fontWeight: 'bold' }}>{title}</Text>
                 </View>
                 {!!createdAt && (
-                    <Text style={{ fontSize: convert(13), color: '#a0a0a0' }}>{moment(createdAt).format('LL')}</Text>
+                    <Text style={{ fontSize: fontScale(13), color: '#a0a0a0' }}>{moment(createdAt).format('LL')}</Text>
                 )}
-                <Text style={{ fontSize: convert(16), color: '#3a3a3a', lineHeight: convert(24) }}>{body}</Text>
+                <Text style={{ fontSize: fontScale(16), color: '#3a3a3a', lineHeight: convert(24) }}>{body}</Text>
             </View>
         </PageLayout_3>
     );
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     },
     adminTagText: {
         color: 'white',
-        fontSize: convert(11),
+        fontSize: fontScale(11),
         fontWeight: 'bold',
     },
 });
