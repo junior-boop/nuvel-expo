@@ -2,7 +2,7 @@
   "expo": {
     "name": "Nuvel",
     "slug": "nuvel-expo",
-    "version": "0.9.2.0",
+    "version": "0.9.2.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "nuvel",
@@ -20,7 +20,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.junior41.nuveltwyoptbpmwgsox1tafyp",
-      "versionCode": 6,
+      "versionCode": 7,
       "intentFilters": [
         {
           "action": "VIEW",
