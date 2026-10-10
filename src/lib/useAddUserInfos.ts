@@ -45,26 +45,14 @@ export default function useTakeUserInfos() {
             setError(null)
 
             // Validation
-            if (!file) {
-                setError('Veuillez sélectionner une photo de profil');
-                setLoading(false);
-                return false;
-            }
-
             if (!name || !first_name || !email) {
                 setError('Veuillez remplir tous les champs obligatoires');
                 setLoading(false);
                 return false;
             }
 
-            // 1. Upload de l'image
-            const imageUrl = await uploadImage();
-
-            if (!imageUrl) {
-                setError('Échec de l\'upload de l\'image');
-                setLoading(false)
-                return false;
-            }
+            // 1. Upload de l'image (optionnel : un échec n'empêche pas la sauvegarde du profil)
+            const imageUrl = file ? await uploadImage() : null;
 
             // 2. Créer l'objet utilisateur complet
             const userData: User = {
@@ -75,7 +63,7 @@ export default function useTakeUserInfos() {
                 country: country?.id || null,
                 association: null,
                 church_status: churchrule || 'Member',
-                photo: imageUrl,
+                photo: imageUrl ?? '',
                 biography: biography || '',
                 created: new Date().toISOString(),
                 modified: new Date().toISOString(),
