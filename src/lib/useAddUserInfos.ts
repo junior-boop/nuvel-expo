@@ -68,7 +68,8 @@ export default function useTakeUserInfos() {
                 created: new Date().toISOString(),
                 modified: new Date().toISOString(),
                 lastlogin: new Date().toISOString(),
-                lastlogout: null
+                lastlogout: null,
+                onboarding_completed: 1
             }
 
             // 3. Envoyer au serveur

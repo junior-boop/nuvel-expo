@@ -465,8 +465,42 @@ const listBooks = [
   }
 ];
 
+
+// À coller dans ton fichier APRÈS `listBooks` (la liste reste inchangée).
+// Remplace entièrement l'ancienne fonction `filterBible`.
+
+type VerseRow = {
+  book_name: string;
+  verse: number;
+  verse_end?: number | null; // présent uniquement sur les versets fusionnés
+  text: string;
+};
+
+// "Gen.", "GENÈSE", "1 co" -> "gen", "genese", "1co"
+const norm = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\s.]/g, "")
+    .toLowerCase();
+
+// Index construit une seule fois. Premier livre gagnant en cas de collision.
+const bookIndex = new Map<string, number>();
+for (const b of listBooks) {
+  for (const a of b.abr) {
+    const k = norm(a);
+    if (!bookIndex.has(k)) bookIndex.set(k, b.livre);
+  }
+}
+
+const lastOf = (r: VerseRow) => r.verse_end ?? r.verse;
+const labelOf = (r: VerseRow) =>
+  r.verse_end ? `${r.verse}-${r.verse_end}` : r.verse < 10 ? `0${r.verse}` : `${r.verse}`;
+
 /**
- * Recherche des versets dans la base de données
+ * Recherche des versets dans la base de données.
+ * Retourne null si le livre, le chapitre ou les versets n'existent pas.
+ * Un verset fusionné (ex. 14-15) est retourné dès qu'un des numéros demandés l'intersecte.
  */
 export const filterBible = async (
   data: [
@@ -481,64 +515,37 @@ export const filterBible = async (
   const [book_id, book_name, chapter, vers1, vers2, version] = data;
   const versionSuffix = version ? ` (${version})` : "";
 
-  const findbook = listBooks.find((el) => el.abr.includes(book_name));
-  const ref = {
-    book_id: book_id,
-    book: findbook?.livre,
-    chapter: parseInt(chapter),
+  const livre = bookIndex.get(norm(book_name));
+  const chapterNum = parseInt(chapter, 10);
+  if (!livre || Number.isNaN(chapterNum)) return null;
+
+  const rows: VerseRow[] = await BibleVerse.find({
+    book_id,
+    book: livre,
+    chapter: chapterNum,
+  });
+  if (!rows?.length) return null;
+
+  // Chapitre entier : 1 -> Infinity | un verset : start = end | plage : start -> end
+  const start = vers1 ? parseInt(vers1, 10) : 1;
+  const end = vers2 ? parseInt(vers2, 10) : vers1 ? start : Infinity;
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return null;
+
+  const selected = rows
+    .filter((r) => r.verse <= end && lastOf(r) >= start)
+    .sort((a, b) => a.verse - b.verse);
+  if (!selected.length) return null;
+
+  const titre = rows[0].book_name;
+  const refPart = !vers1
+    ? `${chapter}`
+    : vers2
+      ? `${chapter}: ${vers1}-${vers2}`
+      : `${chapter}: ${vers1}`;
+
+  return {
+    ref_bible: `${titre} ${refPart}${versionSuffix}`,
+    content: JSON.stringify(selected.map((r) => ({ n: labelOf(r), text: r.text }))),
   };
-  const find = await BibleVerse.find(ref);
-  if (vers1 && vers2) {
-    const verseStart = parseInt(vers1);
-    const verseEnd = parseInt(vers2);
-    const arr = [];
-    const titre = find[0].book_name;
-
-    for (let i = verseStart; i <= verseEnd; i++) {
-      const v = find.filter((el) => el.verse === i)[0].text;
-      const obj = {
-        n: i < 10 ? `0${i}` : i,
-        text: v,
-      };
-      arr.push(obj);
-    }
-
-    const ref_complet = {
-      ref_bible: `${titre} ${chapter}: ${vers1}-${vers2}${versionSuffix}`,
-      content: JSON.stringify(arr),
-    };
-
-    return ref_complet;
-  }
-  if (vers1 && !vers2) {
-    const verseStart = parseInt(vers1);
-    const titre = find[0].book_name;
-    const v = find.filter((el) => el.verse === verseStart)[0].text;
-
-    const ref_complet = {
-      ref_bible: `${titre} ${chapter}: ${vers1}${versionSuffix}`,
-      content: JSON.stringify([{ n: verseStart, text: v }]),
-    };
-    return ref_complet;
-  }
-  if (!vers1 && !vers2) {
-    const arr = [];
-    const titre = find[0].book_name;
-
-    for (let i = 0; i < find.length; i++) {
-      const v = find.filter((el) => el.verse === i)[0].text;
-      const obj = {
-        n: find[i]?.verse < 10 ? `0${find[i].verse}` : find[i]?.verse,
-        text: v,
-      };
-      arr.push(obj);
-    }
-
-    const ref_complet = {
-      ref_bible: `${titre} ${chapter}${versionSuffix}`,
-      content: JSON.stringify(arr),
-    };
-
-    return ref_complet;
-  }
 };
+

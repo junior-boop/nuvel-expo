@@ -133,7 +133,7 @@ function AuthGate({ children }: { children: ReactNode }) {
     const inOnboardingGroup = root === '(onboarding)';
     const inIntroPage = root === 'intro_page';
     const onboardingStep = segments[1] as string | undefined;
-    const profileIncomplete = !!user && (!user.photo || !user.biography);
+    const profileIncomplete = !!user && !user.onboarding_completed;
     // Case 2 (utilisateur existant) : on verifie l'etat local a chaque lancement — si vide, on
     // renvoie l'utilisateur vers l'etape correspondante meme s'il a deja termine l'onboarding avant.
     const bibleIncomplete = !!user && !profileIncomplete && biblemetadatState.count() === 0;

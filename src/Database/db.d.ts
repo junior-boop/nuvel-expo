@@ -27,6 +27,7 @@ export type User = {
   lastlogin: Date | string | null;
   lastlogout: Date | string | null;
   language: "fr" | "en" | "es" | null;
+  onboarding_completed: 0 | 1;
 };
 
 export type Groups = {

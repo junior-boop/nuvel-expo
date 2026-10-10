@@ -14,6 +14,7 @@ const Users = db.createModel<UserType>("users", {
   lastlogin: "TEXT NULL",
   lastlogout: "TEXT NULL",
   language: "TEXT NULL",
+  onboarding_completed: "INTEGER NOT NULL DEFAULT 0",
   created: "DATETIME DEFAULT CURRENT_TIMESTAMP",
   modified: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
 });
@@ -23,6 +24,11 @@ export const createTable = async () => {
   // Migration : la colonne language n'existe pas sur les tables locales creees avant son ajout.
   try {
     await orm.run(`ALTER TABLE users ADD COLUMN language TEXT NULL`);
+  } catch {
+    // colonne deja presente
+  }
+  try {
+    await orm.run(`ALTER TABLE users ADD COLUMN onboarding_completed INTEGER NOT NULL DEFAULT 0`);
   } catch {
     // colonne deja presente
   }
